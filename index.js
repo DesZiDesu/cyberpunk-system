@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '1.0.0';
+const CYBERPUNK_SYSTEM_VERSION = '1.0.1';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -53,6 +53,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     let callOverlay = null;
     let minimizedCall = null;
     let incomingWindow = null;
+    let pendingIncomingCall = null;
     let promptTimer = null;
     let settingsBound = false;
     let callGenerating = false;
@@ -316,17 +317,53 @@ ${clean(s.customPrompt, 6000)}`.trim();
       return `<section class="cps-chat-block cps-chat-${kind}"><div class="cps-chat-kicker">${htmlEscape(stripTags(name))} · ${label}</div><div class="cps-chat-copy">${content}</div></section>`;
     }
 
-    function renderMessageElement(element) {
-      if (!(element instanceof HTMLElement) || element.dataset.cpsRendered === '1' || !settings().enabled) return;
-      const source = element.innerHTML;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK)\|/i.test(source)) { element.dataset.cpsRendered = '1'; return; }
-      let output = source;
+    function markupFingerprint(value) {
+      const source = String(value || '');
+      let hash = 2166136261;
+      for (let index = 0; index < source.length; index += 1) {
+        hash ^= source.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return `${source.length}:${(hash >>> 0).toString(36)}`;
+    }
+
+    function transformProtocolMarkup(source) {
+      let output = String(source || '');
       output = output.replace(/\[CP_HEADER\|([^\]|]+)(?:\|([^\]|]*))?(?:\|([^\]]*))?\]\s*\[\/CP_HEADER\]/gi, (_, name, role = '', status = '') => headerHtml(name, role, status));
       output = output.replace(/\[CP_DIALOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_DIALOGUE\]/gi, (_, name, content) => speechHtml('dialogue', name, content));
       output = output.replace(/\[CP_MONOLOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_MONOLOGUE\]/gi, (_, name, content) => speechHtml('monologue', name, content));
-      output = output.replace(/\[CP_(?:CALL_REQUEST|SIGNAL|HACK)\|[^\]]+\][\s\S]*?\[\/CP_(?:CALL_REQUEST|SIGNAL|HACK)\]/gi, '');
+      for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
+        output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '');
+      }
+      return output;
+    }
+
+    function transformPlainProtocolText(source) {
+      let output = htmlEscape(source);
+      output = output.replace(/\[CP_HEADER\|([^\]|]+)(?:\|([^\]|]*))?(?:\|([^\]]*))?\]\s*\[\/CP_HEADER\]/gi, (_, name, role = '', status = '') => headerHtml(name, role, status));
+      output = output.replace(/\[CP_DIALOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_DIALOGUE\]/gi, (_, name, content) => speechHtml('dialogue', name, content));
+      output = output.replace(/\[CP_MONOLOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_MONOLOGUE\]/gi, (_, name, content) => speechHtml('monologue', name, content));
+      for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
+        output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '');
+      }
+      return output.replace(/\r?\n/g, '<br>');
+    }
+
+    function renderMessageElement(element, force = false) {
+      if (!(element instanceof HTMLElement) || !settings().enabled) return;
+      const source = element.innerHTML;
+      const fingerprint = markupFingerprint(source);
+      if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK)\|/i.test(source)) {
+        element.dataset.cpsRenderFingerprint = fingerprint;
+        return;
+      }
+      let output = transformProtocolMarkup(source);
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK)(?:\||\])/i.test(stripTags(output))) {
+        output = transformPlainProtocolText(element.textContent || '');
+      }
       element.innerHTML = output;
-      element.dataset.cpsRendered = '1';
+      element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
     }
 
     function renderVisibleMessages() {
@@ -345,22 +382,30 @@ ${clean(s.customPrompt, 6000)}`.trim();
       const message = rawMessageById(messageId);
       if (!message || message.is_user) return;
       processMachineRecords(message.mes || '', String(messageId ?? context()?.chat?.length ?? 'latest'));
-      setTimeout(() => {
-        const target = Number.isInteger(Number(messageId)) ? document.querySelector(`.mes[mesid="${CSS.escape(String(messageId))}"] .mes_text`) : null;
-        if (target) { delete target.dataset.cpsRendered; renderMessageElement(target); }
+      const renderPass = () => {
+        const safeId = String(messageId ?? '').replace(/["\\]/g, '\\$&');
+        const target = Number.isInteger(Number(messageId)) ? document.querySelector(`.mes[mesid="${safeId}"] .mes_text`) : null;
+        if (target) renderMessageElement(target, true);
         else renderVisibleMessages();
-      }, 80);
+      };
+      [0, 80, 240, 700, 1500].forEach(delay => setTimeout(renderPass, delay));
       refreshPrompt();
     }
 
     function showIncomingCall(peer) {
       if (!peer?.name) return;
       incomingWindow?.remove();
+      pendingIncomingCall = { ...peer, signals: [] };
       const node = document.createElement('section');
       node.className = 'cps-incoming cps-ui';
       node.innerHTML = `<div class="cps-incoming-head">${htmlEscape(t('incoming'))}</div><div class="cps-incoming-body"><div class="cps-incoming-name">${htmlEscape(peer.name)}</div><div>${htmlEscape(peer.handle ? `@${peer.handle}` : t('encrypted'))}</div><div class="cps-incoming-reason">${htmlEscape(peer.reason || '')}</div></div><div class="cps-incoming-actions"><button class="cps-button danger" data-action="decline">${htmlEscape(t('decline'))}</button><button class="cps-button primary" data-action="accept">${htmlEscape(t('accept'))}</button></div>`;
-      node.querySelector('[data-action="decline"]').addEventListener('click', () => { node.remove(); incomingWindow = null; });
-      node.querySelector('[data-action="accept"]').addEventListener('click', () => { node.remove(); incomingWindow = null; startCall(peer, true); });
+      node.querySelector('[data-action="decline"]').addEventListener('click', () => { node.remove(); incomingWindow = null; pendingIncomingCall = null; });
+      node.querySelector('[data-action="accept"]').addEventListener('click', () => {
+        const accepted = pendingIncomingCall || { ...peer, signals: [] };
+        node.remove(); incomingWindow = null; pendingIncomingCall = null;
+        startCall(accepted, true);
+        accepted.signals.forEach(signal => appendCallMessage('assistant', signal.name || accepted.name, signal.text));
+      });
       document.body.append(node);
       incomingWindow = node;
     }
@@ -397,7 +442,11 @@ ${clean(s.customPrompt, 6000)}`.trim();
 
     function receiveCallSignal(name, text) {
       const call = chatBucket().call;
-      if (!call.active || !call.peer || !text) return;
+      if (!text) return;
+      if (!call.active || !call.peer) {
+        if (pendingIncomingCall) pendingIncomingCall.signals.push({ name: clean(name, 180), text: clean(text, 4000) });
+        return;
+      }
       const peerName = clean(call.peer.name, 180).toLocaleLowerCase();
       const sender = clean(name, 180).toLocaleLowerCase();
       if (sender && peerName && sender !== peerName && clean(call.peer.handle, 180).toLocaleLowerCase() !== sender) return;
@@ -436,10 +485,20 @@ ${clean(s.customPrompt, 6000)}`.trim();
       const node = document.createElement('button');
       node.type = 'button';
       node.className = 'cps-call-minimized cps-ui';
+      node.setAttribute('aria-label', `${t('restore')} ${call.peer.name}`);
       node.innerHTML = `<span class="cps-live-dot"></span><span>${htmlEscape(call.peer.name)}</span>${call.unread ? `<span class="cps-call-badge">${call.unread}</span>` : ''}`;
-      node.addEventListener('click', () => {
-        call.minimized = false; call.unread = 0; saveChat(); node.remove(); minimizedCall = null; showCallOverlay();
-      });
+      let restoring = false;
+      const restore = event => {
+        event?.preventDefault?.(); event?.stopPropagation?.();
+        if (restoring) return;
+        restoring = true;
+        call.minimized = false; call.unread = 0; saveChat();
+        closeHostWand();
+        node.remove(); minimizedCall = null;
+        requestAnimationFrame(showCallOverlay);
+      };
+      node.addEventListener('pointerup', restore);
+      node.addEventListener('click', restore);
       document.body.append(node);
       minimizedCall = node;
     }
@@ -449,6 +508,8 @@ ${clean(s.customPrompt, 6000)}`.trim();
       if (!log) return;
       log.replaceChildren();
       for (const item of chatBucket().call.messages) {
+        const row = document.createElement('div');
+        row.className = `cps-call-row ${item.role}`;
         const node = document.createElement('div');
         node.className = `cps-call-message ${item.role}${item.pending ? ' pending' : ''}`;
         const label = document.createElement('small');
@@ -456,7 +517,8 @@ ${clean(s.customPrompt, 6000)}`.trim();
         const copy = document.createElement('div');
         copy.textContent = item.text;
         node.append(label, copy);
-        log.append(node);
+        row.append(node);
+        log.append(row);
       }
       requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
     }
@@ -520,6 +582,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       const call = chatBucket().call;
       if (!call.active || !call.peer) return;
       call.minimized = false; call.unread = 0; saveChat();
+      closeHostWand();
       minimizedCall?.remove(); minimizedCall = null;
       callOverlay?.remove();
       const node = document.createElement('section');
@@ -545,11 +608,12 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
 
     function openNpcEditor(record = null) {
       const source = record || { scope: settings().defaultScope, name: '', handle: '', role: '', status: '', affiliation: '', age: '', gender: '', appearance: '', notes: '' };
-      const modal = document.createElement('div');
+      const modal = document.createElement('dialog');
       modal.className = 'cps-modal cps-ui';
       modal.innerHTML = `<form class="cps-modal-card"><h2>${htmlEscape(record ? t('edit') : t('addNpc'))}</h2><div class="cps-form"><label><span>${htmlEscape(t('name'))}</span><input name="name" required maxlength="180" value="${htmlEscape(source.name)}"></label><label><span>${htmlEscape(t('handle'))}</span><input name="handle" maxlength="180" value="${htmlEscape(source.handle || '')}"></label><label><span>${htmlEscape(t('role'))}</span><input name="role" maxlength="240" value="${htmlEscape(source.role || '')}"></label><label><span>${htmlEscape(t('status'))}</span><input name="status" maxlength="240" value="${htmlEscape(source.status || '')}"></label><label><span>${htmlEscape(t('affiliation'))}</span><input name="affiliation" maxlength="240" value="${htmlEscape(source.affiliation || '')}"></label><label><span>${htmlEscape(t('scope'))}</span><select name="scope"><option value="chat" ${source.scope === 'chat' ? 'selected' : ''}>${htmlEscape(t('chat'))}</option><option value="character" ${source.scope === 'character' ? 'selected' : ''}>${htmlEscape(t('character'))}</option></select></label><label><span>${htmlEscape(t('age'))}</span><input name="age" maxlength="80" value="${htmlEscape(source.age || '')}"></label><label><span>${htmlEscape(t('gender'))}</span><input name="gender" maxlength="120" value="${htmlEscape(source.gender || '')}"></label><label class="wide"><span>${htmlEscape(t('appearanceField'))}</span><textarea name="appearance" maxlength="2000">${htmlEscape(source.appearance || '')}</textarea></label><label class="wide"><span>${htmlEscape(t('notes'))}</span><textarea name="notes" maxlength="3000">${htmlEscape(source.notes || '')}</textarea></label></div><div class="cps-card-actions"><button type="button" class="cps-button" data-modal-cancel>${htmlEscape(t('cancel'))}</button><button type="submit" class="cps-button primary">${htmlEscape(t('save'))}</button></div></form>`;
-      const close = () => modal.remove();
+      const close = () => { try { modal.close(); } catch {} modal.remove(); };
       modal.querySelector('[data-modal-cancel]').addEventListener('click', close);
+      modal.addEventListener('cancel', event => { event.preventDefault(); close(); });
       modal.addEventListener('click', event => { if (event.target === modal) close(); });
       modal.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
@@ -565,15 +629,18 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
         bucketFor(scope).npcs.push(saved); saveScope(scope); refreshPrompt(); close(); renderManagerBody(); toast(t('profileSaved'));
       });
       document.body.append(modal);
+      if (typeof modal.showModal === 'function') modal.showModal();
+      else modal.setAttribute('open', '');
     }
 
     function openSkillEditor(record = null) {
       const source = record || { scope: settings().defaultScope, name: '', category: t('intrusion'), level: 0, max: 100, rank: 'E', notes: '' };
-      const modal = document.createElement('div');
+      const modal = document.createElement('dialog');
       modal.className = 'cps-modal cps-ui';
       modal.innerHTML = `<form class="cps-modal-card"><h2>${htmlEscape(record ? t('edit') : t('addSkill'))}</h2><div class="cps-form"><label><span>${htmlEscape(t('name'))}</span><input name="name" required maxlength="180" value="${htmlEscape(source.name)}"></label><label><span>${htmlEscape(t('category'))}</span><input name="category" maxlength="120" value="${htmlEscape(source.category || '')}"></label><label><span>${htmlEscape(t('level'))}</span><input name="level" type="number" min="0" max="100000" value="${htmlEscape(source.level)}"></label><label><span>${htmlEscape(t('maximum'))}</span><input name="max" type="number" min="1" max="100000" value="${htmlEscape(source.max)}"></label><label><span>${htmlEscape(t('rank'))}</span><input name="rank" maxlength="60" value="${htmlEscape(source.rank || '')}"></label><label><span>${htmlEscape(t('scope'))}</span><select name="scope"><option value="chat" ${source.scope === 'chat' ? 'selected' : ''}>${htmlEscape(t('chat'))}</option><option value="character" ${source.scope === 'character' ? 'selected' : ''}>${htmlEscape(t('character'))}</option></select></label><label class="wide"><span>${htmlEscape(t('notes'))}</span><textarea name="notes" maxlength="2000">${htmlEscape(source.notes || '')}</textarea></label></div><div class="cps-card-actions"><button type="button" class="cps-button" data-modal-cancel>${htmlEscape(t('cancel'))}</button><button type="submit" class="cps-button primary">${htmlEscape(t('save'))}</button></div></form>`;
-      const close = () => modal.remove();
+      const close = () => { try { modal.close(); } catch {} modal.remove(); };
       modal.querySelector('[data-modal-cancel]').addEventListener('click', close);
+      modal.addEventListener('cancel', event => { event.preventDefault(); close(); });
       modal.addEventListener('click', event => { if (event.target === modal) close(); });
       modal.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
@@ -590,6 +657,8 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
         bucketFor(scope).skills.push(saved); saveScope(scope); refreshPrompt(); close(); renderManagerBody(); toast(t('skillSaved'));
       });
       document.body.append(modal);
+      if (typeof modal.showModal === 'function') modal.showModal();
+      else modal.setAttribute('open', '');
     }
 
     function removeRecord(kind, record) {
@@ -790,20 +859,37 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
     async function initialize() {
       settings(); applyTheme(); exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();
+      const dirtyMessages = new Set();
+      let renderFrame = 0;
+      const scheduleMessageRender = node => {
+        const element = node?.nodeType === Node.TEXT_NODE ? node.parentElement?.closest?.('.mes_text') : node instanceof HTMLElement ? (node.matches?.('.mes_text') ? node : node.closest?.('.mes_text')) : null;
+        if (!element) return;
+        dirtyMessages.add(element);
+        if (renderFrame) return;
+        renderFrame = requestAnimationFrame(() => {
+          renderFrame = 0;
+          const batch = [...dirtyMessages]; dirtyMessages.clear();
+          batch.forEach(message => renderMessageElement(message));
+        });
+      };
       const observer = new MutationObserver(mutations => {
         let shouldCheckWand = false;
         for (const mutation of mutations) {
+          if (mutation.type === 'characterData') {
+            scheduleMessageRender(mutation.target);
+            continue;
+          }
           if (mutation.type !== 'childList') continue;
           shouldCheckWand = true;
+          scheduleMessageRender(mutation.target);
           mutation.addedNodes.forEach(node => {
-            if (!(node instanceof HTMLElement)) return;
-            if (node.matches?.('.mes_text')) renderMessageElement(node);
-            node.querySelectorAll?.('.mes_text').forEach(renderMessageElement);
+            scheduleMessageRender(node);
+            if (node instanceof HTMLElement) node.querySelectorAll?.('.mes_text').forEach(scheduleMessageRender);
           });
         }
         if (shouldCheckWand) ensureWandButton();
       });
-      observer.observe(document.body, { childList: true, subtree: true });
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
       setTimeout(() => { injectSettings(); ensureWandButton(); }, 1200);
       console.info(`[Cyberpunk System] v${CYBERPUNK_SYSTEM_VERSION} initialized`);
     }

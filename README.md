@@ -14,6 +14,13 @@ A mobile-first SillyTavern extension for cyberpunk character presentation, persi
 - English and Thai UI with Orbitron / Chakra Petch cyberpunk font stacks.
 - Safe-area-aware vertical iPhone/Safari layout.
 
+### v1.0.1 reliability fixes
+
+- Reprocesses streamed and late-rendered SillyTavern messages so private call and hacking tags never remain visible in the main chat.
+- Uses explicit left/right call rows for NPC and user messages.
+- Moves the minimized-call control above the mobile composer and restores the call through a topmost interaction layer.
+- Uses native full-screen dialogs for Create/Edit NPC and hacking-skill forms on mobile Safari.
+
 ## Install
 
 1. Open **Extensions** in SillyTavern.
@@ -54,4 +61,4 @@ Rules taught to the AI:
 
 ## Version
 
-`1.0.0`
+`1.0.1`
