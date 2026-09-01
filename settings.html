@@ -1,0 +1,63 @@
+<div id="cyberpunk-system-settings" class="cps-settings">
+  <div class="inline-drawer">
+    <div class="inline-drawer-toggle inline-drawer-header interactable" tabindex="0" role="button" aria-expanded="false">
+      <b><i class="fa-solid fa-microchip" aria-hidden="true"></i> Cyberpunk System <span class="cps-version">v1.0.0</span></b>
+      <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down" aria-hidden="true"></div>
+    </div>
+    <div class="inline-drawer-content">
+      <p data-cps-i18n="settingsIntro">Character presentation, private calls, and hacking progression for the active role-play.</p>
+      <div class="cps-settings-actions">
+        <button id="cps-open-manager" class="menu_button" type="button"><i class="fa-solid fa-terminal"></i> <span data-cps-i18n="openInterface">Open interface</span></button>
+      </div>
+
+      <details open>
+        <summary data-cps-i18n="coreBehavior">Core behavior</summary>
+        <label class="checkbox_label"><input id="cps-enabled" type="checkbox"><span data-cps-i18n="enableSystem">Enable Cyberpunk System</span></label>
+        <label class="checkbox_label"><input id="cps-show-wand" type="checkbox"><span data-cps-i18n="showWand">Show in Wand menu</span></label>
+        <label class="checkbox_label"><input id="cps-inject-prompt" type="checkbox"><span data-cps-i18n="teachAi">Teach the AI when to use each Cyberpunk UI</span></label>
+        <label class="checkbox_label"><input id="cps-auto-profiles" type="checkbox"><span data-cps-i18n="autoProfiles">Create sparse NPC records from tagged speakers</span></label>
+        <label class="checkbox_label"><input id="cps-hacking-enabled" type="checkbox"><span data-cps-i18n="hackingTracking">Enable hacking-skill tracking</span></label>
+        <label class="checkbox_label"><input id="cps-call-main-signals" type="checkbox"><span data-cps-i18n="callSignals">Receive active-call signals from normal AI replies</span></label>
+        <div class="cps-settings-grid">
+          <label><span data-cps-i18n="language">Language / ภาษา</span><select id="cps-language"><option value="en">English</option><option value="th">ไทย</option></select></label>
+          <label><span data-cps-i18n="defaultScope">Default save scope</span><select id="cps-default-scope"><option value="chat">Chat</option><option value="character">Character</option></select></label>
+          <label><span data-cps-i18n="headerPosition">Header position</span><select id="cps-header-position"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+          <label><span data-cps-i18n="callHistory">Call history limit</span><input id="cps-call-history-limit" type="number" min="20" max="300" step="10" inputmode="numeric"></label>
+        </div>
+      </details>
+
+      <details>
+        <summary data-cps-i18n="appearance">Cyberpunk appearance</summary>
+        <div class="cps-settings-grid">
+          <label><span data-cps-i18n="accent">Primary neon</span><input id="cps-accent" type="color"></label>
+          <label><span data-cps-i18n="danger">Alert neon</span><input id="cps-danger" type="color"></label>
+          <label><span data-cps-i18n="surface">Panel surface</span><input id="cps-surface" type="color"></label>
+          <label><span data-cps-i18n="textColor">Text color</span><input id="cps-text" type="color"></label>
+          <label><span data-cps-i18n="uiScale">UI scale</span><input id="cps-ui-scale" type="range" min="80" max="120" step="2"><output id="cps-ui-scale-output"></output></label>
+          <label><span data-cps-i18n="callOpacity">Call backdrop opacity</span><input id="cps-call-opacity" type="range" min="20" max="90" step="5"><output id="cps-call-opacity-output"></output></label>
+          <label><span data-cps-i18n="callBlur">Call backdrop blur</span><input id="cps-call-blur" type="range" min="0" max="24" step="1"><output id="cps-call-blur-output"></output></label>
+          <label><span data-cps-i18n="animationSpeed">Animation speed</span><select id="cps-animation-speed"><option value="off">Off</option><option value="slow">Slow</option><option value="normal">Normal</option><option value="fast">Fast</option></select></label>
+        </div>
+      </details>
+
+      <details>
+        <summary data-cps-i18n="aiProtocol">AI protocol</summary>
+        <label class="cps-block-label"><span data-cps-i18n="customInstructions">Additional instructions</span><textarea id="cps-custom-prompt" rows="6" maxlength="6000" placeholder="Optional world-specific rules..."></textarea></label>
+        <p class="cps-settings-note" data-cps-i18n="quotaNote">Normal tracking uses the main AI reply. Only the call window AI-send button starts an additional request.</p>
+        <details class="cps-tag-reference">
+          <summary data-cps-i18n="tagReference">Tag reference</summary>
+          <pre>[CP_HEADER|Name|role|status][/CP_HEADER]
+[CP_DIALOGUE|Name]Spoken words[/CP_DIALOGUE]
+[CP_MONOLOGUE|Name]Private thoughts[/CP_MONOLOGUE]
+[CP_CALL_REQUEST|Name|handle]Reason[/CP_CALL_REQUEST]
+[CP_SIGNAL|Name]Private call speech[/CP_SIGNAL]
+[CP_HACK|Skill|category|delta|max]Update[/CP_HACK]</pre>
+        </details>
+      </details>
+
+      <div class="cps-settings-actions">
+        <button id="cps-reset-appearance" class="menu_button" type="button"><i class="fa-solid fa-rotate-left"></i> <span data-cps-i18n="resetAppearance">Reset appearance</span></button>
+      </div>
+    </div>
+  </div>
+</div>
