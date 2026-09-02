@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '1.0.1';
+const CYBERPUNK_SYSTEM_VERSION = '1.0.2';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -183,12 +183,26 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
 
     function closeHostWand() {
       const menu = document.getElementById('extensionsMenu');
+      const toggles = [...document.querySelectorAll('#extensionsMenuButton, [data-drawer-id="extensionsMenu"], [aria-controls="extensionsMenu"]')];
+      toggles.forEach(toggle => {
+        if (!(toggle instanceof HTMLElement)) return;
+        if (toggle.getAttribute('aria-expanded') === 'true') toggle.click();
+        toggle.setAttribute('aria-expanded', 'false');
+      });
+      try { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true })); } catch {}
       if (!menu) return;
-      const toggle = document.querySelector('#extensionsMenuButton, [data-drawer-id="extensionsMenu"], [aria-controls="extensionsMenu"]');
-      if (toggle instanceof HTMLElement && toggle.getAttribute('aria-expanded') === 'true') toggle.click();
-      globalThis.jQuery?.(menu).stop(true, true).hide();
-      menu.style.display = 'none';
-      if (toggle instanceof HTMLElement) toggle.setAttribute('aria-expanded', 'false');
+      const hide = () => {
+        globalThis.jQuery?.(menu).stop(true, true).hide();
+        menu.style.display = 'none';
+        menu.setAttribute('aria-hidden', 'true');
+        for (const selector of ['.drawer-content', '[role="dialog"]', '.popup', '.options-content']) {
+          const shell = menu.closest(selector);
+          if (!shell || shell === document.body || shell.classList.contains('cps-ui')) continue;
+          shell.classList.remove('open', 'show', 'visible', 'openDrawer');
+          shell.setAttribute('aria-hidden', 'true');
+        }
+      };
+      hide(); requestAnimationFrame(hide); setTimeout(hide, 90);
     }
 
     function ensureWandButton() {
@@ -202,7 +216,11 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       button.tabIndex = 0;
       button.setAttribute('role', 'button');
       button.innerHTML = '<i class="fa-solid fa-satellite-dish fa-fw"></i><span>Cyberpunk System</span>';
-      button.addEventListener('click', () => { closeHostWand(); openManager(); });
+      button.addEventListener('click', event => {
+        event.preventDefault(); event.stopPropagation();
+        closeHostWand();
+        requestAnimationFrame(openManager);
+      });
       button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') button.click(); });
       menu.append(button);
     }
@@ -452,7 +470,14 @@ ${clean(s.customPrompt, 6000)}`.trim();
       if (sender && peerName && sender !== peerName && clean(call.peer.handle, 180).toLocaleLowerCase() !== sender) return;
       call.messages.forEach(item => { if (item.role === 'user' && item.pending) item.pending = false; });
       appendCallMessage('assistant', call.peer.name, text);
-      if (!call.minimized) showCallOverlay();
+      if (!call.minimized && !callOverlay) showCallOverlay();
+    }
+
+    function removeCallOverlay() {
+      if (!callOverlay) return;
+      try { callOverlay.close?.(); } catch {}
+      callOverlay.remove();
+      callOverlay = null;
     }
 
     function endCall() {
@@ -463,7 +488,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       call.peer = null;
       call.unread = 0;
       saveChat();
-      callOverlay?.remove(); callOverlay = null;
+      removeCallOverlay();
       minimizedCall?.remove(); minimizedCall = null;
       refreshPrompt();
       if (manager) renderManagerBody();
@@ -474,7 +499,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       if (!call.active) return;
       call.minimized = true;
       saveChat();
-      callOverlay?.remove(); callOverlay = null;
+      removeCallOverlay();
       renderMinimizedCall();
     }
 
@@ -582,10 +607,10 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       const call = chatBucket().call;
       if (!call.active || !call.peer) return;
       call.minimized = false; call.unread = 0; saveChat();
+      removeCallOverlay();
       closeHostWand();
       minimizedCall?.remove(); minimizedCall = null;
-      callOverlay?.remove();
-      const node = document.createElement('section');
+      const node = document.createElement('dialog');
       node.className = 'cps-call-overlay cps-ui';
       node.innerHTML = `<header class="cps-call-header"><span class="cps-live-dot"></span><div class="cps-call-identity"><strong>${htmlEscape(call.peer.name)}</strong><small>${htmlEscape(call.peer.handle ? `@${call.peer.handle} · ${t('encrypted')}` : t('encrypted'))}</small></div><button class="cps-icon-button" type="button" data-call-action="minimize" aria-label="${htmlEscape(t('minimize'))}"><i class="fa-solid fa-window-minimize"></i></button></header><main class="cps-call-log" aria-live="polite"></main><footer class="cps-call-composer"><input class="cps-call-input" type="text" maxlength="4000" enterkeyhint="send" autocomplete="off" placeholder="${htmlEscape(t('inputPlaceholder'))}" aria-description="${htmlEscape(t('queueHint'))}"><button class="cps-button primary cps-call-send" type="button" aria-label="AI"><i class="fa-solid fa-paper-plane"></i><span class="sr-only">AI</span></button><button class="cps-button danger cps-end-call" type="button">${htmlEscape(t('endCall'))}</button></footer>`;
       node.querySelector('[data-call-action="minimize"]').addEventListener('click', minimizeCallWindow);
@@ -594,8 +619,11 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       node.querySelector('.cps-call-input').addEventListener('keydown', event => {
         if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); queueCallInput(); }
       });
+      node.addEventListener('cancel', event => { event.preventDefault(); minimizeCallWindow(); });
       document.body.append(node);
       callOverlay = node;
+      if (typeof node.showModal === 'function') node.showModal();
+      else node.setAttribute('open', '');
       renderCallLog();
       setTimeout(() => node.querySelector('.cps-call-input')?.focus({ preventScroll: true }), 50);
     }
@@ -717,37 +745,44 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       });
     }
 
-    function configField(label, control) { return `<label><span>${htmlEscape(label)}</span>${control}</label>`; }
+    function configField(label, control, className = '') { return `<label class="cps-config-field ${className}"><span>${htmlEscape(label)}</span>${control}</label>`; }
+    function configToggle(label, name, value) {
+      return `<label class="cps-config-toggle"><span>${htmlEscape(label)}</span><input name="${name}" type="checkbox" ${value ? 'checked' : ''}><i aria-hidden="true"></i></label>`;
+    }
+    function configRange(label, name, min, max, step, value, suffix) {
+      return `<label class="cps-config-field cps-config-range"><span>${htmlEscape(label)} <output data-config-output="${name}">${htmlEscape(value)}${suffix}</output></span><input name="${name}" type="range" min="${min}" max="${max}" step="${step}" value="${htmlEscape(value)}"></label>`;
+    }
 
     function renderConfig(body) {
       const s = settings();
-      const checked = value => value ? 'checked' : '';
       body.innerHTML = `<p>${htmlEscape(t('customize'))}</p><form class="cps-form" data-config-form>
-        <label><span>${htmlEscape(t('enableSystem'))}</span><input name="enabled" type="checkbox" ${checked(s.enabled)}></label>
-        <label><span>${htmlEscape(t('showWand'))}</span><input name="showWand" type="checkbox" ${checked(s.showWand)}></label>
-        <label><span>${htmlEscape(t('teachAi'))}</span><input name="injectPrompt" type="checkbox" ${checked(s.injectPrompt)}></label>
-        <label><span>${htmlEscape(t('autoProfiles'))}</span><input name="autoProfiles" type="checkbox" ${checked(s.autoProfiles)}></label>
-        <label><span>${htmlEscape(t('hackingTracking'))}</span><input name="hackingEnabled" type="checkbox" ${checked(s.hackingEnabled)}></label>
-        <label><span>${htmlEscape(t('callSignals'))}</span><input name="callMainSignals" type="checkbox" ${checked(s.callMainSignals)}></label>
+        ${configToggle(t('enableSystem'), 'enabled', s.enabled)}
+        ${configToggle(t('showWand'), 'showWand', s.showWand)}
+        ${configToggle(t('teachAi'), 'injectPrompt', s.injectPrompt)}
+        ${configToggle(t('autoProfiles'), 'autoProfiles', s.autoProfiles)}
+        ${configToggle(t('hackingTracking'), 'hackingEnabled', s.hackingEnabled)}
+        ${configToggle(t('callSignals'), 'callMainSignals', s.callMainSignals)}
         ${configField(t('language'), `<select name="language"><option value="en" ${s.language === 'en' ? 'selected' : ''}>English</option><option value="th" ${s.language === 'th' ? 'selected' : ''}>ไทย</option></select>`)}
         ${configField(t('defaultScope'), `<select name="defaultScope"><option value="chat" ${s.defaultScope === 'chat' ? 'selected' : ''}>${htmlEscape(t('chat'))}</option><option value="character" ${s.defaultScope === 'character' ? 'selected' : ''}>${htmlEscape(t('character'))}</option></select>`)}
         ${configField(t('headerPosition'), `<select name="headerPosition"><option value="left" ${s.headerPosition === 'left' ? 'selected' : ''}>Left</option><option value="center" ${s.headerPosition === 'center' ? 'selected' : ''}>Center</option><option value="right" ${s.headerPosition === 'right' ? 'selected' : ''}>Right</option></select>`)}
         ${configField(t('callHistory'), `<input name="callHistoryLimit" type="number" min="20" max="300" step="10" value="${htmlEscape(s.callHistoryLimit)}">`)}
-        ${configField(t('accent'), `<input name="accent" type="color" value="${htmlEscape(s.accent)}">`)}
-        ${configField(t('danger'), `<input name="danger" type="color" value="${htmlEscape(s.danger)}">`)}
-        ${configField(t('surface'), `<input name="surface" type="color" value="${htmlEscape(s.surface)}">`)}
-        ${configField(t('textColor'), `<input name="text" type="color" value="${htmlEscape(s.text)}">`)}
-        ${configField(t('uiScale'), `<input name="uiScale" type="range" min="80" max="120" step="2" value="${htmlEscape(s.uiScale)}">`)}
-        ${configField(t('callOpacity'), `<input name="callOpacity" type="range" min="20" max="90" step="5" value="${htmlEscape(s.callOpacity)}">`)}
-        ${configField(t('callBlur'), `<input name="callBlur" type="range" min="0" max="24" value="${htmlEscape(s.callBlur)}">`)}
+        ${configField(t('accent'), `<input name="accent" type="color" value="${htmlEscape(s.accent)}">`, 'cps-config-color')}
+        ${configField(t('danger'), `<input name="danger" type="color" value="${htmlEscape(s.danger)}">`, 'cps-config-color')}
+        ${configField(t('surface'), `<input name="surface" type="color" value="${htmlEscape(s.surface)}">`, 'cps-config-color')}
+        ${configField(t('textColor'), `<input name="text" type="color" value="${htmlEscape(s.text)}">`, 'cps-config-color')}
+        ${configRange(t('uiScale'), 'uiScale', 80, 120, 2, s.uiScale, '%')}
+        ${configRange(t('callOpacity'), 'callOpacity', 20, 90, 5, s.callOpacity, '%')}
+        ${configRange(t('callBlur'), 'callBlur', 0, 24, 1, s.callBlur, 'px')}
         ${configField(t('animationSpeed'), `<select name="animationSpeed"><option value="off" ${s.animationSpeed === 'off' ? 'selected' : ''}>Off</option><option value="slow" ${s.animationSpeed === 'slow' ? 'selected' : ''}>Slow</option><option value="normal" ${s.animationSpeed === 'normal' ? 'selected' : ''}>Normal</option><option value="fast" ${s.animationSpeed === 'fast' ? 'selected' : ''}>Fast</option></select>`)}
-        <label class="wide"><span>${htmlEscape(t('customInstructions'))}</span><textarea name="customPrompt" maxlength="6000">${htmlEscape(s.customPrompt)}</textarea></label>
+        <label class="cps-config-field wide"><span>${htmlEscape(t('customInstructions'))}</span><textarea name="customPrompt" maxlength="6000">${htmlEscape(s.customPrompt)}</textarea></label>
       </form>`;
       const form = body.querySelector('[data-config-form]');
       form.addEventListener('input', event => {
         const target = event.target;
         if (!target.name) return;
         s[target.name] = target.type === 'checkbox' ? target.checked : ['uiScale', 'callOpacity', 'callBlur', 'callHistoryLimit'].includes(target.name) ? Number(target.value) : target.value;
+        const output = form.querySelector(`[data-config-output="${target.name}"]`);
+        if (output) output.textContent = `${target.value}${target.name === 'callBlur' ? 'px' : '%'}`;
         saveSettings(); applyTheme(); ensureWandButton(); refreshPrompt();
         if (target.name === 'language') { renderManager(); bindSettingsValues(); }
       });

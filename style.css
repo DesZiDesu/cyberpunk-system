@@ -69,8 +69,7 @@
 .cps-chat-dialogue .cps-chat-copy::before { content: "// "; color: var(--cps-accent); font-family: var(--cps-font-en); }
 
 /* Shared overlays */
-.cps-overlay, .cps-call-overlay { position: fixed; inset: 0; z-index: 2147482000; color: var(--cps-text); }
-.cps-call-overlay { z-index: 2147483000; isolation: isolate; }
+.cps-overlay { position: fixed; inset: 0; z-index: 2147482000; color: var(--cps-text); }
 .cps-overlay { display: grid; place-items: center; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); background: rgb(0 4 7 / .76); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .cps-panel { width: min(980px, 100%); height: min(780px, 100%); display: grid; grid-template-rows: auto auto minmax(0, 1fr); background: linear-gradient(145deg, rgb(3 14 19 / .98), rgb(1 6 10 / .97)); border: 1px solid var(--cps-accent); box-shadow: 0 0 34px color-mix(in srgb, var(--cps-accent) 20%, transparent), inset 0 0 38px rgb(0 240 255 / .035); clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px)); overflow: hidden; }
 .cps-panel-header, .cps-call-header { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 12px; border-bottom: 1px solid color-mix(in srgb, var(--cps-accent) 45%, transparent); background: linear-gradient(90deg, color-mix(in srgb, var(--cps-accent) 13%, transparent), transparent); }
@@ -98,8 +97,27 @@
 .cps-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .cps-form label { display: grid; gap: 5px; min-width: 0; }
 .cps-form .wide { grid-column: 1 / -1; }
-.cps-form input, .cps-form select, .cps-form textarea, .cps-call-input { width: 100%; min-height: 40px; border: 1px solid rgb(0 240 255 / .3); color: var(--cps-text); background: rgb(0 0 0 / .38); padding: 8px; font: .9rem var(--cps-font-th); border-radius: 0; }
+.cps-form input:not([type="checkbox"]):not([type="range"]):not([type="color"]), .cps-form select, .cps-form textarea, .cps-call-input { width: 100%; min-height: 40px; border: 1px solid rgb(0 240 255 / .3); color: var(--cps-text); background: rgb(0 0 0 / .38); padding: 8px; font: .9rem var(--cps-font-th); border-radius: 0; }
 .cps-form textarea { min-height: 88px; resize: vertical; }
+.cps-config-toggle { position: relative; grid-template-columns: minmax(0, 1fr) 54px; align-items: center; gap: 12px; min-height: 58px; padding: 10px 12px; border: 1px solid rgb(0 240 255 / .22); background: rgb(0 240 255 / .035); cursor: pointer; }
+.cps-config-toggle > span { font: .86rem/1.35 var(--cps-font-th); overflow-wrap: anywhere; }
+.cps-config-toggle input[type="checkbox"] { position: absolute !important; inline-size: 1px !important; block-size: 1px !important; min-width: 1px !important; min-height: 1px !important; opacity: 0 !important; pointer-events: none !important; }
+.cps-config-toggle > i { position: relative; grid-column: 2; grid-row: 1; width: 52px; height: 28px; border: 1px solid rgb(0 240 255 / .42); background: rgb(0 0 0 / .55); box-shadow: inset 0 0 10px rgb(0 0 0 / .65); transition: border-color .18s ease, background .18s ease; }
+.cps-config-toggle > i::before { content: ""; position: absolute; left: 4px; top: 4px; width: 18px; height: 18px; background: #64737a; box-shadow: 0 0 6px rgb(100 115 122 / .4); transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
+.cps-config-toggle input:checked + i { border-color: var(--cps-accent); background: rgb(0 240 255 / .13); }
+.cps-config-toggle input:checked + i::before { transform: translateX(24px); background: var(--cps-accent); box-shadow: 0 0 11px var(--cps-accent); }
+.cps-config-toggle:focus-within { outline: 2px solid color-mix(in srgb, var(--cps-accent) 64%, transparent); outline-offset: 2px; }
+.cps-config-field { padding: 2px 0; }
+.cps-config-field > span { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: .82rem/1.35 var(--cps-font-th); }
+.cps-config-field output { color: var(--cps-accent); font: .72rem var(--cps-font-en); }
+.cps-config-color input[type="color"] { appearance: none !important; -webkit-appearance: none !important; width: 100% !important; height: 42px !important; min-height: 42px !important; padding: 4px !important; border: 1px solid rgb(0 240 255 / .34) !important; border-radius: 0 !important; background: rgb(0 0 0 / .45) !important; }
+.cps-config-color input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.cps-config-color input[type="color"]::-webkit-color-swatch { border: 0; }
+.cps-config-range input[type="range"] { appearance: none !important; -webkit-appearance: none !important; width: 100% !important; height: 32px !important; min-height: 32px !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+.cps-config-range input[type="range"]::-webkit-slider-runnable-track { height: 5px; border: 1px solid rgb(0 240 255 / .42); background: linear-gradient(90deg, rgb(0 240 255 / .24), rgb(0 240 255 / .06)); }
+.cps-config-range input[type="range"]::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border: 2px solid #001015; border-radius: 0; background: var(--cps-accent); box-shadow: 0 0 9px var(--cps-accent); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.cps-config-range input[type="range"]::-moz-range-track { height: 5px; border: 1px solid rgb(0 240 255 / .42); background: rgb(0 240 255 / .12); }
+.cps-config-range input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border: 2px solid #001015; border-radius: 0; background: var(--cps-accent); }
 dialog.cps-modal { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; z-index: 2147483600; place-items: center; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); color: var(--cps-text); background: rgb(0 0 0 / .76); overflow: hidden; }
 dialog.cps-modal[open] { display: grid; }
 dialog.cps-modal::backdrop { background: rgb(0 0 0 / .76); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); }
@@ -118,9 +136,11 @@ dialog.cps-modal::backdrop { background: rgb(0 0 0 / .76); backdrop-filter: blur
 .cps-incoming-reason { margin-top: 6px; font-family: var(--cps-font-th); opacity: .75; }
 .cps-incoming-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 13px 13px; }
 
-/* Private call */
-.cps-call-overlay { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: max(7px, env(safe-area-inset-top)) max(7px, env(safe-area-inset-right)) max(7px, env(safe-area-inset-bottom)) max(7px, env(safe-area-inset-left)); background: rgb(0 7 10 / var(--cps-call-opacity)); backdrop-filter: blur(var(--cps-call-blur)); -webkit-backdrop-filter: blur(var(--cps-call-blur)); animation: cps-fade calc(.25s * var(--cps-motion)) ease both; }
-.cps-call-overlay::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgb(0 240 255 / .025) 1px, transparent 1px), linear-gradient(rgb(0 240 255 / .025) 1px, transparent 1px); background-size: 28px 28px; }
+/* Private call: native top-layer dialog prevents SillyTavern drawers from changing its viewport. */
+dialog.cps-call-overlay { position: fixed; inset: 0; width: 100%; height: 100dvh; max-width: none; max-height: 100dvh; margin: 0; border: 0; z-index: 2147483000; isolation: isolate; grid-template-rows: auto minmax(0, 1fr) auto; padding: max(7px, env(safe-area-inset-top)) max(7px, env(safe-area-inset-right)) max(7px, env(safe-area-inset-bottom)) max(7px, env(safe-area-inset-left)); color: var(--cps-text); background: rgb(0 7 10 / var(--cps-call-opacity)); backdrop-filter: blur(var(--cps-call-blur)); -webkit-backdrop-filter: blur(var(--cps-call-blur)); overflow: hidden; animation: cps-fade calc(.25s * var(--cps-motion)) ease both; }
+dialog.cps-call-overlay[open] { display: grid; }
+dialog.cps-call-overlay::backdrop { background: transparent; }
+dialog.cps-call-overlay::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgb(0 240 255 / .035) 1px, transparent 1px), linear-gradient(rgb(0 240 255 / .035) 1px, transparent 1px), rgb(0 10 14 / .2); background-size: 28px 28px, 28px 28px, auto; }
 .cps-call-header, .cps-call-log, .cps-call-composer { position: relative; z-index: 1; width: min(920px, 100%); margin-inline: auto; }
 .cps-call-header { border: 1px solid rgb(0 240 255 / .35); background: rgb(3 14 19 / .76); }
 .cps-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #6cff6c; box-shadow: 0 0 10px #6cff6c; animation: cps-pulse calc(1.4s * var(--cps-motion)) infinite; }

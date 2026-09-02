@@ -21,6 +21,12 @@ A mobile-first SillyTavern extension for cyberpunk character presentation, persi
 - Moves the minimized-call control above the mobile composer and restores the call through a topmost interaction layer.
 - Uses native full-screen dialogs for Create/Edit NPC and hacking-skill forms on mobile Safari.
 
+### v1.0.2 UI isolation fixes
+
+- Replaces oversized Config checkboxes and broken range inputs with scoped cyberpunk toggles, sliders, value readouts, and color swatches.
+- Runs the active call inside a native viewport-level dialog so its layout cannot change when the SillyTavern Wand drawer is open.
+- Closes the Wand drawer without allowing the extension-button click to bubble back into the host menu.
+
 ## Install
 
 1. Open **Extensions** in SillyTavern.
@@ -61,4 +67,4 @@ Rules taught to the AI:
 
 ## Version
 
-`1.0.1`
+`1.0.2`
