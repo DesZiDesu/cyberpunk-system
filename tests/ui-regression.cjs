@@ -33,6 +33,11 @@ const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
  for (const file of ['rpg-core.js','rpg-catalog.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()'); await wait();
  assert.ok(w.CyberpunkSystem);
+ test('Fullscreen workspaces block host text without relying on backdrop blur',()=>{
+   const root=postcss.parse(css), declarations=selector=>{const values={};root.walkRules(rule=>{if(rule.selector===selector)rule.walkDecls(decl=>values[decl.prop]=decl.value);});return values;};
+   for(const selector of ['dialog.cps-breach','dialog.cps-breach::backdrop','dialog.cps-call-overlay','dialog.cps-call-overlay::backdrop']) assert.equal(declarations(selector).background,'#04080c',selector);
+   assert.equal(declarations('#cps-immersion .cps-immersion-card').background,'#08161e');
+ });
  click('#cyberpunk-system-wand');await wait();
  test('Wand opens a labelled native manager and closes host menu',()=>{assert.equal(q('.cps-overlay').open,true);assert.equal(q('#extensionsMenu').style.display,'none');assert.equal(q('.cps-overlay').getAttribute('aria-labelledby'),'cps-manager-title');});
  test('Saved custom colors survive the upgrade',()=>assert.equal(ctx.extensionSettings.cyberpunk_system.accent,'#123456'));

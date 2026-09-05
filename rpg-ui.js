@@ -29,7 +29,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   function closePanel(){api.removeUiDialog(panel);panel=null;}
   function dialog(title,body,cls=''){
     const d=document.createElement('dialog');d.className=`cps-ui cps-rpg-dialog ${cls}`;d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '2.1.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '2.1.1')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
   }
   function detail(title,content){api.removeUiDialog(popup);popup=dialog(title,`<div class="cps-rpg-detail">${E(content)}</div>`);}

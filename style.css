@@ -311,9 +311,9 @@ dialog.cps-modal[open] { display: grid; place-items: center; }
 .cps-live-dot { display: inline-block; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--cps-accent); }
 
 /* Live call: transparent viewport, dedicated scroll region, anchored composer. */
-dialog.cps-call-overlay { z-index: 2147483500; isolation: isolate; padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: rgb(4 8 12 / var(--cps-call-opacity)); backdrop-filter: blur(var(--cps-call-blur)); -webkit-backdrop-filter: blur(var(--cps-call-blur)); }
+dialog.cps-call-overlay { z-index: 2147483500; isolation: isolate; padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: #04080c; background-image: linear-gradient(rgb(4 8 12 / var(--cps-call-opacity)), rgb(4 8 12 / var(--cps-call-opacity))), linear-gradient(var(--cps-surface), var(--cps-surface)); backdrop-filter: blur(var(--cps-call-blur)); -webkit-backdrop-filter: blur(var(--cps-call-blur)); }
 dialog.cps-call-overlay[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-dialog.cps-call-overlay::backdrop { background: transparent; }
+dialog.cps-call-overlay::backdrop { background: #04080c; }
 dialog.cps-call-overlay::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1; opacity: var(--cps-scan-opacity); background: repeating-linear-gradient(0deg, transparent 0 3px, white 3px 4px); }
 .cps-call-header, .cps-call-log, .cps-call-composer { position: relative; width: min(820px, 100%); min-width: 0; margin-inline: auto; }
 .cps-call-header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 16px 20px; border: 1px solid color-mix(in srgb, var(--cps-danger) 38%, transparent); border-top: 2px solid var(--cps-danger); background: color-mix(in srgb, var(--cps-surface) 90%, transparent); }
@@ -683,17 +683,17 @@ html[data-cps-ambient=on][data-cps-motion=on] .cps-body-scan .cps-scan-neural {a
 .cps-map-player {fill:var(--cps-danger);stroke:var(--cps-text);stroke-width:.3;}
 /* Compact top-layer notifications: explicitly reset host button/popover geometry. */
 #cps-immersion,#cps-immersion[popover] {position:fixed;inset:max(16px,env(safe-area-inset-top)) 14px auto auto;margin:0;padding:0;width:min(340px,calc(100vw - 28px));height:fit-content;min-height:0;max-height:none;border:0;background:transparent;overflow:visible;z-index:2147483600;pointer-events:none;display:grid;align-content:start;gap:10px;}
-#cps-immersion .cps-immersion-card {position:relative;inset:auto;display:grid;align-content:start;align-self:start;gap:7px;width:100%;height:auto;min-height:0;max-height:160px;margin:0;padding:16px;text-align:left;background:#08161ef5;color:var(--cps-text);border:1px solid var(--cps-accent);border-left:3px solid var(--cps-accent);border-radius:0;box-shadow:0 6px 25px #0004;font:13px/1.5 var(--cps-font-th);cursor:pointer;pointer-events:auto;overflow:hidden;}
+#cps-immersion .cps-immersion-card {position:relative;inset:auto;display:grid;align-content:start;align-self:start;gap:7px;width:100%;height:auto;min-height:0;max-height:160px;margin:0;padding:16px;text-align:left;background:#08161e;color:var(--cps-text);border:1px solid var(--cps-accent);border-left:3px solid var(--cps-accent);border-radius:0;box-shadow:0 6px 25px #0004;font:13px/1.5 var(--cps-font-th);cursor:pointer;pointer-events:auto;overflow:hidden;}
 #cps-immersion .cps-immersion-card small {color:var(--cps-accent);font-size:9px;letter-spacing:.12em;}
 #cps-immersion .cps-immersion-card strong {font-size:15px;overflow-wrap:anywhere;}
 #cps-immersion .cps-immersion-card span {color:var(--cps-muted);font-size:11px;}
 #cps-immersion .cps-immersion-card.danger {border-color:var(--cps-danger);}
 #cps-immersion .cps-immersion-card.danger small {color:var(--cps-danger);}
-/* No background/scrim for Breach; suspend earlier extension dialogs until it closes. */
+/* Opaque workspace backing is essential: transparent controls must never expose host chat. */
 dialog[data-cps-breach-suspended] {visibility:hidden!important;pointer-events:none!important;}
 dialog[data-cps-breach-suspended]::backdrop {background:transparent!important;backdrop-filter:none!important;}
-dialog.cps-breach {position:fixed;inset:var(--cps-viewport-top,0px) 0 auto;width:100%;height:var(--cps-viewport-height,100dvh);max-width:none;max-height:none;margin:0;padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));border:0;background:transparent!important;box-shadow:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;color:var(--cps-accent);}
-dialog.cps-breach::backdrop {background:transparent;backdrop-filter:none;}
+dialog.cps-breach {position:fixed;inset:var(--cps-viewport-top,0px) 0 auto;width:100%;height:var(--cps-viewport-height,100dvh);max-width:none;max-height:none;margin:0;padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));border:0;background:#04080c!important;box-shadow:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;color:var(--cps-accent);}
+dialog.cps-breach::backdrop {background:#04080c;backdrop-filter:none;}
 .cps-breach-terminal {width:min(880px,100%);margin:clamp(12px,4vh,40px) auto 20px;transform:translateY(var(--breach-offset,0px));text-shadow:0 1px 3px #000;}
 .cps-breach-drag {display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:2px solid var(--cps-accent);border-bottom:1px solid var(--cps-accent);padding:12px 0;cursor:ns-resize;touch-action:none;user-select:none;}
 .cps-breach-drag > div {min-width:0;}

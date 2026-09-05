@@ -1,14 +1,20 @@
 # Cyberpunk System
 
+## v2.1.1 — Emergency overlay readability fix
+
+- Breach now covers host chat with a solid backing, including when backdrop filtering or native modal support is unavailable.
+- Call windows use an opaque base with the saved opacity setting applied as tint strength; notification cards are opaque too. Cyberware, NPC forms and incoming-call cards already have solid surfaces.
+- No changes to puzzle rules, chat processing or saved state. Minimize/restore and close continue to release the workspace.
+
 ## v2.1.0 — Cyberware HUD and iPhone Breach polish
 
 - Rebuilt the Cyberware workspace with desktop side navigation and an iPhone section picker. Health has a red segmented HUD, RAM shows memory units, and stamina/capacity/stress have distinct telemetry styling and accessible values. Installed implants have a body schematic and slot list; equipment, skills, accounts, mission objectives and Relic/Blackwall use dedicated components.
-- Replaced the oversized Breach matrix with bounded 44 px mobile controls, safe-area padding, a compact header/buffer and visible top-row controls. Underlying extension dialogs are suspended while Breach is open and restored when minimized/closed. Dragging is constrained to keep the header reachable. ACCESS must be matched before Upload enables. Results appear inside the HUD; they do not create a covering toast or leave a huge disabled matrix on screen. The requested transparent background remains.
+- Replaced the oversized Breach matrix with bounded 44 px mobile controls, safe-area padding, a compact header/buffer and visible top-row controls. Underlying extension dialogs are suspended while Breach is open and restored when minimized/closed. Dragging is constrained to keep the header reachable. ACCESS must be matched before Upload enables. Results appear inside the HUD; they do not create a covering toast or leave a huge disabled matrix on screen. The HUD controls retain their outline style; v2.1.1 adds an opaque workspace backing to prevent host-chat bleed-through.
 - Fixed the extension drawer's stale `v1.1.0` label. Runtime reconciles the version and adds a direct Cyberware entry even if older drawer markup is already present. Manifest, JavaScript, CSS, module URLs, drawer, in-app protocol reference and current documentation are updated together.
 - Main-chat state records now support earned maximum HP/RAM/stamina/capacity changes as well as current resources. Equipment records support add/remove/equip/unequip/use by stored item ID. Using an item consumes resources once and creates its skill header. Invalid status patches are atomic. Private-call quick actions always use the current call participant, independent of the last NPC asset page opened.
 - State continues updating with the UI closed. Repeated host render events do not replay actions, regenerate resources, rebuild the Cyberware DOM or reset scroll. Live updates retain unsaved preferences and focused inputs. Ordinary story turns regenerate once through the existing response; no extra model request is added.
 
-**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.1.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
+**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.1.1**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
 
 **Validation:** 113 checks pass: 41 existing UI, 12 portrait/raster/vision integration and 60 RPG behavior checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the remaining catalog/map scope.
 
@@ -21,7 +27,7 @@ Update the extension, then reload SillyTavern. The manifest and all runtime modu
 - **Starting state:** open Status → Edit starting status for initial funds/resources. Inventory → Browse catalog grants established equipment without spending money; custom items and editable costs are supported. Equip implants (exclusive named slots) and up to three weapons. Using equipment/skills consumes resources or stack quantities and respects turn cooldowns. Item data is fictional role-play state, not a shop connected to real money.
 - **Cyberpsychosis:** equipped load and stress affect a per-story-turn probability. Settings → risk multiplier adjusts it; `0` disables it. Recovery spends a turn, restores RAM/stamina and lowers stress; reducing load and stress lets recovery clear an episode. These are local scenario rules, not the game's formula or a medical model.
 - **Skill headers:** `[CP_SKILL]` JSON records show actual user or NPC ability use in main chat. Pipe form `[CP_SKILL|Actor|Ability]effect[/CP_SKILL]` also works. Manual activation adds a saved skill header to the current main-chat message. Ordinary narration is never guessed into a skill use; the AI prompt instructs the model to emit records for established actions.
-- **Breach Protocol:** access-point/shard events open a transparent fullscreen HUD. Start in the top row; alternate column/row without reusing cells; match ACCESS before the buffer/time runs out. Finish upload once ACCESS is matched, or pursue the extra sequences. Drag the header vertically or use the slider. Minimize pauses and preserves the puzzle; Resume restores it; Cancel records denial. Hidden data becomes visible only after success, including during streamed generation. A training puzzle is available under Skills/Hacking.
+- **Breach Protocol:** access-point/shard events open a fullscreen HUD with an opaque readability backing. Start in the top row; alternate column/row without reusing cells; match ACCESS before the buffer/time runs out. Finish upload once ACCESS is matched, or pursue the extra sequences. Drag the header vertically or use the slider. Minimize pauses and preserves the puzzle; Resume restores it; Cancel records denial. Hidden data becomes visible only after success, including during streamed generation. A training puzzle is available under Skills/Hacking.
 - **Transfers:** Balance → Transfer, the call `€$` button, or `/cp transfer @lucy 500` in main chat/private composer. Thai command: `โอนเงิน 500 ให้ @lucy`. Exact stored names/handles and positive whole amounts are required. A successful transfer debits and credits both accounts atomically and saves receipts. AI NPCs can pay from their own funded accounts; AI records cannot debit the player. Replayed events cannot spend twice.
 - **Call data:** send the current location, freeform data/mission/location cards, inventory information or mission details. NPCs can attach item/contact cards and end their own call after their final words. A contact card must contain name, handle, role, status, affiliation, age, gender, personality, appearance and notes; pressing Add contact stores the complete profile with its own supplied starting assets. Duplicate and incomplete contacts are rejected. Received cards are also retained in notification history.
 - **Night City:** original district schematic, discovered/completed area state, and narrative district/subdistrict/building/floor/interior location. Undiscovered zones hide their details. This is **not** an official street map or GPS tracker. Location updates come from the story or manual setup; tapping a district does not teleport the player.
@@ -121,7 +127,7 @@ Visual direction was informed by Cyberpunk 2077 Senior UI Artist Vladimír Vilim
 3. Paste `https://github.com/DesZiDesu/cyberpunk-system`.
 4. Reload SillyTavern.
 
-For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.1.0**.
+For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.1.1**.
 
 ## AI protocol
 
@@ -156,7 +162,7 @@ Rules taught to the AI:
 
 ## Version
 
-`2.1.0`
+`2.1.1`
 
 ## Development checks
 
