@@ -1,5 +1,10 @@
 # Cyberpunk System
 
+## v2.1.2 — Anatomy and equipment detail
+
+- Layered anatomy schematic with face plates, torso armor, articulated limbs, joints and neural pathways. Numbered OS/arm/leg nodes reflect equipped cyberware.
+- Larger equipment imagery in a blueprint inspection stage, with touch-screen layout adjustments. No gameplay or chat-state changes.
+
 ## v2.1.1 — Emergency overlay readability fix
 
 - Breach now covers host chat with a solid backing, including when backdrop filtering or native modal support is unavailable.
@@ -14,7 +19,7 @@
 - Main-chat state records now support earned maximum HP/RAM/stamina/capacity changes as well as current resources. Equipment records support add/remove/equip/unequip/use by stored item ID. Using an item consumes resources once and creates its skill header. Invalid status patches are atomic. Private-call quick actions always use the current call participant, independent of the last NPC asset page opened.
 - State continues updating with the UI closed. Repeated host render events do not replay actions, regenerate resources, rebuild the Cyberware DOM or reset scroll. Live updates retain unsaved preferences and focused inputs. Ordinary story turns regenerate once through the existing response; no extra model request is added.
 
-**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.1.1**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
+**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.1.2**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
 
 **Validation:** 113 checks pass: 41 existing UI, 12 portrait/raster/vision integration and 60 RPG behavior checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the remaining catalog/map scope.
 
@@ -127,7 +132,7 @@ Visual direction was informed by Cyberpunk 2077 Senior UI Artist Vladimír Vilim
 3. Paste `https://github.com/DesZiDesu/cyberpunk-system`.
 4. Reload SillyTavern.
 
-For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.1.1**.
+For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.1.2**.
 
 ## AI protocol
 
@@ -162,7 +167,7 @@ Rules taught to the AI:
 
 ## Version
 
-`2.1.1`
+`2.1.2`
 
 ## Development checks
 

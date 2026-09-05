@@ -817,3 +817,18 @@ dialog.cps-breach::backdrop {background:#04080c;backdrop-filter:none;}
 @media(prefers-reduced-motion:reduce) {.cps-hud-fill {transition:none;}.cps-scan-neural {animation:none!important;}}
 .cps-breach [data-rpg=finish]:enabled {background:var(--cps-accent);color:var(--cps-surface);text-shadow:none;}
 .cps-breach:is([data-status=failed],[data-status=success]) [data-rpg=finish] {display:none;}
+
+/* Detailed anatomy plates and equipment inspection stage. */
+.cps-anatomy-plates {fill:color-mix(in srgb,var(--cps-accent) 9%,var(--cps-surface));stroke-linejoin:round;}
+.cps-anatomy-node {fill:var(--cps-surface);stroke:var(--cps-muted);stroke-width:.6;}
+.cps-anatomy-node text {fill:var(--cps-muted);stroke:none;font:7px monospace;}
+.cps-anatomy-node.linked {stroke:var(--cps-accent);}
+.cps-anatomy-node.linked circle:last-of-type {fill:var(--cps-accent);}
+.cps-body-scan {background-color:var(--cps-surface);border-top:2px solid var(--cps-accent);}
+.cps-loadout-overview .cps-body-scan svg {max-height:350px;}
+.cps-gear-visual {position:relative;min-height:150px;background:repeating-linear-gradient(0deg,transparent 0 23px,#62f5ed09 23px 24px),repeating-linear-gradient(90deg,transparent 0 23px,#62f5ed09 23px 24px),radial-gradient(ellipse at center,#62f5ed12,transparent 70%);border-block:1px solid var(--cps-line);}
+.cps-gear-visual::after {content:'';position:absolute;inset:25px 16px 14px;border:1px solid var(--cps-line);clip-path:polygon(0 0,18% 0,18% 2%,2% 2%,2% 98%,18% 98%,18% 100%,0 100%,0 0,100% 0,100% 100%,82% 100%,82% 98%,98% 98%,98% 2%,82% 2%,82% 0);pointer-events:none;}
+.cps-gear-blueprint-label {position:absolute;top:8px;left:12px;font:8px var(--cps-font-th);letter-spacing:.12em;color:var(--cps-muted);}
+.cps-gear-visual .cps-item-image {width:88px;height:88px;max-width:65%;object-fit:contain;}
+@media(max-width:600px){.cps-status-overview {grid-template-columns:minmax(0,1fr) 125px;}.cps-loadout-overview {grid-template-columns:135px minmax(0,1fr);gap:14px;}.cps-body-scan {padding:8px;}.cps-scan-caption {flex-wrap:wrap;font-size:8px;}}
+@media(max-width:350px){.cps-status-overview {grid-template-columns:minmax(0,1fr) 105px;}.cps-loadout-overview {grid-template-columns:115px minmax(0,1fr);gap:10px;}}
