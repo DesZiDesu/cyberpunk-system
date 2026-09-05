@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '1.2.0';
+const CYBERPUNK_SYSTEM_VERSION = '2.0.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -128,6 +128,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     let settingsBound = false;
     let callGenerating = false;
     let npcGenerating = false;
+    let systems = null;
     let managerTrigger = null;
     let callDraft = '';
     const viewState = { characters: { query: '', scope: 'all' }, hacking: { query: '', scope: 'all' } };
@@ -140,6 +141,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     };
 
     const clean = (value, max = 2000) => String(value ?? '').trim().slice(0, max);
+    const cleanHandle = value => clean(value, 180).replace(/^[@＠\s]+/u, '');
     const htmlEscape = value => String(value ?? '').replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
     const stripTags = value => {
       const node = document.createElement('div');
@@ -209,17 +211,20 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     function effectiveRecords(kind) {
       const map = new Map();
       for (const [scope, list] of [['character', characterBucket()[kind]], ['chat', chatBucket()[kind]]]) {
+        let normalized = false;
         for (const record of list) {
+          if (kind === 'npcs' && record.handle !== cleanHandle(record.handle)) { record.handle = cleanHandle(record.handle); normalized = true; }
           const key = clean(record.name, 180).toLocaleLowerCase() || record.id;
           if (key) map.set(key, { ...record, scope });
         }
+        if (normalized) saveScope(scope);
       }
       return [...map.values()];
     }
 
     const findEffectiveNpc = name => effectiveRecords('npcs').find(item => {
-      const needle = clean(name, 180).toLocaleLowerCase();
-      return clean(item.name, 180).toLocaleLowerCase() === needle || clean(item.handle, 180).toLocaleLowerCase() === needle;
+      const needle = cleanHandle(name).toLocaleLowerCase();
+      return clean(item.name, 180).toLocaleLowerCase() === needle || cleanHandle(item.handle).toLocaleLowerCase() === needle;
     }) || null;
 
     function t(key) {
@@ -384,6 +389,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     }
 
     function ensureWandButton() {
+      systems?.ensureWand();
       const menu = document.getElementById('extensionsMenu');
       const existing = document.getElementById('cyberpunk-system-wand');
       if (!settings().showWand) { existing?.remove(); return; }
@@ -441,11 +447,11 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     function aiProtocol() {
       const s = settings();
       if (!s.enabled || !s.injectPrompt) return '';
-      const npcs = effectiveRecords('npcs').slice(0, 28).map(npc => `${npc.name}${npc.handle ? ` (@${npc.handle})` : ''}${npc.role ? ` — ${npc.role}` : ''}${npc.personality ? `; personality: ${clean(npc.personality, 300)}` : ''}${npc.appearance ? `; appearance: ${clean(npc.appearance, 300)}` : ''}`).join('; ');
+      const npcs = effectiveRecords('npcs').slice(0, 28).map(npc => `${npc.name}${npc.handle ? ` (@${cleanHandle(npc.handle)})` : ''}${npc.role ? ` — ${npc.role}` : ''}${npc.personality ? `; personality: ${clean(npc.personality, 300)}` : ''}${npc.appearance ? `; appearance: ${clean(npc.appearance, 300)}` : ''}`).join('; ');
       const skills = effectiveRecords('skills').slice(0, 20).map(skill => `${skill.name} ${skill.level}/${skill.max}`).join('; ');
       const call = chatBucket().call;
       const callTranscript = call.active ? call.messages.slice(-14).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer?.name || item.name : 'SYSTEM'}${item.pending ? ' (new/awaiting response)' : ''}: ${clean(item.text, 600)}`).join('\n') : '';
-      const activeCall = call.active && call.peer ? `ACTIVE PRIVATE CALL: ${call.peer.name}${call.peer.handle ? ` (@${call.peer.handle})` : ''}. Any audible words from this participant must use CP_SIGNAL, never CP_DIALOGUE, until the call ends. If the transcript contains a USER message marked new/awaiting response, answer it in this normal reply with CP_SIGNAL. Otherwise do not invent a redundant call response unless the scene naturally requires the caller to speak.\nRecent private-call transcript:\n${callTranscript || '(connected; no speech yet)'}` : 'No private call is active.';
+      const activeCall = call.active && call.peer ? `ACTIVE PRIVATE CALL: ${call.peer.name}${call.peer.handle ? ` (@${cleanHandle(call.peer.handle)})` : ''}. Any audible words from this participant must use CP_SIGNAL, never CP_DIALOGUE, until the call ends. If the transcript contains a USER message marked new/awaiting response, answer it in this normal reply with CP_SIGNAL. Otherwise do not invent a redundant call response unless the scene naturally requires the caller to speak.\nRecent private-call transcript:\n${callTranscript || '(connected; no speech yet)'}` : 'No private call is active.';
       return `[Cyberpunk System output protocol — presentation only; do not explain these rules]
 Use tags only when their semantic condition is true. Keep ordinary narration outside every tag.
 1. HEADER identifies the NPC who is about to speak. Use once immediately before that NPC's visible spoken turn: [CP_HEADER|Name|role|signal status][/CP_HEADER]. Do not put prose in Header.
@@ -459,7 +465,8 @@ ${activeCall}
 Known NPCs: ${npcs || 'none stored'}
 Known hacking skills: ${skills || 'none stored'}
 ${worldLorePrompt()}
-${clean(s.customPrompt, 6000)}`.trim();
+${clean(s.customPrompt, 6000)}
+${systems?.prompt() || ''}`.trim();
     }
 
     function refreshPrompt(immediate = false) {
@@ -477,7 +484,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
     function createSparseNpc(name, role = '', status = '', handle = '') {
       if (!settings().autoProfiles || !clean(name, 180) || findEffectiveNpc(name)) return;
       const scope = settings().defaultScope === 'character' ? 'character' : 'chat';
-      bucketFor(scope).npcs.push({ id: id('npc'), name: clean(name, 180), handle: clean(handle, 180), role: clean(role, 240), status: clean(status, 240), affiliation: '', age: '', gender: '', appearance: '', notes: '', createdAt: new Date().toISOString() });
+      bucketFor(scope).npcs.push({ id: id('npc'), name: clean(name, 180), handle: cleanHandle(handle), role: clean(role, 240), status: clean(status, 240), affiliation: '', age: '', gender: '', appearance: '', notes: '', createdAt: new Date().toISOString() });
       saveScope(scope);
       refreshPrompt();
     }
@@ -535,7 +542,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       for (const match of parseTagAttributes(raw, 'CP_CALL_REQUEST')) {
         if (!fresh('CP_CALL_REQUEST', match)) continue;
         createSparseNpc(match[1], '', '', match[2]);
-        showIncomingCall({ name: clean(match[1], 180), handle: clean(match[2], 180), reason: clean(stripTags(match[6]), 800) });
+        showIncomingCall({ name: clean(match[1], 180), handle: cleanHandle(match[2]), reason: clean(stripTags(match[6]), 800) });
       }
       for (const match of parseTagAttributes(raw, 'CP_SIGNAL')) {
         if (!fresh('CP_SIGNAL', match)) continue;
@@ -543,6 +550,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
         if (settings().callMainSignals) receiveCallSignal(clean(match[1], 180), clean(stripTags(match[6]), 4000));
       }
       for (const match of parseTagAttributes(raw, 'CP_HACK')) if (fresh('CP_HACK', match)) updateHackingSkill(match);
+      systems?.process(raw, messageKey);
     }
 
     function headerHtml(name, role, status) {
@@ -550,7 +558,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       const displayName = stripTags(name) || npc?.name || 'UNKNOWN';
       const displayRole = stripTags(role) || npc?.role || t('unregistered');
       const displayStatus = stripTags(status) || npc?.status || t('signalReady');
-      const extra = [npc?.affiliation, npc?.handle ? `@${npc.handle}` : ''].filter(Boolean);
+      const extra = [npc?.affiliation, npc?.handle ? `@${cleanHandle(npc.handle)}` : ''].filter(Boolean);
       return `<section class="cps-chat-block cps-chat-header" data-speaker="${htmlEscape(displayName.toLocaleLowerCase())}" data-position="${htmlEscape(settings().headerPosition)}">${npc?.portrait ? avatarMarkup(displayName) : ''}<div><span class="cps-chat-overline">${uiIcon('characters')}${htmlEscape(t('identity'))}</span><div class="cps-chat-name">${htmlEscape(displayName)}</div><div class="cps-chat-role">${htmlEscape(displayRole)}</div><div class="cps-chat-meta"><span>${htmlEscape(displayStatus)}</span>${extra.map(item => `<span>${htmlEscape(item)}</span>`).join('')}</div></div></section>`;
     }
 
@@ -577,7 +585,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
         output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '');
       }
-      return output;
+      return systems?.transform(output) ?? output;
     }
 
     function transformPlainProtocolText(source) {
@@ -588,7 +596,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
         output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '');
       }
-      return output.replace(/\r?\n/g, '<br>');
+      return (systems?.transform(output) ?? output).replace(/\r?\n/g, '<br>');
     }
 
     function connectChatBlocks(element) {
@@ -618,17 +626,19 @@ ${clean(s.customPrompt, 6000)}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK)\|/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
+        systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
       connectChatBlocks(element);
+      systems?.decorate(element);
       element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
     }
 
@@ -667,7 +677,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       node.setAttribute('role', 'region');
       node.setAttribute('aria-label', t('incoming'));
       node.lang = settings().language;
-      node.innerHTML = `<div class="cps-incoming-head">${uiIcon('calls')}<span>${htmlEscape(t('incoming'))}</span><span class="cps-signal-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div><div class="cps-incoming-body"><div class="cps-contact-identity">${avatarMarkup(peer.name)}<div><div class="cps-incoming-name">${htmlEscape(peer.name)}</div><span class="cps-muted">${htmlEscape(peer.handle ? `@${peer.handle}` : t('encrypted'))}</span></div></div><p class="cps-incoming-reason">${htmlEscape(peer.reason || t('incomingHint'))}</p></div><div class="cps-incoming-actions"><button type="button" class="cps-button danger" data-action="decline">${uiIcon('end')}${htmlEscape(t('decline'))}</button><button type="button" class="cps-button primary" data-action="accept">${uiIcon('calls')}${htmlEscape(t('accept'))}</button></div>`;
+      node.innerHTML = `<div class="cps-incoming-head">${uiIcon('calls')}<span>${htmlEscape(t('incoming'))}</span><span class="cps-signal-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div><div class="cps-incoming-body"><div class="cps-contact-identity">${avatarMarkup(peer.name)}<div><div class="cps-incoming-name">${htmlEscape(peer.name)}</div><span class="cps-muted">${htmlEscape(peer.handle ? `@${cleanHandle(peer.handle)}` : t('encrypted'))}</span></div></div><p class="cps-incoming-reason">${htmlEscape(peer.reason || t('incomingHint'))}</p></div><div class="cps-incoming-actions"><button type="button" class="cps-button danger" data-action="decline">${uiIcon('end')}${htmlEscape(t('decline'))}</button><button type="button" class="cps-button primary" data-action="accept">${uiIcon('calls')}${htmlEscape(t('accept'))}</button></div>`;
       node.querySelector('[data-action="decline"]').addEventListener('click', () => { node.remove(); incomingWindow = null; pendingIncomingCall = null; });
       node.querySelector('[data-action="accept"]').addEventListener('click', () => {
         const accepted = pendingIncomingCall || { ...peer, signals: [] };
@@ -705,7 +715,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       call.active = true;
       call.minimized = false;
       call.unread = 0;
-      call.peer = { name: clean(peer.name, 180), handle: clean(peer.handle, 180) };
+      call.peer = { name: clean(peer.name, 180), handle: cleanHandle(peer.handle) };
       appendCallMessage('system', 'SYSTEM', t('connected'));
       if (incoming && peer.reason) appendCallMessage('assistant', peer.name, peer.reason);
       saveChat();
@@ -834,6 +844,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
           const status = existing.querySelector('.cps-pending-label');
           if (status) status.hidden = !item.pending;
           else if (item.pending) { const badge = document.createElement('span'); badge.className = 'cps-pending-label'; badge.textContent = t('queuedShort'); existing.querySelector('.cps-call-message').append(badge); }
+          systems?.attachment(existing.querySelector('.cps-call-message'), item);
           continue;
         }
         const row = document.createElement('div');
@@ -849,6 +860,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
         if (item.pending) {
           const status = document.createElement('span'); status.className = 'cps-pending-label'; status.textContent = t('queuedShort'); node.append(status);
         }
+        systems?.attachment(node, item);
         row.append(node); log.append(row);
         animateSignal(copy, item);
       }
@@ -860,7 +872,8 @@ ${clean(s.customPrompt, 6000)}`.trim();
       const input = callOverlay?.querySelector('.cps-call-input');
       const value = clean(input?.value, 4000);
       if (!value) return;
-      appendCallMessage('user', context()?.name1 || 'USER', value, true);
+      const queued = appendCallMessage('user', context()?.name1 || 'USER', value, true);
+      systems?.userText(value, queued?.id);
       input.value = ''; callDraft = '';
       updateCallComposer();
       refreshPrompt(true);
@@ -892,21 +905,22 @@ ${clean(s.customPrompt, 6000)}`.trim();
       updateCallComposer();
       const profile = findEffectiveNpc(call.peer.name);
       const transcript = call.messages.slice(-30).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer.name : 'SYSTEM'}: ${item.text}`).join('\n');
-      const prompt = `You are continuing a private cyberpunk call as ${call.peer.name}${call.peer.handle ? `, network handle @${call.peer.handle}` : ''}.
+      const prompt = `You are continuing a private cyberpunk call as ${call.peer.name}${call.peer.handle ? `, network handle @${cleanHandle(call.peer.handle)}` : ''}.
 NPC dossier: ${profile ? JSON.stringify({ role: profile.role, status: profile.status, affiliation: profile.affiliation, personality: profile.personality, appearance: profile.appearance, notes: profile.notes }) : 'Use the established main-chat characterization.'}
 Recent main-chat context (context only; do not continue it as public dialogue):
 ${recentMainChat()}
 ${worldLorePrompt()}
 Private call transcript:
 ${transcript}
-Respond only as ${call.peer.name} through the private call. Return exactly one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record. Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
+Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record, with optional structured Cyberware records after it. ${systems?.prompt() || ''} Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
       try {
         const result = await generator.call(context(), prompt, false, false);
         if (!sameCall()) return;
         const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
-        const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(result), 4000);
-        if (!reply) throw new Error('Empty private response');
-        appendCallMessage('assistant', peer.name, reply);
+        const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
+        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER)\]/i.test(result)) throw new Error('Empty private response');
+        if (reply) appendCallMessage('assistant', peer.name, reply);
+        systems?.process(result, `call:${pending.map(item => item.id).join(',')}`);
       } catch (error) {
         console.warn('[Cyberpunk System] Private call generation failed', error);
         if (sameCall()) {
@@ -930,7 +944,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       const node = document.createElement('dialog');
       node.className = 'cps-call-overlay cps-ui';
       node.setAttribute('aria-labelledby', 'cps-call-peer');
-      node.innerHTML = `<header class="cps-call-header"><div class="cps-call-channel"><span class="cps-eyebrow"><span class="cps-live-dot"></span>${htmlEscape(t('privateLine'))}</span><span>${uiIcon('shield')}${htmlEscape(t('encrypted'))}</span></div>${avatarMarkup(call.peer.name)}<div class="cps-call-identity"><strong id="cps-call-peer">${htmlEscape(call.peer.name)}</strong><small>${htmlEscape(call.peer.handle ? `@${call.peer.handle}` : t('signalReady'))}</small></div><button class="cps-icon-button" type="button" data-call-action="minimize" aria-label="${htmlEscape(t('minimize'))}">${uiIcon('minimize')}</button></header><main class="cps-call-log" role="log" aria-label="${htmlEscape(t('privateLine'))}" aria-live="polite" tabindex="0"></main><footer class="cps-call-composer"><div class="cps-composer-state"><span class="cps-call-status" role="status"></span>${uiIcon('signal')}</div><textarea class="cps-call-input" rows="2" maxlength="4000" enterkeyhint="send" autocomplete="off" placeholder="${htmlEscape(t('inputPlaceholder'))}" aria-label="${htmlEscape(t('inputPlaceholder'))}" aria-describedby="cps-call-hint"></textarea><div class="cps-call-actions"><button class="cps-button danger cps-end-call" type="button">${uiIcon('end')}<span>${htmlEscape(t('endCall'))}</span></button><button class="cps-button" type="button" data-call-action="queue">${uiIcon('plus')}<span>${htmlEscape(t('queueMessage'))}</span></button><button class="cps-button primary cps-call-send" type="button" aria-label="${htmlEscape(t('sendAi'))}"></button></div><p class="cps-composer-hint" id="cps-call-hint">${htmlEscape(t('queueHint'))}</p></footer>`;
+      node.innerHTML = `<header class="cps-call-header"><div class="cps-call-channel"><span class="cps-eyebrow"><span class="cps-live-dot"></span>${htmlEscape(t('privateLine'))}</span><span>${uiIcon('shield')}${htmlEscape(t('encrypted'))}</span></div>${avatarMarkup(call.peer.name)}<div class="cps-call-identity"><strong id="cps-call-peer">${htmlEscape(call.peer.name)}</strong><small>${htmlEscape(call.peer.handle ? `@${cleanHandle(call.peer.handle)}` : t('signalReady'))}</small></div><button class="cps-icon-button" type="button" data-call-action="minimize" aria-label="${htmlEscape(t('minimize'))}">${uiIcon('minimize')}</button></header><main class="cps-call-log" role="log" aria-label="${htmlEscape(t('privateLine'))}" aria-live="polite" tabindex="0"></main><footer class="cps-call-composer"><div class="cps-composer-state"><span class="cps-call-status" role="status"></span>${uiIcon('signal')}</div><textarea class="cps-call-input" rows="2" maxlength="4000" enterkeyhint="send" autocomplete="off" placeholder="${htmlEscape(t('inputPlaceholder'))}" aria-label="${htmlEscape(t('inputPlaceholder'))}" aria-describedby="cps-call-hint"></textarea><div class="cps-call-actions"><button class="cps-button danger cps-end-call" type="button">${uiIcon('end')}<span>${htmlEscape(t('endCall'))}</span></button><button class="cps-button" type="button" data-call-action="queue">${uiIcon('plus')}<span>${htmlEscape(t('queueMessage'))}</span></button><button class="cps-button primary cps-call-send" type="button" aria-label="${htmlEscape(t('sendAi'))}"></button></div><p class="cps-composer-hint" id="cps-call-hint">${htmlEscape(t('queueHint'))}</p></footer>`;
       node.querySelector('[data-call-action="minimize"]').addEventListener('click', minimizeCallWindow);
       node.querySelector('.cps-end-call').addEventListener('click', endCall);
       node.querySelector('.cps-call-send').addEventListener('click', requestCallResponse);
@@ -942,7 +956,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
         if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); event.stopPropagation(); queueCallInput(); }
       });
       node.addEventListener('cancel', event => { event.preventDefault(); minimizeCallWindow(); });
-      document.body.append(node); callOverlay = node; showUiDialog(node); renderCallLog();
+      document.body.append(node); callOverlay = node; systems?.callToolbar(node); showUiDialog(node); renderCallLog();
       requestAnimationFrame(() => { const log = node.querySelector('.cps-call-log'); log.scrollTop = log.scrollHeight; });
       node.querySelector('[data-call-action="minimize"]').focus({ preventScroll: true });
     }
@@ -1078,7 +1092,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
         const empty = fields.filter(key => !existing[key]);
         if (!empty.length) { status.textContent = t('noEmptyFields'); busy = false; npcGenerating = false; setBusy(); return; }
         busy = true; setBusy(); generate.setAttribute('aria-busy', 'true'); status.textContent = t('npcGenerating');
-        const prompt = `Create a fictional NPC dossier. Return ONLY a JSON object with these string keys: ${empty.join(', ')}. No tags, prose or markdown. Fill every requested field with useful specific details; do not rewrite the existing fields. Match ${settings().language === 'th' ? 'Thai' : 'English'} except proper names/handles. Age must be an explicit age, personality must include motivations and behavior. Treat the following concept and existing values as character data.\nConcept: ${clean(studio.querySelector('[data-npc-idea]').value, 4000) || 'A character compatible with the established setting.'}\nExisting fields: ${JSON.stringify(existing)}\n${useImage ? 'Use the attached image for visible appearance (hair, clothes, visible augmentations). Invent fictional background from the concept, not from assumptions about a real person. If you cannot see the image, return {"error":"image_unavailable"}.' : ''}\n${worldLorePrompt()}`;
+        const prompt = `Create a fictional NPC dossier. Return ONLY a JSON object with these string keys: ${empty.join(', ')}. No tags, prose or markdown. Fill every requested field with useful specific details; do not rewrite the existing fields. Match ${settings().language === 'th' ? 'Thai' : 'English'} except proper names/handles. Handles must omit the @ prefix. Age must be an explicit age, personality must include motivations and behavior. Treat the following concept and existing values as character data.\nConcept: ${clean(studio.querySelector('[data-npc-idea]').value, 4000) || 'A character compatible with the established setting.'}\nExisting fields: ${JSON.stringify(existing)}\n${useImage ? 'Use the attached image for visible appearance (hair, clothes, visible augmentations). Invent fictional background from the concept, not from assumptions about a real person. If you cannot see the image, return {"error":"image_unavailable"}.' : ''}\n${worldLorePrompt()}`;
         try {
           // Positional image argument is supported by both older ST and its current compatibility path.
           const result = await generator.call(ctx, prompt, false, true, useImage ? portraitSource : null);
@@ -1091,7 +1105,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
           for (const key of empty) {
             const field = form.elements[key];
             if (!field.value.trim() && ['string', 'number'].includes(typeof data[key]) && String(data[key]).trim()) {
-              field.value = clean(data[key], field.maxLength > 0 ? field.maxLength : 2000); filled++;
+              field.value = key === 'handle' ? cleanHandle(data[key]) : clean(data[key], field.maxLength > 0 ? field.maxLength : 2000); filled++;
               field.dispatchEvent(new Event('input', { bubbles: true }));
             }
           }
@@ -1139,7 +1153,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
         if (!studio.ready()) return;
         const data = Object.fromEntries(new FormData(event.currentTarget).entries());
         const scope = data.scope === 'character' ? 'character' : 'chat';
-        const saved = { ...source, ...studio.snapshot(), personality: clean(data.personality, 2000), id: record?.id || id('npc'), name: clean(data.name, 180), handle: clean(data.handle, 180), role: clean(data.role, 240), status: clean(data.status, 240), affiliation: clean(data.affiliation, 240), age: clean(data.age, 80), gender: clean(data.gender, 120), appearance: clean(data.appearance, 2000), notes: clean(data.notes, 3000), createdAt: record?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+        const saved = { ...source, ...studio.snapshot(), personality: clean(data.personality, 2000), id: record?.id || id('npc'), name: clean(data.name, 180), handle: cleanHandle(data.handle), role: clean(data.role, 240), status: clean(data.status, 240), affiliation: clean(data.affiliation, 240), age: clean(data.age, 80), gender: clean(data.gender, 120), appearance: clean(data.appearance, 2000), notes: clean(data.notes, 3000), createdAt: record?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
         if (record) {
           const oldList = bucketFor(record.scope).npcs;
           const oldIndex = oldList.findIndex(item => item.id === record.id);
@@ -1243,7 +1257,8 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
         card.dataset.recordScope = record.scope;
         card.dataset.search = [record.name, record.handle, record.role, record.affiliation].join(' ').toLocaleLowerCase();
         const facts = [['age', record.age], ['gender', record.gender]].filter(([, value]) => value);
-        card.innerHTML = `<div class="cps-card-topline">${scopeBadge(record.scope)}<span class="cps-card-id">${htmlEscape(record.handle ? `@${record.handle}` : t('identity'))}</span></div><div class="cps-contact-identity">${avatarMarkup(record.name)}<div><h3>${htmlEscape(record.name)}</h3><p>${htmlEscape(record.role || t('noRole'))}</p></div></div><div class="cps-chips">${[record.affiliation, record.status].filter(Boolean).map(value => `<span>${htmlEscape(value)}</span>`).join('')}</div>${facts.length ? `<dl class="cps-facts">${facts.map(([label, value]) => `<div><dt>${htmlEscape(t(label))}</dt><dd>${htmlEscape(value)}</dd></div>`).join('')}</dl>` : ''}${record.appearance || record.notes ? `<details class="cps-dossier"><summary>${htmlEscape(t('viewDossier'))}${uiIcon('chevron')}</summary>${record.appearance ? `<p><strong>${htmlEscape(t('appearanceField'))}</strong>${htmlEscape(record.appearance)}</p>` : ''}${record.notes ? `<p><strong>${htmlEscape(t('notes'))}</strong>${htmlEscape(record.notes)}</p>` : ''}</details>` : ''}<footer class="cps-card-actions"><button class="cps-button primary" type="button" data-action="call">${uiIcon('calls')}<span>${htmlEscape(t('call'))}</span></button><button class="cps-button" type="button" data-action="edit">${uiIcon('edit')}<span>${htmlEscape(t('edit'))}</span></button><button class="cps-icon-button danger" type="button" data-action="remove" aria-label="${htmlEscape(`${t('remove')} ${record.name}`)}">${uiIcon('trash')}</button></footer>`;
+        card.innerHTML = `<div class="cps-card-topline">${scopeBadge(record.scope)}<span class="cps-card-id">${htmlEscape(record.handle ? `@${cleanHandle(record.handle)}` : t('identity'))}</span></div><div class="cps-contact-identity">${avatarMarkup(record.name)}<div><h3>${htmlEscape(record.name)}</h3><p>${htmlEscape(record.role || t('noRole'))}</p></div></div><div class="cps-chips">${[record.affiliation, record.status].filter(Boolean).map(value => `<span>${htmlEscape(value)}</span>`).join('')}</div>${facts.length ? `<dl class="cps-facts">${facts.map(([label, value]) => `<div><dt>${htmlEscape(t(label))}</dt><dd>${htmlEscape(value)}</dd></div>`).join('')}</dl>` : ''}${record.appearance || record.notes ? `<details class="cps-dossier"><summary>${htmlEscape(t('viewDossier'))}${uiIcon('chevron')}</summary>${record.appearance ? `<p><strong>${htmlEscape(t('appearanceField'))}</strong>${htmlEscape(record.appearance)}</p>` : ''}${record.notes ? `<p><strong>${htmlEscape(t('notes'))}</strong>${htmlEscape(record.notes)}</p>` : ''}</details>` : ''}<footer class="cps-card-actions"><button class="cps-button" type="button" data-action="assets">Cyberware</button><button class="cps-button primary" type="button" data-action="call">${uiIcon('calls')}<span>${htmlEscape(t('call'))}</span></button><button class="cps-button" type="button" data-action="edit">${uiIcon('edit')}<span>${htmlEscape(t('edit'))}</span></button><button class="cps-icon-button danger" type="button" data-action="remove" aria-label="${htmlEscape(`${t('remove')} ${record.name}`)}">${uiIcon('trash')}</button></footer>`;
+        card.querySelector('[data-action="assets"]').addEventListener('click', () => systems?.open(record.name));
         card.querySelector('[data-action="call"]').addEventListener('click', () => { closeManager(); startCall(record, false); });
         card.querySelector('[data-action="edit"]').addEventListener('click', () => openNpcEditor(record));
         card.querySelector('[data-action="remove"]').addEventListener('click', () => removeRecord('npcs', record));
@@ -1275,7 +1290,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
 
     function renderCalls(body) {
       const call = chatBucket().call;
-      body.innerHTML = `${sectionHeading('03', 'callsTitle', 'callsHint', metric(call.messages.length, 'signalCount'))}<section class="cps-active-signal">${call.active && call.peer ? `<div class="cps-contact-identity">${avatarMarkup(call.peer.name)}<div><span class="cps-eyebrow"><span class="cps-live-dot"></span>${htmlEscape(t('active'))}</span><h3>${htmlEscape(call.peer.name)}</h3><p>${htmlEscape(call.peer.handle ? `@${call.peer.handle}` : t('encrypted'))}</p></div></div><div class="cps-card-actions"><button class="cps-button primary" type="button" data-action="restore-call">${uiIcon('calls')}${htmlEscape(t('restore'))}</button><button class="cps-button danger" type="button" data-action="end-call">${uiIcon('end')}${htmlEscape(t('endCall'))}</button></div>` : `${emptyState('calls', 'noActiveCall', 'emptyCallHint')}<button class="cps-button primary" type="button" data-action="browse-contacts">${uiIcon('characters')}${htmlEscape(t('browseContacts'))}</button>`}</section><div class="cps-list-heading"><h3>${htmlEscape(t('history'))}</h3><span>${htmlEscape(t('localChat'))}</span></div><div class="cps-timeline" data-call-history></div>`;
+      body.innerHTML = `${sectionHeading('03', 'callsTitle', 'callsHint', metric(call.messages.length, 'signalCount'))}<section class="cps-active-signal">${call.active && call.peer ? `<div class="cps-contact-identity">${avatarMarkup(call.peer.name)}<div><span class="cps-eyebrow"><span class="cps-live-dot"></span>${htmlEscape(t('active'))}</span><h3>${htmlEscape(call.peer.name)}</h3><p>${htmlEscape(call.peer.handle ? `@${cleanHandle(call.peer.handle)}` : t('encrypted'))}</p></div></div><div class="cps-card-actions"><button class="cps-button primary" type="button" data-action="restore-call">${uiIcon('calls')}${htmlEscape(t('restore'))}</button><button class="cps-button danger" type="button" data-action="end-call">${uiIcon('end')}${htmlEscape(t('endCall'))}</button></div>` : `${emptyState('calls', 'noActiveCall', 'emptyCallHint')}<button class="cps-button primary" type="button" data-action="browse-contacts">${uiIcon('characters')}${htmlEscape(t('browseContacts'))}</button>`}</section><div class="cps-list-heading"><h3>${htmlEscape(t('history'))}</h3><span>${htmlEscape(t('localChat'))}</span></div><div class="cps-timeline" data-call-history></div>`;
       body.querySelector('[data-action="restore-call"]')?.addEventListener('click', () => { closeManager(); showCallOverlay(); });
       body.querySelector('[data-action="end-call"]')?.addEventListener('click', endCall);
       body.querySelector('[data-action="browse-contacts"]')?.addEventListener('click', () => selectManagerTab('characters'));
@@ -1467,16 +1482,19 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       const listen = (name, handler) => { if (types[name] !== undefined) source.on(types[name], handler); };
       listen('MESSAGE_RECEIVED', onAssistantMessage);
       listen('MESSAGE_UPDATED', onAssistantMessage);
-      listen('CHAT_CHANGED', () => { removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
+      listen('CHAT_CHANGED', () => { systems?.onChatChanged(); removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
       listen('CHARACTER_MESSAGE_RENDERED', onAssistantMessage);
       listen('GENERATION_STARTED', () => refreshPrompt(true));
-      listen('MESSAGE_SENT', () => refreshPrompt(true));
+      listen('MESSAGE_SENT', messageId => { const msg = rawMessageById(messageId); if (msg?.is_user) systems?.userText(msg.mes, `main:${context().chat.indexOf(msg)}`); refreshPrompt(true); });
     }
 
     function exposeApi() {
       globalThis.CyberpunkSystem = Object.freeze({
         version: CYBERPUNK_SYSTEM_VERSION,
         open: openManager,
+        openCyberware: (name = 'user') => systems?.open(name),
+        getRpgState: () => systems?.state(),
+        startBreach: data => systems?.beginBreach(data),
         startCall: (name, handle = '') => startCall({ name, handle }, false),
         receiveCall: (name, handle = '', reason = '') => showIncomingCall({ name, handle, reason }),
         endCall,
@@ -1487,7 +1505,14 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
     }
 
     async function initialize() {
-      settings(); applyTheme(); exposeApi(); bindEvents(); refreshPrompt();
+      settings(); applyTheme();
+      try {
+        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
+          if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
+        }
+        systems = globalThis.CyberpunkSystemsFactory({ context, settings, chatBucket, effectiveRecords, findEffectiveNpc, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+      } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
+      exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();
       const dirtyMessages = new Set();
       let renderFrame = 0;

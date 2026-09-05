@@ -30,6 +30,7 @@ const input=(selector,value)=>{const el=q(selector);el.value=value;el.dispatchEv
 let passed=0;
 const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
+ for (const file of ['rpg-core.js','rpg-catalog.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()'); await wait();
  assert.ok(w.CyberpunkSystem);
  click('#cyberpunk-system-wand');await wait();
