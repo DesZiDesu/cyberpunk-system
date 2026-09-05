@@ -1,5 +1,30 @@
 # Cyberpunk System
 
+## v1.2.0 — Connected identities and private signals
+
+- Fixed replayed call signals when SillyTavern emits received, updated and rendered events for the same reply. Individual complete records are remembered in chat metadata; extending narration and reopening a chat cannot replay them. Identical speech in different turns remains allowed. Existing historical duplicates are retained rather than guessing which old messages to delete.
+- Headers and consecutive same-speaker dialogue/monologue now share one continuous frame. Empty Markdown paragraphs and line breaks between these components are removed; intervening narration and different speakers stay separate.
+- New call messages briefly scramble into readable text, including Thai grapheme clusters. Existing rows retain their DOM identity, scroll position and text when another message arrives. Ambient neural motion and signal animation have separate Config → Layout switches; Animation off and reduced-motion preferences are respected.
+- NPC portraits support JPEG/PNG/WebP upload or clipboard paste (up to 20 MB), drag framing, two-finger pinch, a Zoom slider, keyboard arrows and reset. Images are compressed to at most 768 px on the long edge; the displayed portrait is a 384 × 384 JPEG. The source and crop remain editable in the selected Character/Chat scope. Portraits appear in headers, contacts and call identity panels with square corners.
+- NPC **AI Generate** accepts a concept and optional portrait reference, then fills only empty fields, including personality/motivations. It preserves values typed while waiting. Review the draft and press Save. Invalid output, errors, double taps, closing the editor and changing chats do not overwrite the draft or leak records into another chat.
+- Config → **Cyberpunk 2077 world data** has a master toggle (off by default) and 12 individually selectable entries. Selected summaries are used by normal replies, private-call generation and NPC generation. Entries cover Choom, Chrome, Eddies, Gonk, Preem, Delta/Flatline/Detes, fixers, ripperdocs, netrunners, districts, transport and corporate/gang influence. The knowledge policy separates public facts, expertise, rumors and secrets without assuming NPCs know private conversations, user money or future plot events.
+
+**AI connection:** Normal tracking still uses the main response. Each explicit Call AI Send or NPC AI Generate uses one quiet request through the current SillyTavern connection. Image reference requires a vision-capable Chat Completion model with image sending enabled; the extension checks SillyTavern's own image-support API before sending. Unsupported connections show a message and let you disable the reference for text-only generation. No separate API key is needed.
+
+**Update:** Update the extension and reload SillyTavern. The manifest versions both JavaScript and CSS URLs at `1.2.0`. New motion settings are in Config → Layout. Portrait and AI controls are in Add NPC/Edit.
+
+### Reference sources
+
+The extension contains original concise summaries and links, not copied game assets or sourcebooks. Examples of how to use terms and rules for what NPCs can know are role-play guidance, not additional canon.
+
+- [CD PROJEKT RED's Night City visitor guide](https://www.nightcity.love/en/) — districts, public transit and corporate/gang presence. The guide is written as in-world tourism publicity; its safety claims are not treated as neutral truth.
+- [R. Talsorian's Cyberpunk overview](https://rtalsoriangames.com/cyberpunk/) — chrome/cyberware terminology. RED is set in 2045; its rules are not imported into the 2077 reference.
+- [CD PROJEKT RED Update 2.0](https://www.cyberpunk.net/en/news/49060/update-2-0) — ripperdocs and cyberware installation.
+- [CD PROJEKT RED Netrunner build breakdown](https://www.cyberpunk.net/en/news/50026/hack-slash-netrunner-build-breakdown) — cyberdecks, RAM and quickhacks.
+- [CD PROJEKT RED additional gigs](https://www.cyberpunk.net/en/dlc) — fixers and mercenary jobs.
+- [Game8 street-talk glossary](https://game8.co/games/Cyberpunk-2077/archives/Slang-Explained-Street-Talk-Dictionary) and [community slang glossary](https://www.reddit.com/r/cyberpunkgame/comments/l0avwd/slang_megathread/) — secondary cross-checks of street vocabulary.
+
+
 A mobile-first SillyTavern extension for cyberpunk character presentation, persistent Character/Chat NPC records, private calls, and hacking-skill progression.
 
 ## Features
@@ -98,10 +123,14 @@ Rules taught to the AI:
 
 ## Version
 
-`1.1.0`
+`1.2.0`
 
 ## Development checks
 
 Run `npm ci`, `npm run check`, and `npm test`. Development dependencies are used only by the tests; installation in SillyTavern needs no build or npm step.
 
-The DOM regression suite covers navigation, search/filter state, saved settings, Thai translation, NPC edit/save, call queue/send/minimize/restore, failed generation, private-tag routing, and chat-switch isolation. Dialog and viewport APIs are simulated. These tests do not verify native browser rendering, touch behavior, or real iOS Safari keyboard behavior.
+The DOM regression suite covers record-level call replay prevention, world-data selection, empty-field NPC generation, navigation, search/filter state, saved settings, Thai translation, NPC edit/save, call queue/send/minimize/restore, failed generation, private-tag routing, and chat-switch isolation. Dialog and viewport APIs are simulated. These tests do not verify native browser rendering, touch behavior, or real iOS Safari keyboard behavior.
+
+The portrait suite uses a native raster canvas to test real image downsampling, square JPEG export and framing. It simulates pointer/pinch events and the host vision API to check upload/paste integration, quota guards, crop persistence and chat isolation. It does not call an actual AI provider. `tests/preview.html` is a manual browser fixture with synthetic imagery and a simulated AI; serve the repository over HTTP to inspect it. Vision generation in that standalone fixture needs the host API or a test stub.
+
+Validation for v1.2.0: JavaScript syntax and CSS parse checks, 41 DOM checks and 12 image/integration checks passed. Native browser visual review was blocked by the review environment's local-URL policy; real iOS Safari rendering, keyboard and touch behavior remain to be checked on-device.

@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '1.1.0';
+const CYBERPUNK_SYSTEM_VERSION = '1.2.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -27,6 +27,10 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       animationSpeed: 'normal',
       density: 'comfortable',
       scanlines: true,
+      ambientMotion: true,
+      signalDecrypt: true,
+      loreEnabled: false,
+      loreEntries: {},
       customPrompt: '',
       characters: {},
     });
@@ -83,6 +87,37 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       voiceChannel: 'ช่องเสียง', privateThought: 'ความคิดส่วนตัว', identity: 'ตัวตน', signal: 'สัญญาณ',
     });
 
+    Object.assign(I18N.en, {
+      ambientMotion: 'Animated neural background', signalDecrypt: 'Decrypt animation for new call messages',
+      portrait: 'Portrait', uploadPortrait: 'Choose portrait', removePortrait: 'Remove image', zoomPortrait: 'Zoom', resetCrop: 'Center / reset',
+      cropHint: 'Drag to frame · Pinch or use Zoom · Arrow keys move the crop. Paste an image anywhere in this editor. JPEG, PNG or WebP, up to 20 MB.',
+      imageFailed: 'Could not load this image. Choose a JPEG, PNG or WebP under 20 MB.',
+      npcIdea: 'Describe your NPC', npcIdeaHint: 'A cautious Night City medic with silver hair and a debt to a fixer…',
+      useReference: 'Use portrait as AI appearance reference', npcAiHint: 'AI fills empty fields only. Uses one request on your current connection; image reference needs a vision model with image sending enabled. Review the result, then Save.',
+      generateNpc: 'AI Generate', npcGenerating: 'Building identity…', npcGenerated: 'Fields filled. Review and Save when ready.',
+      noEmptyFields: 'Every field is filled. Clear a field to generate it again.', npcGenerateFailed: 'Could not generate a usable profile. Your inputs are kept; check the model response or try again.',
+      visionRequired: 'Select a vision-capable Chat Completion model and enable image sending in SillyTavern, or turn off the image reference to generate from text.',
+      npcContextChanged: 'The active chat changed. Reopen this editor in the intended chat.', personality: 'Personality & motivations',
+      loreTitle: 'Cyberpunk 2077 world data', loreHint: 'Select setting knowledge and street vocabulary for the AI.', loreEnabled: 'Enable Cyberpunk 2077 world data', loreSelect: 'Reference entries',
+      lorePolicy: 'Only enabled entries join the prompt. Knowledge follows each NPC’s background and discoveries; private calls, thoughts, finances and secrets stay private. Sources are linked below; usage examples and knowledge limits are role-play guidance.',
+      quotaNote: 'Normal tracking uses the main AI reply. Call AI Send and NPC AI Generate each request one additional response when you press them.',
+    });
+    Object.assign(I18N.th, {
+      ambientMotion: 'พื้นหลังโครงข่ายเคลื่อนไหว', signalDecrypt: 'เอฟเฟกต์ถอดรหัสข้อความใหม่ในสาย',
+      portrait: 'ภาพตัวละคร', uploadPortrait: 'เลือกภาพ Portrait', removePortrait: 'นำภาพออก', zoomPortrait: 'ซูมภาพ', resetCrop: 'จัดกึ่งกลาง / รีเซ็ต',
+      cropHint: 'ลากเพื่อจัดภาพ · ใช้สองนิ้วหรือแถบซูม · ปุ่มลูกศรเลื่อนภาพ วางภาพได้ทุกจุดในหน้าสร้าง รองรับ JPEG, PNG, WebP ไม่เกิน 20 MB',
+      imageFailed: 'โหลดภาพไม่สำเร็จ กรุณาเลือก JPEG, PNG หรือ WebP ขนาดไม่เกิน 20 MB',
+      npcIdea: 'อธิบาย NPC ที่ต้องการ', npcIdeaHint: 'หมอใน Night City ผมสีเงิน นิสัยระวังตัว และติดหนี้ fixer…',
+      useReference: 'ใช้ภาพ Portrait อ้างอิงรูปลักษณ์ให้ AI', npcAiHint: 'AI เติมเฉพาะช่องว่าง ใช้ 1 คำขอจากการเชื่อมต่อปัจจุบัน การอ้างอิงภาพต้องใช้โมเดลอ่านภาพและเปิดส่งภาพใน SillyTavern ตรวจข้อมูลก่อนกดบันทึก',
+      generateNpc: 'AI Generate', npcGenerating: 'กำลังสร้างข้อมูลตัวละคร…', npcGenerated: 'เติมข้อมูลแล้ว ตรวจทานและกดบันทึกเมื่อพร้อม',
+      noEmptyFields: 'ทุกช่องมีข้อมูลแล้ว ล้างช่องที่ต้องการให้ AI สร้างใหม่', npcGenerateFailed: 'ยังสร้างโปรไฟล์ที่ใช้ได้ไม่สำเร็จ ข้อมูลที่กรอกไว้ยังอยู่ ตรวจการตอบของโมเดลหรือลองใหม่',
+      visionRequired: 'เลือกโมเดล Chat Completion ที่อ่านภาพได้และเปิดส่งภาพใน SillyTavern หรือปิดการอ้างอิงภาพเพื่อสร้างจากข้อความ',
+      npcContextChanged: 'แชตเปลี่ยนแล้ว กรุณาเปิดหน้าสร้างใหม่ในแชตที่ต้องการ', personality: 'บุคลิกและแรงจูงใจ',
+      loreTitle: 'ข้อมูลโลก Cyberpunk 2077', loreHint: 'เลือกความรู้ของโลกและศัพท์เฉพาะที่จะให้ AI ใช้', loreEnabled: 'เปิดข้อมูลโลก Cyberpunk 2077', loreSelect: 'รายการข้อมูลอ้างอิง',
+      lorePolicy: 'ส่งเฉพาะรายการที่เปิดให้ AI ความรู้ขึ้นกับภูมิหลังและสิ่งที่ NPC ค้นพบ สายส่วนตัว ความคิด เงิน และความลับยังเป็นเรื่องส่วนตัว มีลิงก์แหล่งข้อมูลด้านล่าง ตัวอย่างการใช้และข้อจำกัดความรู้เป็นแนวทางสำหรับโรลเพลย์',
+      quotaNote: 'การติดตามปกติใช้คำตอบ AI หลัก ปุ่มส่ง AI ในสายและ AI Generate NPC ใช้เพิ่มครั้งละ 1 คำขอเมื่อกด',
+    });
+
     let manager = null;
     let managerTab = 'characters';
     let callOverlay = null;
@@ -92,11 +127,12 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     let promptTimer = null;
     let settingsBound = false;
     let callGenerating = false;
+    let npcGenerating = false;
     let managerTrigger = null;
     let callDraft = '';
     const viewState = { characters: { query: '', scope: 'all' }, hacking: { query: '', scope: 'all' } };
     const configSections = new Set(['appearance']);
-    const processedMessages = new Set();
+    const animatedSignals = new Set();
 
     const context = () => {
       try { return globalThis.SillyTavern?.getContext?.() || null; }
@@ -125,6 +161,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
         if (root[key] === undefined) root[key] = clone(value);
       }
       if (!root.characters || typeof root.characters !== 'object') root.characters = {};
+      if (!root.loreEntries || typeof root.loreEntries !== 'object' || Array.isArray(root.loreEntries)) root.loreEntries = {};
       return root;
     }
 
@@ -219,6 +256,8 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
 
     function avatarMarkup(name, large = false) {
       const initials = clean(name).split(/\s+/).slice(0, 2).map(word => Array.from(word)[0] || '').join('').toLocaleUpperCase();
+      const portrait = findEffectiveNpc(name)?.portrait;
+      if (isPortraitData(portrait)) return `<span class="cps-avatar cps-avatar-photo${large ? ' large' : ''}"><img src="${htmlEscape(portrait)}" alt="${htmlEscape(name)}" width="384" height="384" loading="lazy" decoding="async"></span>`;
       return `<span class="cps-avatar${large ? ' large' : ''}" aria-hidden="true"><span>${htmlEscape(initials || '?')}</span></span>`;
     }
 
@@ -297,6 +336,8 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       root.style.setProperty('--cps-call-blur', `${clamp(s.callBlur, 0, 24)}px`);
       root.style.setProperty('--cps-motion', ({ off: 0, slow: 1.7, normal: 1, fast: .58 })[s.animationSpeed] ?? 1);
       root.style.setProperty('--cps-space', s.density === 'compact' ? '12px' : '18px');
+      root.dataset.cpsMotion = s.animationSpeed === 'off' ? 'off' : 'on';
+      root.dataset.cpsAmbient = s.ambientMotion ? 'on' : 'off';
       root.style.setProperty('--cps-scan-opacity', s.scanlines ? '.035' : '0');
       document.querySelectorAll('.cps-ui, .cps-settings').forEach(node => { node.lang = s.language; });
     }
@@ -362,10 +403,45 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       menu.append(button);
     }
 
+    // Original summaries; sources and the distinction between canon and role-play
+    // knowledge policy are visible to the user. No RED 2045 mechanics are injected.
+    const LORE_SOURCES = {
+      slang: ['Game8 · slang glossary', 'https://game8.co/games/Cyberpunk-2077/archives/Slang-Explained-Street-Talk-Dictionary'],
+      chrome: ['R. Talsorian · Cyberpunk', 'https://rtalsoriangames.com/cyberpunk/'],
+      city: ['CD PROJEKT RED · Night City guide', 'https://www.nightcity.love/en/'],
+      implants: ['CD PROJEKT RED · Update 2.0', 'https://www.cyberpunk.net/en/news/49060/update-2-0'],
+      netrunning: ['CD PROJEKT RED · Netrunner build', 'https://www.cyberpunk.net/en/news/50026/hack-slash-netrunner-build-breakdown'],
+      fixers: ['CD PROJEKT RED · Additional gigs', 'https://www.cyberpunk.net/en/dlc'],
+    };
+    const WORLD_LORE = [
+      { id: 'choom', title: 'Choom / Choomba', en: 'Friend or buddy. Use as a casual address between familiar people, e.g. “Thanks, choom.” It does not prove trust or a close relationship.', th: 'เพื่อนหรือพวกพ้อง ใช้เรียกกันอย่างเป็นกันเอง เช่น “ขอบใจนะ choom” ไม่ได้แปลว่าสนิทหรือเชื่อใจกันเสมอ', source: 'slang' },
+      { id: 'chrome', title: 'Chrome', en: 'Street term for cyberware: technological implants or replacements integrated with the body. “New chrome” can mean a new implant, not just shiny metal.', th: 'คำเรียก cyberware หรืออุปกรณ์เทคโนโลยีที่ฝังหรือใช้แทนส่วนของร่างกาย “New chrome” จึงอาจหมายถึงอวัยวะเสริมใหม่ ไม่ใช่แค่โลหะเงา', source: 'chrome' },
+      { id: 'eddies', title: 'Eddies / Eurodollars', en: 'Eddies means eurodollars, the money used for jobs and purchases. Use it naturally when discussing payment; do not invent the user’s balance.', th: 'Eddies หมายถึงเงินยูโรดอลลาร์ ใช้คุยเรื่องค่าจ้างและการซื้อขาย โดยไม่แต่งยอดเงินของผู้ใช้ขึ้นเอง', source: 'slang' },
+      { id: 'gonk', title: 'Gonk', en: 'An insult for someone acting foolishly. Use according to personality and relationship; it is not a neutral greeting.', th: 'คำด่าหรือแซวว่าทำตัวโง่ ใช้ตามบุคลิกและความสัมพันธ์ ไม่ใช่คำทักทายทั่วไป', source: 'slang' },
+      { id: 'preem', title: 'Preem', en: 'Excellent or high-quality. A short approving description of gear, work, or a situation.', th: 'ดีเยี่ยมหรือคุณภาพสูง ใช้ชมอุปกรณ์ ผลงาน หรือสถานการณ์', source: 'slang' },
+      { id: 'delta', title: 'Delta / Flatline / Detes', en: 'Delta means leave or get out; flatline means die or kill; detes means details. Keep the intended meaning clear from context.', th: 'Delta คือออกไปหรือหนี Flatline คือตายหรือฆ่า Detes คือรายละเอียด ใช้ให้ความหมายชัดจากบริบท', source: 'slang' },
+      { id: 'fixers', title: 'Fixers & gigs', en: 'Fixers arrange gigs for mercenaries. Treat job details, client identities and payment terms as information obtained through contacts, not automatically known to every NPC.', th: 'Fixer จัดหางานหรือ gig ให้ทหารรับจ้าง รายละเอียดงาน ตัวตนลูกค้า และค่าจ้างต้องได้รับรู้ผ่านผู้ติดต่อ ไม่ใช่สิ่งที่ NPC ทุกคนรู้อยู่แล้ว', source: 'fixers' },
+      { id: 'ripperdocs', title: 'Ripperdocs & cyberware', en: 'Ripperdocs install and upgrade cyberware. An implant can affect the body and abilities; its exact model, condition and limits require examination or established information.', th: 'Ripperdoc ติดตั้งและอัปเกรด cyberware ส่วนเสริมส่งผลต่อร่างกายและความสามารถ แต่รุ่น สภาพ และข้อจำกัดต้องตรวจหรือมีข้อมูลก่อน', source: 'implants' },
+      { id: 'netrunners', title: 'Netrunners & quickhacks', en: 'Netrunners use cyberdecks and quickhacks, with RAM resources and recovery affecting their options. Specialist skill is not omniscience; hidden data requires access and discovery in the story.', th: 'Netrunner ใช้ cyberdeck และ quickhack โดยมี RAM และการฟื้นตัวเป็นข้อจำกัด ทักษะแฮ็กไม่ได้ทำให้รู้ทุกอย่าง ข้อมูลลับต้องเข้าถึงและค้นพบในเรื่องก่อน', source: 'netrunning' },
+      { id: 'districts', title: 'Night City districts', en: 'Night City has City Center, Watson, Heywood, Westbrook, Santo Domingo and Pacifica. Corporate Plaza anchors City Center; Kabuki is in Watson, Japantown in Westbrook. Conditions differ by neighborhood; avoid treating tourism publicity as objective safety advice.', th: 'Night City มี City Center, Watson, Heywood, Westbrook, Santo Domingo และ Pacifica โดย Corporate Plaza อยู่ City Center, Kabuki อยู่ Watson และ Japantown อยู่ Westbrook สภาพพื้นที่ต่างกัน และโฆษณาท่องเที่ยวไม่ใช่ข้อมูลความปลอดภัยที่เป็นกลาง', source: 'city' },
+      { id: 'transit', title: 'NCART & Delamain', en: 'NCART is Night City Area Rapid Transit. Delamain offers AI-driven taxis. Characters can know these public services without knowing every destination, fare or private passenger record.', th: 'NCART คือ Night City Area Rapid Transit ส่วน Delamain เป็นแท็กซี่ขับด้วย AI ตัวละครรู้จักบริการสาธารณะได้ แต่ไม่จำเป็นต้องรู้ทุกเส้นทาง ค่าโดยสาร หรือประวัติผู้โดยสาร', source: 'city' },
+      { id: 'corporate', title: 'Corporate influence & local gangs', en: 'Corporate Plaza lets corporations govern their own zone. Valentinos are associated with Heywood and Tyger Claws with Japantown. Public reputation does not reveal confidential operations or prove an individual’s allegiance.', th: 'บริษัทมีอำนาจปกครองพื้นที่ Corporate Plaza โดย Valentinos เชื่อมโยงกับ Heywood และ Tyger Claws กับ Japantown ชื่อเสียงสาธารณะไม่ได้เปิดเผยปฏิบัติการลับหรือยืนยันสังกัดของบุคคล', source: 'city' },
+    ];
+    function worldLorePrompt() {
+      const s = settings();
+      if (!s.loreEnabled || !s.enabled) return '';
+      const selected = WORLD_LORE.filter(entry => s.loreEntries[entry.id] !== false);
+      return `[Optional Cyberpunk 2077 setting reference]\nUse only the selected reference entries below when relevant. This is setting context, not a forced plot. Preserve the role-play's established year, alternate universe and discoveries. Do not import 2045 RED rules into 2077.\nKnowledge policy (role-play instruction, not a canon fact): distinguish public knowledge, professional expertise, rumors and secrets. Ordinary residents may know street terms and local services; technical details depend on training. No NPC automatically knows private calls, thoughts, user stats, money, passwords, undiscovered conspiracies, future events or another NPC's secrets. Only grant knowledge through a believable source in the scene. Do not force slang into every sentence or add spoilers.\n${selected.map(entry => `${entry.title}: ${entry.en}`).join('\n')}`;
+    }
+    function loreConfig(s) {
+      const lang = s.language === 'th' ? 'th' : 'en';
+      return `${configToggle(t('loreEnabled'), 'loreEnabled', s.loreEnabled)}<p class="cps-inline-note wide">${htmlEscape(t('lorePolicy'))}</p><fieldset class="cps-lore-list wide" data-lore-list ${s.loreEnabled ? '' : 'disabled'}><legend>${htmlEscape(t('loreSelect'))}</legend>${WORLD_LORE.map(entry => { const [label, url] = LORE_SOURCES[entry.source]; return `<article class="cps-lore-entry"><label><input type="checkbox" data-lore-id="${entry.id}" ${s.loreEntries[entry.id] !== false ? 'checked' : ''}><strong>${entry.title}</strong></label><p>${htmlEscape(entry[lang])}</p><a href="${url}" target="_blank" rel="noopener noreferrer">${htmlEscape(label)}</a></article>`; }).join('')}</fieldset>`;
+    }
+
     function aiProtocol() {
       const s = settings();
       if (!s.enabled || !s.injectPrompt) return '';
-      const npcs = effectiveRecords('npcs').slice(0, 28).map(npc => `${npc.name}${npc.handle ? ` (@${npc.handle})` : ''}${npc.role ? ` — ${npc.role}` : ''}`).join('; ');
+      const npcs = effectiveRecords('npcs').slice(0, 28).map(npc => `${npc.name}${npc.handle ? ` (@${npc.handle})` : ''}${npc.role ? ` — ${npc.role}` : ''}${npc.personality ? `; personality: ${clean(npc.personality, 300)}` : ''}${npc.appearance ? `; appearance: ${clean(npc.appearance, 300)}` : ''}`).join('; ');
       const skills = effectiveRecords('skills').slice(0, 20).map(skill => `${skill.name} ${skill.level}/${skill.max}`).join('; ');
       const call = chatBucket().call;
       const callTranscript = call.active ? call.messages.slice(-14).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer?.name || item.name : 'SYSTEM'}${item.pending ? ' (new/awaiting response)' : ''}: ${clean(item.text, 600)}`).join('\n') : '';
@@ -382,6 +458,7 @@ Use tags only when their semantic condition is true. Keep ordinary narration out
 ${activeCall}
 Known NPCs: ${npcs || 'none stored'}
 Known hacking skills: ${skills || 'none stored'}
+${worldLorePrompt()}
 ${clean(s.customPrompt, 6000)}`.trim();
     }
 
@@ -439,23 +516,33 @@ ${clean(s.customPrompt, 6000)}`.trim();
 
     function processMachineRecords(raw, messageKey = '') {
       if (!settings().enabled || !raw) return;
-      const fingerprint = `${messageKey}:${String(raw).length}:${String(raw).slice(-80)}`;
-      if (messageKey && processedMessages.has(fingerprint)) return;
-      if (messageKey) {
-        processedMessages.add(fingerprint);
-        if (processedMessages.size > 300) processedMessages.delete(processedMessages.values().next().value);
-      }
+      // Claim individual complete records, not the whole changing response. Persist
+      // with chat metadata so redraws, edits and reopening a chat cannot replay them.
+      const bucket = chatBucket();
+      if (!Array.isArray(bucket.processedRecords)) bucket.processedRecords = [];
+      const records = new Set(bucket.processedRecords);
+      const fresh = (tag, match) => {
+        const payload = tag === 'CP_SIGNAL' ? JSON.stringify([clean(match[1], 180).toLocaleLowerCase(), clean(stripTags(match[6]), 4000).replace(/\s+/g, ' ')]) : match[0];
+        const key = `${messageKey}:${tag}:${markupFingerprint(payload)}`;
+        if (records.has(key)) return false;
+        records.add(key);
+        bucket.processedRecords = [...records].slice(-2400);
+        saveChat();
+        return true;
+      };
       for (const match of parseTagAttributes(raw, 'CP_HEADER')) createSparseNpc(match[1], match[2], match[3]);
       for (const tag of ['CP_DIALOGUE', 'CP_MONOLOGUE']) for (const match of parseTagAttributes(raw, tag)) createSparseNpc(match[1]);
       for (const match of parseTagAttributes(raw, 'CP_CALL_REQUEST')) {
+        if (!fresh('CP_CALL_REQUEST', match)) continue;
         createSparseNpc(match[1], '', '', match[2]);
         showIncomingCall({ name: clean(match[1], 180), handle: clean(match[2], 180), reason: clean(stripTags(match[6]), 800) });
       }
       for (const match of parseTagAttributes(raw, 'CP_SIGNAL')) {
+        if (!fresh('CP_SIGNAL', match)) continue;
         createSparseNpc(match[1]);
         if (settings().callMainSignals) receiveCallSignal(clean(match[1], 180), clean(stripTags(match[6]), 4000));
       }
-      for (const match of parseTagAttributes(raw, 'CP_HACK')) updateHackingSkill(match);
+      for (const match of parseTagAttributes(raw, 'CP_HACK')) if (fresh('CP_HACK', match)) updateHackingSkill(match);
     }
 
     function headerHtml(name, role, status) {
@@ -464,12 +551,12 @@ ${clean(s.customPrompt, 6000)}`.trim();
       const displayRole = stripTags(role) || npc?.role || t('unregistered');
       const displayStatus = stripTags(status) || npc?.status || t('signalReady');
       const extra = [npc?.affiliation, npc?.handle ? `@${npc.handle}` : ''].filter(Boolean);
-      return `<section class="cps-chat-block cps-chat-header" data-position="${htmlEscape(settings().headerPosition)}"><div><span class="cps-chat-overline">${uiIcon('characters')}${htmlEscape(t('identity'))}</span><div class="cps-chat-name">${htmlEscape(displayName)}</div><div class="cps-chat-role">${htmlEscape(displayRole)}</div><div class="cps-chat-meta"><span>${htmlEscape(displayStatus)}</span>${extra.map(item => `<span>${htmlEscape(item)}</span>`).join('')}</div></div></section>`;
+      return `<section class="cps-chat-block cps-chat-header" data-speaker="${htmlEscape(displayName.toLocaleLowerCase())}" data-position="${htmlEscape(settings().headerPosition)}">${npc?.portrait ? avatarMarkup(displayName) : ''}<div><span class="cps-chat-overline">${uiIcon('characters')}${htmlEscape(t('identity'))}</span><div class="cps-chat-name">${htmlEscape(displayName)}</div><div class="cps-chat-role">${htmlEscape(displayRole)}</div><div class="cps-chat-meta"><span>${htmlEscape(displayStatus)}</span>${extra.map(item => `<span>${htmlEscape(item)}</span>`).join('')}</div></div></section>`;
     }
 
     function speechHtml(kind, name, content) {
       const label = t(kind === 'monologue' ? 'privateThought' : 'voiceChannel');
-      return `<section class="cps-chat-block cps-chat-${kind}"><div class="cps-chat-kicker">${uiIcon(kind === 'monologue' ? 'thought' : 'voice')}<span>${htmlEscape(stripTags(name))}</span><small>${htmlEscape(label)}</small></div><div class="cps-chat-copy">${content}</div></section>`;
+      return `<section class="cps-chat-block cps-chat-${kind}" data-speaker="${htmlEscape(stripTags(name).toLocaleLowerCase())}"><div class="cps-chat-kicker">${uiIcon(kind === 'monologue' ? 'thought' : 'voice')}<span>${htmlEscape(stripTags(name))}</span><small>${htmlEscape(label)}</small></div><div class="cps-chat-copy">${content}</div></section>`;
     }
 
     function markupFingerprint(value) {
@@ -504,13 +591,36 @@ ${clean(s.customPrompt, 6000)}`.trim();
       return output.replace(/\r?\n/g, '<br>');
     }
 
+    function connectChatBlocks(element) {
+      // Markdown often leaves BRs or empty paragraphs between block tags.
+      const spacer = node => node.nodeType === Node.TEXT_NODE ? !node.textContent.trim() :
+        node.nodeType === Node.ELEMENT_NODE && (node.tagName === 'BR' ||
+          (node.tagName === 'P' && !node.textContent.trim() && !node.querySelector('img,video,svg,section')));
+      element.querySelectorAll('p').forEach(p => {
+        if (p.querySelector(':scope > .cps-chat-block') && [...p.childNodes].every(n => spacer(n) || n.classList?.contains('cps-chat-block'))) p.replaceWith(...p.childNodes);
+      });
+      element.querySelectorAll('.cps-chat-header').forEach(header => {
+        if (header.parentElement.classList.contains('cps-chat-thread')) return;
+        const blocks = [header]; const gaps = []; let next = header.nextSibling;
+        while (next) {
+          if (spacer(next)) { gaps.push(next); next = next.nextSibling; continue; }
+          if (!next.matches?.('.cps-chat-dialogue, .cps-chat-monologue') || next.dataset.speaker !== header.dataset.speaker) break;
+          gaps.splice(0).forEach(n => n.remove()); blocks.push(next); next = next.nextSibling;
+        }
+        if (blocks.length < 2) return;
+        const thread = document.createElement('div'); thread.className = 'cps-chat-thread';
+        header.before(thread); thread.append(...blocks);
+      });
+    }
+
     function renderMessageElement(element, force = false) {
       if (!(element instanceof HTMLElement) || !settings().enabled) return;
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
       if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK)\|/i.test(source)) {
-        element.dataset.cpsRenderFingerprint = fingerprint;
+        connectChatBlocks(element);
+        element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
@@ -518,6 +628,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
+      connectChatBlocks(element);
       element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
     }
 
@@ -529,17 +640,17 @@ ${clean(s.customPrompt, 6000)}`.trim();
       const chat = context()?.chat;
       if (!Array.isArray(chat)) return null;
       const index = Number(messageId);
-      if (Number.isInteger(index) && chat[index]) return chat[index];
+      if (messageId !== null && messageId !== undefined && messageId !== '' && Number.isInteger(index) && chat[index]) return chat[index];
       return chat.at(-1) || null;
     }
 
     function onAssistantMessage(messageId) {
       const message = rawMessageById(messageId);
       if (!message || message.is_user) return;
-      processMachineRecords(message.mes || '', String(messageId ?? context()?.chat?.length ?? 'latest'));
+      const index = context().chat.indexOf(message);
+      processMachineRecords(message.mes || '', `${index}:swipe:${message.swipe_id ?? 0}`);
       const renderPass = () => {
-        const safeId = String(messageId ?? '').replace(/["\\]/g, '\\$&');
-        const target = Number.isInteger(Number(messageId)) ? document.querySelector(`.mes[mesid="${safeId}"] .mes_text`) : null;
+        const target = index >= 0 ? document.querySelector(`.mes[mesid="${index}"] .mes_text`) : null;
         if (target) renderMessageElement(target, true);
         else renderVisibleMessages();
       };
@@ -582,6 +693,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
       refreshPrompt(true);
       renderCallLog();
       renderMinimizedCall();
+      if (manager && managerTab === 'calls') renderManagerBody();
       return message;
     }
 
@@ -685,15 +797,47 @@ ${clean(s.customPrompt, 6000)}`.trim();
       callOverlay.querySelector('.cps-call-status').textContent = callGenerating ? t('generating') : pending ? `${pending} · ${t('queuedShort')}` : t('signalReady');
     }
 
+    function animateSignal(copy, item) {
+      if (animatedSignals.has(item.id) || item.role === 'system') return;
+      animatedSignals.add(item.id);
+      if (animatedSignals.size > 600) animatedSignals.delete(animatedSignals.values().next().value);
+      if (!settings().signalDecrypt || settings().animationSpeed === 'off' || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.hidden) return;
+      const chars = globalThis.Intl?.Segmenter ? [...new Intl.Segmenter(settings().language, { granularity: 'grapheme' }).segment(item.text)].map(x => x.segment) : Array.from(item.text);
+      const visual = document.createElement('span'); visual.setAttribute('aria-hidden', 'true');
+      const accessible = document.createElement('span'); accessible.className = 'cps-sr-only'; accessible.textContent = item.text;
+      copy.replaceChildren(visual, accessible); copy.classList.add('cps-decrypting');
+      const start = performance.now(); const duration = ({ slow: 1000, fast: 360 })[settings().animationSpeed] || 650;
+      const finish = () => { copy.textContent = item.text; copy.classList.remove('cps-decrypting'); };
+      const frame = now => {
+        if (!copy.isConnected) return;
+        if (now - start >= duration || document.hidden || !settings().signalDecrypt || settings().animationSpeed === 'off') { finish(); return; }
+        const count = Math.floor(chars.length * Math.max(0, (now - start) / duration));
+        visual.textContent = chars.map((c,i) => i < count || /\s/.test(c) ? c : '▰01/░'[Math.floor(Math.random() * 6)]).join('');
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    }
+
     function renderCallLog() {
       const log = callOverlay?.querySelector('.cps-call-log');
       if (!log) return;
       const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
       const scroll = log.scrollTop;
-      log.replaceChildren();
+      const previous = new Map([...log.children].map(row => [row.dataset.signalId, row]));
+      const ids = new Set(chatBucket().call.messages.map(item => item.id));
+      previous.forEach((row, key) => { if (!ids.has(key)) row.remove(); });
       for (const item of chatBucket().call.messages) {
         const role = ['user', 'assistant', 'system'].includes(item.role) ? item.role : 'system';
+        const existing = previous.get(item.id);
+        if (existing) {
+          existing.querySelector('.cps-call-message').classList.toggle('pending', Boolean(item.pending));
+          const status = existing.querySelector('.cps-pending-label');
+          if (status) status.hidden = !item.pending;
+          else if (item.pending) { const badge = document.createElement('span'); badge.className = 'cps-pending-label'; badge.textContent = t('queuedShort'); existing.querySelector('.cps-call-message').append(badge); }
+          continue;
+        }
         const row = document.createElement('div');
+        row.dataset.signalId = item.id;
         row.className = `cps-call-row ${role}`;
         const node = document.createElement('div');
         node.className = `cps-call-message ${role}${item.pending ? ' pending' : ''}`;
@@ -706,6 +850,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
           const status = document.createElement('span'); status.className = 'cps-pending-label'; status.textContent = t('queuedShort'); node.append(status);
         }
         row.append(node); log.append(row);
+        animateSignal(copy, item);
       }
       requestAnimationFrame(() => { log.scrollTop = atBottom ? log.scrollHeight : scroll; });
       updateCallComposer();
@@ -729,7 +874,7 @@ ${clean(s.customPrompt, 6000)}`.trim();
     }
 
     async function requestCallResponse() {
-      if (callGenerating) return;
+      if (callGenerating || npcGenerating) { if (npcGenerating) toast(t('npcGenerating')); return; }
       const call = chatBucket().call;
       if (!call.active || !call.peer) return;
       const input = callOverlay?.querySelector('.cps-call-input');
@@ -748,12 +893,13 @@ ${clean(s.customPrompt, 6000)}`.trim();
       const profile = findEffectiveNpc(call.peer.name);
       const transcript = call.messages.slice(-30).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer.name : 'SYSTEM'}: ${item.text}`).join('\n');
       const prompt = `You are continuing a private cyberpunk call as ${call.peer.name}${call.peer.handle ? `, network handle @${call.peer.handle}` : ''}.
-NPC dossier: ${profile ? JSON.stringify({ role: profile.role, status: profile.status, affiliation: profile.affiliation, appearance: profile.appearance, notes: profile.notes }) : 'Use the established main-chat characterization.'}
+NPC dossier: ${profile ? JSON.stringify({ role: profile.role, status: profile.status, affiliation: profile.affiliation, personality: profile.personality, appearance: profile.appearance, notes: profile.notes }) : 'Use the established main-chat characterization.'}
 Recent main-chat context (context only; do not continue it as public dialogue):
 ${recentMainChat()}
+${worldLorePrompt()}
 Private call transcript:
 ${transcript}
-Respond only as ${call.peer.name} through the private call. Return exactly one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
+Respond only as ${call.peer.name} through the private call. Return exactly one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record. Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
       try {
         const result = await generator.call(context(), prompt, false, false);
         if (!sameCall()) return;
@@ -807,11 +953,175 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       return { scope, list, index: list.findIndex(item => item.id === record.id) };
     }
 
+    const isPortraitData = value => typeof value === 'string' && value.length <= 1500000 && /^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(value);
+
+    function loadPortraitImage(data) {
+      return new Promise((resolve, reject) => {
+        const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(new Error(t('imageFailed'))); img.src = data;
+      });
+    }
+
+    async function compressPortrait(file) {
+      if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size > 20 * 1024 * 1024) throw new Error(t('imageFailed'));
+      const url = URL.createObjectURL(file);
+      try {
+        const img = await loadPortraitImage(url);
+        const ratio = Math.min(1, 768 / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.naturalWidth * ratio)); canvas.height = Math.max(1, Math.round(img.naturalHeight * ratio));
+        const pen = canvas.getContext('2d');
+        pen.fillStyle = '#101116'; pen.fillRect(0, 0, canvas.width, canvas.height); pen.drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', .8);
+      } finally { URL.revokeObjectURL(url); }
+    }
+
+    function mountNpcStudio(modal, source) {
+      const form = modal.querySelector('form');
+      const studio = document.createElement('section'); studio.className = 'cps-npc-studio';
+      studio.innerHTML = `<div class="cps-portrait-controls"><div class="cps-crop-stage"><canvas width="384" height="384" tabindex="0" aria-label="${htmlEscape(t('cropHint'))}"></canvas><span class="cps-crop-empty">1:1<br>${htmlEscape(t('portrait'))}</span></div><div class="cps-portrait-tools"><label class="cps-button"><span>${htmlEscape(t('uploadPortrait'))}</span><input type="file" accept="image/jpeg,image/png,image/webp" data-portrait-file></label><button type="button" class="cps-button" data-portrait-remove>${htmlEscape(t('removePortrait'))}</button><label><span>${htmlEscape(t('zoomPortrait'))}</span><input type="range" min="1" max="3" step=".01" value="1" data-portrait-zoom></label><button type="button" class="cps-button" data-portrait-reset>${htmlEscape(t('resetCrop'))}</button></div></div><p class="cps-muted">${htmlEscape(t('cropHint'))}</p><label><span>${htmlEscape(t('npcIdea'))}</span><textarea data-npc-idea rows="3" maxlength="4000" placeholder="${htmlEscape(t('npcIdeaHint'))}"></textarea></label><label class="cps-reference-toggle"><input type="checkbox" data-use-reference checked> ${htmlEscape(t('useReference'))}</label><p class="cps-muted">${htmlEscape(t('npcAiHint'))}</p><button type="button" class="cps-button primary" data-npc-generate>${uiIcon('chip')}<span>${htmlEscape(t('generateNpc'))}</span></button><p class="cps-studio-status" role="status" aria-live="polite"></p>`;
+      const fieldsPanel = form.querySelector('.cps-form');
+      const scroller = document.createElement('div'); scroller.className = 'cps-editor-scroll';
+      fieldsPanel.before(scroller); scroller.append(studio, fieldsPanel);
+      const canvas = studio.querySelector('canvas'); const zoom = studio.querySelector('[data-portrait-zoom]');
+      const status = studio.querySelector('[role="status"]'); const generate = studio.querySelector('[data-npc-generate]');
+      const save = form.querySelector('[type="submit"]'); const fileInput = studio.querySelector('[data-portrait-file]');
+      let portraitSource = isPortraitData(source.portraitSource) ? source.portraitSource : isPortraitData(source.portrait) ? source.portrait : '';
+      let image = null; let loading = false; let busy = false; let revision = 0;
+      let crop = { x: source.portraitCrop?.x ?? .5, y: source.portraitCrop?.y ?? .5, zoom: source.portraitCrop?.zoom ?? 1 };
+      const owner = chatBucket(); const ownerCharacter = characterKey();
+      const isCurrent = () => modal.isConnected && owner === chatBucket() && ownerCharacter === characterKey();
+      const pointers = new Map(); let pinchDistance = 0;
+      const geometry = () => {
+        const scale = image ? Math.max(384 / image.naturalWidth, 384 / image.naturalHeight) * crop.zoom : 1;
+        return { width: (image?.naturalWidth || 384) * scale, height: (image?.naturalHeight || 384) * scale };
+      };
+      const draw = () => {
+        crop = { x: clamp(crop.x, 0, 1), y: clamp(crop.y, 0, 1), zoom: clamp(crop.zoom, 1, 3) };
+        zoom.value = String(crop.zoom);
+        studio.querySelector('.cps-crop-empty').hidden = Boolean(image);
+        zoom.disabled = !image; canvas.setAttribute('aria-valuetext', `${Math.round(crop.zoom * 100)}%`);
+        if (!image) { if (canvas.dataset.hasImage) canvas.getContext('2d').clearRect(0, 0, 384, 384); return; }
+        canvas.dataset.hasImage = 'true';
+        const pen = canvas.getContext('2d'); const { width, height } = geometry();
+        pen.fillStyle = '#101116'; pen.fillRect(0, 0, 384, 384);
+        pen.drawImage(image, (384 - width) * crop.x, (384 - height) * crop.y, width, height);
+      };
+      const setBusy = () => { generate.disabled = busy || loading; save.disabled = busy || loading; fileInput.disabled = busy; };
+      const load = async (data, reset = true) => {
+        const version = ++revision; loading = true; setBusy();
+        try {
+          const loaded = await loadPortraitImage(data);
+          if (!isCurrent() || revision !== version) return;
+          image = loaded; portraitSource = data; if (reset) crop = { x: .5, y: .5, zoom: 1 }; draw(); status.textContent = '';
+        } catch (error) { if (isCurrent()) status.textContent = t('imageFailed'); }
+        finally { if (version === revision) { loading = false; setBusy(); } }
+      };
+      const acceptFile = async file => {
+        if (!file || busy) return;
+        const version = ++revision; loading = true; setBusy();
+        try {
+          const data = await compressPortrait(file);
+          if (version !== revision || !isCurrent()) return;
+          await load(data);
+        } catch (error) { if (isCurrent()) status.textContent = error.message || t('imageFailed'); }
+        finally { if (version === revision) { loading = false; setBusy(); } }
+      };
+      fileInput.addEventListener('change', () => { acceptFile(fileInput.files?.[0]); fileInput.value = ''; });
+      modal.addEventListener('paste', event => {
+        const item = [...(event.clipboardData?.items || [])].find(item => item.type.startsWith('image/'));
+        if (item) { event.preventDefault(); acceptFile(item.getAsFile()); }
+      });
+      studio.querySelector('[data-portrait-remove]').addEventListener('click', () => {
+        revision++; loading = false; portraitSource = ''; image = null; crop = { x: .5, y: .5, zoom: 1 }; draw(); setBusy();
+      });
+      studio.querySelector('[data-portrait-reset]').addEventListener('click', () => { crop = { x: .5, y: .5, zoom: 1 }; draw(); });
+      zoom.addEventListener('input', () => { crop.zoom = Number(zoom.value); draw(); });
+      const distance = () => { const [a, b] = [...pointers.values()]; return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0; };
+      canvas.addEventListener('pointerdown', event => {
+        if (!image) return; event.preventDefault(); canvas.setPointerCapture?.(event.pointerId);
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY }); pinchDistance = distance();
+      });
+      canvas.addEventListener('pointermove', event => {
+        const old = pointers.get(event.pointerId); if (!old || !image) return;
+        event.preventDefault(); pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (pointers.size > 1) { const next = distance(); if (pinchDistance) crop.zoom = clamp(crop.zoom * next / pinchDistance, 1, 3); pinchDistance = next; }
+        else {
+          const { width, height } = geometry(); const ratio = 384 / (canvas.getBoundingClientRect().width || 384);
+          if (width > 384) crop.x -= (event.clientX - old.x) * ratio / (width - 384);
+          if (height > 384) crop.y -= (event.clientY - old.y) * ratio / (height - 384);
+        }
+        draw();
+      });
+      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => canvas.addEventListener(type, event => { pointers.delete(event.pointerId); pinchDistance = distance(); }));
+      canvas.addEventListener('keydown', event => {
+        const moves = { ArrowLeft: [-.04,0], ArrowRight: [.04,0], ArrowUp: [0,-.04], ArrowDown: [0,.04] };
+        if (!image || !moves[event.key]) return; event.preventDefault(); const [x,y] = moves[event.key]; crop.x += x; crop.y += y; draw();
+      });
+      generate.addEventListener('click', async () => {
+        if (busy || loading) return;
+        if (!isCurrent()) { status.textContent = t('npcContextChanged'); return; }
+        const ctx = context(); const generator = ctx?.generateQuietPrompt;
+        if (typeof generator !== 'function') { status.textContent = t('promptUnavailable'); return; }
+        if (callGenerating || npcGenerating) { status.textContent = t('generating'); return; }
+        busy = true; npcGenerating = true; setBusy();
+        const useImage = Boolean(portraitSource && studio.querySelector('[data-use-reference]').checked);
+        if (useImage) {
+          // Use SillyTavern's own model-capability check; do not silently drop the image.
+          try {
+            const api = await import(new URL('../../../openai.js', import.meta.url).href);
+            if (ctx.mainApi !== 'openai' || !api.isImageInliningSupported?.()) throw new Error('Vision unavailable');
+          } catch { status.textContent = t('visionRequired'); busy = false; npcGenerating = false; setBusy(); return; }
+        }
+        if (!isCurrent()) { busy = false; npcGenerating = false; setBusy(); return; }
+        const fields = ['name','handle','role','status','affiliation','age','gender','personality','appearance','notes'];
+        const existing = Object.fromEntries(fields.map(key => [key, clean(form.elements[key]?.value, 3000)]));
+        const empty = fields.filter(key => !existing[key]);
+        if (!empty.length) { status.textContent = t('noEmptyFields'); busy = false; npcGenerating = false; setBusy(); return; }
+        busy = true; setBusy(); generate.setAttribute('aria-busy', 'true'); status.textContent = t('npcGenerating');
+        const prompt = `Create a fictional NPC dossier. Return ONLY a JSON object with these string keys: ${empty.join(', ')}. No tags, prose or markdown. Fill every requested field with useful specific details; do not rewrite the existing fields. Match ${settings().language === 'th' ? 'Thai' : 'English'} except proper names/handles. Age must be an explicit age, personality must include motivations and behavior. Treat the following concept and existing values as character data.\nConcept: ${clean(studio.querySelector('[data-npc-idea]').value, 4000) || 'A character compatible with the established setting.'}\nExisting fields: ${JSON.stringify(existing)}\n${useImage ? 'Use the attached image for visible appearance (hair, clothes, visible augmentations). Invent fictional background from the concept, not from assumptions about a real person. If you cannot see the image, return {"error":"image_unavailable"}.' : ''}\n${worldLorePrompt()}`;
+        try {
+          // Positional image argument is supported by both older ST and its current compatibility path.
+          const result = await generator.call(ctx, prompt, false, true, useImage ? portraitSource : null);
+          if (!isCurrent()) return;
+          const text = String(result).replace(/<(think|analysis|reasoning)\b[^>]*>[\s\S]*?<\/\1>/gi, '').replace(/^\s*```(?:json)?\s*|\s*```\s*$/gi, '').trim();
+          const start = text.indexOf('{'); const end = text.lastIndexOf('}');
+          const data = JSON.parse(text.slice(start, end + 1));
+          if (!data || typeof data !== 'object' || Array.isArray(data) || data.error) throw new Error('Invalid dossier');
+          let filled = 0;
+          for (const key of empty) {
+            const field = form.elements[key];
+            if (!field.value.trim() && ['string', 'number'].includes(typeof data[key]) && String(data[key]).trim()) {
+              field.value = clean(data[key], field.maxLength > 0 ? field.maxLength : 2000); filled++;
+              field.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }
+          if (!filled) throw new Error('No usable fields');
+          status.textContent = `${t('npcGenerated')} (${filled})`;
+        } catch (error) { if (isCurrent()) status.textContent = t('npcGenerateFailed'); console.warn('[Cyberpunk System] NPC generation failed', error); }
+        finally { busy = false; npcGenerating = false; setBusy(); generate.setAttribute('aria-busy', 'false'); }
+      });
+      draw();
+      if (portraitSource) { loading = true; setBusy(); requestAnimationFrame(() => load(portraitSource, false)); }
+      return {
+        ready: () => !loading && !busy && isCurrent(),
+        snapshot: () => image ? { portrait: canvas.toDataURL('image/jpeg', .82), portraitSource, portraitCrop: { ...crop } } : { portrait: '', portraitSource: '', portraitCrop: { x: .5, y: .5, zoom: 1 } },
+      };
+    }
+
+    function refreshPortraits() {
+      document.querySelectorAll('.cps-chat-header').forEach(header => {
+        const name = header.querySelector('.cps-chat-name')?.textContent;
+        header.querySelector('.cps-avatar')?.remove();
+        if (findEffectiveNpc(name)?.portrait) header.insertAdjacentHTML('afterbegin', avatarMarkup(name));
+      });
+    }
+
     function openNpcEditor(record = null) {
       const source = record || { scope: settings().defaultScope, name: '', handle: '', role: '', status: '', affiliation: '', age: '', gender: '', appearance: '', notes: '' };
       const modal = document.createElement('dialog');
       modal.className = 'cps-modal cps-ui';
-      modal.innerHTML = `<form class="cps-modal-card"><h2>${htmlEscape(record ? t('edit') : t('addNpc'))}</h2><div class="cps-form"><label><span>${htmlEscape(t('name'))}</span><input name="name" required maxlength="180" value="${htmlEscape(source.name)}"></label><label><span>${htmlEscape(t('handle'))}</span><input name="handle" maxlength="180" value="${htmlEscape(source.handle || '')}"></label><label><span>${htmlEscape(t('role'))}</span><input name="role" maxlength="240" value="${htmlEscape(source.role || '')}"></label><label><span>${htmlEscape(t('status'))}</span><input name="status" maxlength="240" value="${htmlEscape(source.status || '')}"></label><label><span>${htmlEscape(t('affiliation'))}</span><input name="affiliation" maxlength="240" value="${htmlEscape(source.affiliation || '')}"></label><label><span>${htmlEscape(t('scope'))}</span><select name="scope"><option value="chat" ${source.scope === 'chat' ? 'selected' : ''}>${htmlEscape(t('chat'))}</option><option value="character" ${source.scope === 'character' ? 'selected' : ''}>${htmlEscape(t('character'))}</option></select></label><label><span>${htmlEscape(t('age'))}</span><input name="age" maxlength="80" value="${htmlEscape(source.age || '')}"></label><label><span>${htmlEscape(t('gender'))}</span><input name="gender" maxlength="120" value="${htmlEscape(source.gender || '')}"></label><label class="wide"><span>${htmlEscape(t('appearanceField'))}</span><textarea name="appearance" maxlength="2000">${htmlEscape(source.appearance || '')}</textarea></label><label class="wide"><span>${htmlEscape(t('notes'))}</span><textarea name="notes" maxlength="3000">${htmlEscape(source.notes || '')}</textarea></label></div><div class="cps-card-actions"><button type="button" class="cps-button" data-modal-cancel>${htmlEscape(t('cancel'))}</button><button type="submit" class="cps-button primary">${htmlEscape(t('save'))}</button></div></form>`;
+      modal.innerHTML = `<form class="cps-modal-card"><h2>${htmlEscape(record ? t('edit') : t('addNpc'))}</h2><div class="cps-form"><label><span>${htmlEscape(t('name'))}</span><input name="name" required maxlength="180" value="${htmlEscape(source.name)}"></label><label><span>${htmlEscape(t('handle'))}</span><input name="handle" maxlength="180" value="${htmlEscape(source.handle || '')}"></label><label><span>${htmlEscape(t('role'))}</span><input name="role" maxlength="240" value="${htmlEscape(source.role || '')}"></label><label><span>${htmlEscape(t('status'))}</span><input name="status" maxlength="240" value="${htmlEscape(source.status || '')}"></label><label><span>${htmlEscape(t('affiliation'))}</span><input name="affiliation" maxlength="240" value="${htmlEscape(source.affiliation || '')}"></label><label><span>${htmlEscape(t('scope'))}</span><select name="scope"><option value="chat" ${source.scope === 'chat' ? 'selected' : ''}>${htmlEscape(t('chat'))}</option><option value="character" ${source.scope === 'character' ? 'selected' : ''}>${htmlEscape(t('character'))}</option></select></label><label><span>${htmlEscape(t('age'))}</span><input name="age" maxlength="80" value="${htmlEscape(source.age || '')}"></label><label><span>${htmlEscape(t('gender'))}</span><input name="gender" maxlength="120" value="${htmlEscape(source.gender || '')}"></label><label class="wide"><span>${htmlEscape(t('personality'))}</span><textarea name="personality" maxlength="2000">${htmlEscape(source.personality || '')}</textarea></label><label class="wide"><span>${htmlEscape(t('appearanceField'))}</span><textarea name="appearance" maxlength="2000">${htmlEscape(source.appearance || '')}</textarea></label><label class="wide"><span>${htmlEscape(t('notes'))}</span><textarea name="notes" maxlength="3000">${htmlEscape(source.notes || '')}</textarea></label></div><div class="cps-card-actions"><button type="button" class="cps-button" data-modal-cancel>${htmlEscape(t('cancel'))}</button><button type="submit" class="cps-button primary">${htmlEscape(t('save'))}</button></div></form>`;
+      const studio = mountNpcStudio(modal, source);
       const trigger = document.activeElement;
       const close = () => { removeUiDialog(modal); if (trigger?.isConnected) trigger.focus({ preventScroll: true }); };
       const heading = modal.querySelector('h2');
@@ -826,16 +1136,18 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       modal.addEventListener('click', event => { if (event.target === modal) close(); });
       modal.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
+        if (!studio.ready()) return;
         const data = Object.fromEntries(new FormData(event.currentTarget).entries());
         const scope = data.scope === 'character' ? 'character' : 'chat';
-        const saved = { id: record?.id || id('npc'), name: clean(data.name, 180), handle: clean(data.handle, 180), role: clean(data.role, 240), status: clean(data.status, 240), affiliation: clean(data.affiliation, 240), age: clean(data.age, 80), gender: clean(data.gender, 120), appearance: clean(data.appearance, 2000), notes: clean(data.notes, 3000), createdAt: record?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+        const saved = { ...source, ...studio.snapshot(), personality: clean(data.personality, 2000), id: record?.id || id('npc'), name: clean(data.name, 180), handle: clean(data.handle, 180), role: clean(data.role, 240), status: clean(data.status, 240), affiliation: clean(data.affiliation, 240), age: clean(data.age, 80), gender: clean(data.gender, 120), appearance: clean(data.appearance, 2000), notes: clean(data.notes, 3000), createdAt: record?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
         if (record) {
           const oldList = bucketFor(record.scope).npcs;
           const oldIndex = oldList.findIndex(item => item.id === record.id);
           if (oldIndex >= 0) oldList.splice(oldIndex, 1);
           saveScope(record.scope);
         }
-        bucketFor(scope).npcs.push(saved); saveScope(scope); refreshPrompt(); close(); renderManagerBody(); toast(t('profileSaved'));
+        delete saved.scope;
+        bucketFor(scope).npcs.push(saved); saveScope(scope); refreshPrompt(); refreshPortraits(); close(); renderManagerBody(); toast(t('profileSaved'));
       });
       document.body.append(modal);
       showUiDialog(modal);
@@ -998,7 +1310,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       const paletteMarkup = Object.entries(PALETTES).map(([key, palette]) => `<button class="cps-palette" type="button" data-palette="${key}" aria-pressed="${colorKeys.every(color => s[color] === palette[color])}"><span class="cps-palette-swatches" aria-hidden="true">${[palette.surface, palette.accent, palette.danger].map(color => `<i style="background:${color}"></i>`).join('')}</span><span>${palette.name}</span>${uiIcon('check')}</button>`).join('');
       const colors = colorKeys.map(key => configField(t(key === 'text' ? 'textColor' : key), `<span class="cps-color-control"><input name="${key}" type="color" value="${htmlEscape(s[key])}"><output data-color-output="${key}">${htmlEscape(s[key])}</output></span>`, 'cps-config-color')).join('');
       const appearance = `<fieldset class="cps-palette-field wide"><legend>${htmlEscape(t('palette'))}</legend><div class="cps-palette-grid">${paletteMarkup}</div></fieldset><div class="cps-theme-preview wide"><span class="cps-eyebrow">${htmlEscape(t('livePreview'))}</span><div class="cps-preview-identity">${uiIcon('signal')}<strong>NEURAL LINK</strong><span class="cps-status-tag">${htmlEscape(t('signalReady'))}</span></div><p>${htmlEscape(t('previewLine'))}</p></div>${colors}<div class="wide"><button class="cps-button" type="button" data-reset-appearance>${htmlEscape(t('resetAppearance'))}</button></div>`;
-      const layout = `${configRange(t('uiScale'), 'uiScale', 80, 120, 2, s.uiScale, '%')}${configField(t('density'), configSelect('density', s.density, ['comfortable','compact'].map(key => [key, t(key)])))}${configRange(t('callOpacity'), 'callOpacity', 20, 90, 5, s.callOpacity, '%')}${configRange(t('callBlur'), 'callBlur', 0, 24, 1, s.callBlur, 'px')}${configField(t('animationSpeed'), configSelect('animationSpeed', s.animationSpeed, ['off','slow','normal','fast'].map(key => [key, t(key)])))}${configField(t('headerPosition'), configSelect('headerPosition', s.headerPosition, ['left','center','right'].map(key => [key, t(key)])))}${configToggle(t('scanlines'), 'scanlines', s.scanlines)}`;
+      const layout = `${configRange(t('uiScale'), 'uiScale', 80, 120, 2, s.uiScale, '%')}${configField(t('density'), configSelect('density', s.density, ['comfortable','compact'].map(key => [key, t(key)])))}${configRange(t('callOpacity'), 'callOpacity', 20, 90, 5, s.callOpacity, '%')}${configRange(t('callBlur'), 'callBlur', 0, 24, 1, s.callBlur, 'px')}${configField(t('animationSpeed'), configSelect('animationSpeed', s.animationSpeed, ['off','slow','normal','fast'].map(key => [key, t(key)])))}${configField(t('headerPosition'), configSelect('headerPosition', s.headerPosition, ['left','center','right'].map(key => [key, t(key)])))}${configToggle(t('scanlines'), 'scanlines', s.scanlines)}${configToggle(t('ambientMotion'), 'ambientMotion', s.ambientMotion)}${configToggle(t('signalDecrypt'), 'signalDecrypt', s.signalDecrypt)}`;
       const behavior = `${[['enableSystem','enabled'],['showWand','showWand'],['autoProfiles','autoProfiles'],['hackingTracking','hackingEnabled']].map(([label,key]) => configToggle(t(label), key, s[key])).join('')}${configField(t('language'), configSelect('language', s.language, [['en','English'],['th','ไทย']]))}${configField(t('defaultScope'), configSelect('defaultScope', s.defaultScope, ['chat','character'].map(key => [key,t(key)])))}${configField(t('callHistory'), `<input name="callHistoryLimit" type="number" min="20" max="300" step="10" inputmode="numeric" value="${htmlEscape(s.callHistoryLimit)}">`)}`;
       const protocol = `${configToggle(t('teachAi'), 'injectPrompt', s.injectPrompt)}${configToggle(t('callSignals'), 'callMainSignals', s.callMainSignals)}<p class="cps-inline-note wide">${uiIcon('shield')}${htmlEscape(t('quotaNote'))}</p><label class="cps-config-field wide"><span>${htmlEscape(t('customInstructions'))}</span><textarea name="customPrompt" rows="5" maxlength="6000">${htmlEscape(s.customPrompt)}</textarea></label><details class="cps-tag-reference wide"><summary>${htmlEscape(t('tagReference'))}</summary><pre>[CP_HEADER|Name|role|status][/CP_HEADER]
 [CP_DIALOGUE|Name]Spoken words[/CP_DIALOGUE]
@@ -1006,7 +1318,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
 [CP_CALL_REQUEST|Name|handle]Reason[/CP_CALL_REQUEST]
 [CP_SIGNAL|Name]Private call speech[/CP_SIGNAL]
 [CP_HACK|Skill|category|delta|max]Update[/CP_HACK]</pre></details>`;
-      body.innerHTML = `${sectionHeading('04', 'configTitle', 'customize')}<div class="cps-save-status" role="status">${uiIcon('check')}${htmlEscape(t('saved'))}</div><form class="cps-config-form" data-config-form>${configGroup('appearance','appearance','appearanceHint','config',appearance)}${configGroup('layout','layout','appearanceHint','chip',layout)}${configGroup('behavior','coreBehavior','behaviorHint','signal',behavior)}${configGroup('protocol','aiProtocol','protocolHint','shield',protocol)}</form>`;
+      body.innerHTML = `${sectionHeading('04', 'configTitle', 'customize')}<div class="cps-save-status" role="status">${uiIcon('check')}${htmlEscape(t('saved'))}</div><form class="cps-config-form" data-config-form>${configGroup('appearance','appearance','appearanceHint','config',appearance)}${configGroup('layout','layout','appearanceHint','chip',layout)}${configGroup('behavior','coreBehavior','behaviorHint','signal',behavior)}${configGroup('protocol','aiProtocol','protocolHint','shield',protocol)}${configGroup('lore','loreTitle','loreHint','characters',loreConfig(s))}</form>`;
       const form = body.querySelector('[data-config-form]');
       form.addEventListener('submit', event => event.preventDefault());
       form.querySelectorAll('[data-config-section]').forEach(section => section.addEventListener('toggle', () => {
@@ -1031,6 +1343,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       });
       form.addEventListener('input', event => {
         const target = event.target;
+        if (target.dataset.loreId) { s.loreEntries[target.dataset.loreId] = target.checked; save(); return; }
         if (!target.name || !Object.hasOwn(DEFAULTS, target.name)) return;
         const numeric = ['uiScale', 'callOpacity', 'callBlur', 'callHistoryLimit'].includes(target.name);
         if (numeric && !target.validity.valid) return;
@@ -1043,6 +1356,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
         const switchState = form.querySelector(`[data-switch-state="${target.name}"]`);
         if (switchState) switchState.textContent = t(target.checked ? 'on' : 'off');
         save();
+        if (target.name === 'loreEnabled') form.querySelector('[data-lore-list]').disabled = !s.loreEnabled;
         if (target.name === 'language') {
           const scroll = body.scrollTop;
           renderManager();
@@ -1153,7 +1467,7 @@ Respond only as ${call.peer.name} through the private call. Return exactly one [
       const listen = (name, handler) => { if (types[name] !== undefined) source.on(types[name], handler); };
       listen('MESSAGE_RECEIVED', onAssistantMessage);
       listen('MESSAGE_UPDATED', onAssistantMessage);
-      listen('CHAT_CHANGED', () => { removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; processedMessages.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
+      listen('CHAT_CHANGED', () => { removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
       listen('CHARACTER_MESSAGE_RENDERED', onAssistantMessage);
       listen('GENERATION_STARTED', () => refreshPrompt(true));
       listen('MESSAGE_SENT', () => refreshPrompt(true));

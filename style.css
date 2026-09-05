@@ -441,3 +441,63 @@ dialog.cps-call-overlay::before { content: ''; position: absolute; inset: 0; poi
 @media (prefers-reduced-motion: reduce) {
   .cps-ui *, .cps-ui::before, .cps-ui::after, .cps-chat-block, .cps-toast { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* v1.2: one continuous speaker frame; narration keeps its original spacing. */
+.cps-chat-thread { width: min(100%, 800px); margin: 14px auto; border: 1px solid var(--cps-line); border-left: 2px solid var(--cps-danger); overflow: hidden; }
+.cps-chat-thread > .cps-chat-block { width: 100%; margin: 0 !important; border: 0; border-radius: 0; }
+.cps-chat-thread > .cps-chat-block + .cps-chat-block { border-top: 1px solid var(--cps-line); }
+.cps-chat-thread .cps-chat-header { background: linear-gradient(110deg, color-mix(in srgb, var(--cps-accent) 4%, transparent), transparent 65%); }
+.cps-chat-header { display: flex; align-items: center; gap: 14px; }
+.cps-chat-header > div { min-width: 0; flex: 1; }
+.cps-chat-header[data-position='right'] { flex-direction: row-reverse; }
+.cps-chat-header[data-position='center'] { flex-direction: column; }
+.cps-avatar.cps-avatar-photo, .cps-call-header .cps-avatar.cps-avatar-photo { width: 64px; height: 64px; aspect-ratio: 1; flex: 0 0 64px; border: 1px solid var(--cps-accent); border-radius: 0; clip-path: none; padding: 0; overflow: hidden; }
+.cps-avatar-photo::before, .cps-avatar-photo::after { display: none; }
+.cps-avatar-photo img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.cps-chat-header .cps-avatar.cps-avatar-photo { width: 80px; height: 80px; flex-basis: 80px; }
+.cps-npc-studio { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--cps-line); border-top: 2px solid var(--cps-accent); background: linear-gradient(135deg, color-mix(in srgb, var(--cps-accent) 5%, var(--cps-surface)), var(--cps-surface)); }
+.cps-npc-studio > label { display: grid; gap: 6px; }
+.cps-portrait-controls { display: grid; grid-template-columns: minmax(100px, 180px) minmax(0, 1fr); gap: 16px; }
+.cps-crop-stage { position: relative; align-self: start; aspect-ratio: 1; border: 1px solid var(--cps-accent); background: #101116; }
+.cps-crop-stage canvas { display: block; width: 100%; height: 100%; aspect-ratio: 1; touch-action: none; cursor: grab; }
+.cps-crop-stage canvas:active { cursor: grabbing; }
+.cps-crop-empty { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; color: var(--cps-muted); pointer-events: none; font-size: .85em; }
+.cps-portrait-tools { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cps-portrait-tools > label { position: relative; }
+.cps-portrait-tools input[type='file'] { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.cps-portrait-tools input[type='range'] { width: 100%; min-width: 0; }
+.cps-portrait-tools label:focus-within { outline: 2px solid var(--cps-accent); }
+.cps-npc-studio .cps-reference-toggle { display: flex; gap: 8px; align-items: center; font-size: .86em; }
+.cps-studio-status { color: var(--cps-accent); overflow-wrap: anywhere; font-size: .87em; }
+.cps-lore-list { min-width: 0; display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+.cps-lore-list:disabled { opacity: .48; }
+.cps-lore-list legend { padding-bottom: 12px; color: var(--cps-muted); }
+.cps-lore-entry { padding: 14px; border: 1px solid var(--cps-line); background: var(--cps-surface); }
+.cps-lore-entry label { display: flex; gap: 10px; align-items: center; }
+.cps-lore-entry p { margin: 8px 0; font-size: .87em; }
+.cps-lore-entry a { color: var(--cps-accent); font-size: .74em; overflow-wrap: anywhere; }
+.cps-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.cps-decrypting { animation: cps-decrypt calc(650ms * var(--cps-motion)) steps(2, end); }
+@keyframes cps-decrypt { 0%, 22% { opacity: .55; text-shadow: 2px 0 var(--cps-accent), -1px 0 var(--cps-danger); } 24%, 52% { opacity: .9; text-shadow: -1px 0 var(--cps-accent); } 100% { opacity: 1; text-shadow: none; } }
+/* Two composited decorative planes, no canvas loop or animated blur. */
+.cps-panel, dialog.cps-call-overlay { isolation: isolate; }
+.cps-panel::before, dialog.cps-call-overlay::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; background: repeating-linear-gradient(90deg, transparent 0 63px, color-mix(in srgb, var(--cps-accent) 8%, transparent) 63px 64px), linear-gradient(135deg, transparent 30%, color-mix(in srgb, var(--cps-accent) 12%, transparent) 48%, transparent 65%); }
+html[data-cps-ambient='on'][data-cps-motion='on'] .cps-panel::before,
+html[data-cps-ambient='on'][data-cps-motion='on'] dialog.cps-call-overlay::after { animation: cps-neural-drift calc(12s * var(--cps-motion)) ease-in-out infinite alternate; }
+html[data-cps-ambient='on'][data-cps-motion='on'] .cps-brand-mark { animation: cps-neural-pulse calc(4s * var(--cps-motion)) ease-in-out infinite alternate; }
+@keyframes cps-neural-drift { from { opacity: .3; transform: translateY(-2%); } to { opacity: .8; transform: translateY(2%); } }
+@keyframes cps-neural-pulse { from { box-shadow: inset 0 0 0 transparent; } to { box-shadow: inset 0 0 16px color-mix(in srgb, var(--cps-accent) 18%, transparent); } }
+html[data-cps-motion='off'] :is(.cps-ui, .cps-chat-block, .cps-toast),
+html[data-cps-motion='off'] .cps-ui *, html[data-cps-motion='off'] .cps-ui *::before, html[data-cps-motion='off'] .cps-ui *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .cps-ui, .cps-ui *, .cps-ui::after, .cps-ui *::after, .cps-ui *::before { animation: none !important; transition: none !important; }
+}
+@media (max-width: 480px) {
+  .cps-npc-studio { padding: 12px; }
+  .cps-portrait-controls { grid-template-columns: minmax(100px, 140px) minmax(0, 1fr); gap: 12px; }
+  .cps-portrait-tools .cps-button { padding: 8px; font-size: .8em; }
+  .cps-chat-header .cps-avatar.cps-avatar-photo { width: 64px; height: 64px; flex-basis: 64px; }
+}
+.cps-editor-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 20px; }
+.cps-editor-scroll > .cps-form { padding: 20px 0 4px; }
+@media (max-width: 480px) { .cps-editor-scroll { padding: 12px max(12px, env(safe-area-inset-right)) 18px max(12px, env(safe-area-inset-left)); } }
