@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.0.0';
+const CYBERPUNK_SYSTEM_VERSION = '2.1.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -43,7 +43,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
 
     const I18N = {
       en: {
-        appName: 'Cyberpunk System', openInterface: 'Open interface', settingsIntro: 'Character presentation, private calls, and hacking progression for the active role-play.',
+        appName: 'Cyberpunk System', openInterface: 'Open interface', settingsIntro: 'Characters, private calls, Cyberware, equipment, quests and Breach Protocol for the active chat.',
         coreBehavior: 'Core behavior', enableSystem: 'Enable Cyberpunk System', showWand: 'Show in Wand menu', teachAi: 'Teach the AI when to use each Cyberpunk UI', autoProfiles: 'Create sparse NPC records from tagged speakers', hackingTracking: 'Enable hacking-skill tracking', callSignals: 'Receive active-call signals from normal AI replies',
         language: 'Language / ภาษา', defaultScope: 'Default save scope', headerPosition: 'Header position', callHistory: 'Call history limit', appearance: 'Cyberpunk appearance', accent: 'Primary neon', danger: 'Alert neon', surface: 'Panel surface', textColor: 'Text color', uiScale: 'UI scale', callOpacity: 'Call backdrop opacity', callBlur: 'Call backdrop blur', animationSpeed: 'Animation speed', aiProtocol: 'AI protocol', customInstructions: 'Additional instructions', quotaNote: 'Normal tracking uses the main AI reply. Only the call window AI-send button starts an additional request.', tagReference: 'Tag reference', resetAppearance: 'Reset appearance',
         network: 'Neural Network', characters: 'Characters', hacking: 'Hacking', calls: 'Calls', config: 'Config', close: 'Close', addNpc: 'Add NPC', addSkill: 'Add skill', noNpcs: 'No linked identities in Character or Chat scope.', noSkills: 'No hacking skills stored for this character or chat.', noCalls: 'No private signal history in this chat.', edit: 'Edit', remove: 'Remove', call: 'Call', character: 'Character', chat: 'Chat', name: 'Name', handle: 'Handle', role: 'Role', status: 'Signal status', affiliation: 'Affiliation', age: 'Age', gender: 'Gender', appearanceField: 'Appearance', notes: 'Notes', scope: 'Scope', save: 'Save', cancel: 'Cancel', category: 'Category', level: 'Progress', maximum: 'Maximum', rank: 'Rank',
@@ -51,7 +51,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
         general: 'General', stealth: 'Stealth', intrusion: 'Intrusion', hardware: 'Hardware', social: 'Social Engineering', combat: 'Combat Hacking', currentCall: 'Current signal', history: 'Signal history', noActiveCall: 'No active private signal.', customize: 'Every visible value and behavior below is saved immediately.',
       },
       th: {
-        appName: 'ระบบไซเบอร์พังก์', openInterface: 'เปิดอินเทอร์เฟซ', settingsIntro: 'การนำเสนอตัวละคร สายส่วนตัว และความก้าวหน้าทักษะแฮ็กสำหรับโรลเพลย์ปัจจุบัน',
+        appName: 'ระบบไซเบอร์พังก์', openInterface: 'เปิดอินเทอร์เฟซ', settingsIntro: 'ตัวละคร สายส่วนตัว Cyberware อุปกรณ์ ภารกิจ และ Breach Protocol สำหรับแชตปัจจุบัน',
         coreBehavior: 'การทำงานหลัก', enableSystem: 'เปิดใช้ระบบไซเบอร์พังก์', showWand: 'แสดงในเมนูไม้กายสิทธิ์', teachAi: 'สอน AI ว่าควรใช้ UI แต่ละแบบเมื่อใด', autoProfiles: 'สร้างข้อมูล NPC แบบย่อจากแท็กผู้พูด', hackingTracking: 'เปิดการติดตามทักษะแฮ็ก', callSignals: 'รับสัญญาณสายที่กำลังใช้งานจากคำตอบ AI ปกติ',
         language: 'ภาษา / Language', defaultScope: 'ขอบเขตบันทึกเริ่มต้น', headerPosition: 'ตำแหน่งส่วนหัว', callHistory: 'จำนวนประวัติสาย', appearance: 'รูปลักษณ์ไซเบอร์พังก์', accent: 'สีนีออนหลัก', danger: 'สีนีออนแจ้งเตือน', surface: 'สีพื้นแผง', textColor: 'สีตัวอักษร', uiScale: 'ขนาด UI', callOpacity: 'ความทึบพื้นหลังสาย', callBlur: 'ความเบลอพื้นหลังสาย', animationSpeed: 'ความเร็วแอนิเมชัน', aiProtocol: 'โปรโตคอล AI', customInstructions: 'คำสั่งเพิ่มเติม', quotaNote: 'การติดตามปกติใช้คำตอบ AI หลัก เฉพาะปุ่มส่งหา AI ในหน้าสายเท่านั้นที่สร้างคำขอเพิ่ม', tagReference: 'รายการแท็ก', resetAppearance: 'รีเซ็ตรูปลักษณ์',
         network: 'โครงข่ายประสาท', characters: 'ตัวละคร', hacking: 'การแฮ็ก', calls: 'สาย', config: 'ตั้งค่า', close: 'ปิด', addNpc: 'เพิ่ม NPC', addSkill: 'เพิ่มทักษะ', noNpcs: 'ยังไม่มีตัวตนที่เชื่อมในขอบเขตตัวละครหรือแชต', noSkills: 'ยังไม่มีทักษะแฮ็กสำหรับตัวละครหรือแชตนี้', noCalls: 'ยังไม่มีประวัติสัญญาณส่วนตัวในแชตนี้', edit: 'แก้ไข', remove: 'ลบ', call: 'โทร', character: 'ตัวละคร', chat: 'แชต', name: 'ชื่อ', handle: 'ชื่อในเครือข่าย', role: 'บทบาท', status: 'สถานะสัญญาณ', affiliation: 'สังกัด', age: 'อายุ', gender: 'เพศ', appearanceField: 'รูปลักษณ์', notes: 'หมายเหตุ', scope: 'ขอบเขต', save: 'บันทึก', cancel: 'ยกเลิก', category: 'หมวดหมู่', level: 'ความก้าวหน้า', maximum: 'ค่าสูงสุด', rank: 'แรงก์',
@@ -452,7 +452,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       const call = chatBucket().call;
       const callTranscript = call.active ? call.messages.slice(-14).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer?.name || item.name : 'SYSTEM'}${item.pending ? ' (new/awaiting response)' : ''}: ${clean(item.text, 600)}`).join('\n') : '';
       const activeCall = call.active && call.peer ? `ACTIVE PRIVATE CALL: ${call.peer.name}${call.peer.handle ? ` (@${cleanHandle(call.peer.handle)})` : ''}. Any audible words from this participant must use CP_SIGNAL, never CP_DIALOGUE, until the call ends. If the transcript contains a USER message marked new/awaiting response, answer it in this normal reply with CP_SIGNAL. Otherwise do not invent a redundant call response unless the scene naturally requires the caller to speak.\nRecent private-call transcript:\n${callTranscript || '(connected; no speech yet)'}` : 'No private call is active.';
-      return `[Cyberpunk System output protocol — presentation only; do not explain these rules]
+      return `[Cyberpunk System presentation and scene-state protocol — do not explain these rules]
 Use tags only when their semantic condition is true. Keep ordinary narration outside every tag.
 1. HEADER identifies the NPC who is about to speak. Use once immediately before that NPC's visible spoken turn: [CP_HEADER|Name|role|signal status][/CP_HEADER]. Do not put prose in Header.
 2. DIALOGUE contains only audible spoken NPC words: [CP_DIALOGUE|Name]words[/CP_DIALOGUE]. Never wrap narration, actions, descriptions, or the user's words.
@@ -1332,7 +1332,18 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 [CP_MONOLOGUE|Name]Private thoughts[/CP_MONOLOGUE]
 [CP_CALL_REQUEST|Name|handle]Reason[/CP_CALL_REQUEST]
 [CP_SIGNAL|Name]Private call speech[/CP_SIGNAL]
-[CP_HACK|Skill|category|delta|max]Update[/CP_HACK]</pre></details>`;
+[CP_HACK|Skill|category|delta|max]Update[/CP_HACK]
+[CP_STATE]{"id":"e1","actor":"user","hp":85,"maxHp":100}[/CP_STATE]
+[CP_ITEM]{"id":"e2","actor":"user","operation":"equip","itemId":"stored-id"}[/CP_ITEM]
+[CP_SKILL]{"id":"e3","actor":"user","name":"Short Circuit","cost":2,"resource":"ram"}[/CP_SKILL]
+[CP_BREACH]{"id":"e4","target":"Access point","data":"Locked data"}[/CP_BREACH]
+[CP_TRANSFER]{"id":"e5","from":"NPC name","to":"user","amount":100}[/CP_TRANSFER]
+[CP_SHARE]{"id":"e6","kind":"data","title":"Briefing","description":"Details"}[/CP_SHARE]
+[CP_LOCATION]{"id":"e7","district":"watson","subdistrict":"Kabuki","floor":"12"}[/CP_LOCATION]
+[CP_QUEST]{"id":"e8","questId":"q1","title":"Gig","status":"completed"}[/CP_QUEST]
+[CP_RELIC]{"id":"e9","actor":"user","unlock":true,"points":1}[/CP_RELIC]
+[CP_BLACKWALL]{"id":"e10","actor":"user","exposure":10}[/CP_BLACKWALL]
+[CP_CALL_END]{"id":"e11","actor":"NPC name","reason":"Goodbye"}[/CP_CALL_END]</pre></details>`;
       body.innerHTML = `${sectionHeading('04', 'configTitle', 'customize')}<div class="cps-save-status" role="status">${uiIcon('check')}${htmlEscape(t('saved'))}</div><form class="cps-config-form" data-config-form>${configGroup('appearance','appearance','appearanceHint','config',appearance)}${configGroup('layout','layout','appearanceHint','chip',layout)}${configGroup('behavior','coreBehavior','behaviorHint','signal',behavior)}${configGroup('protocol','aiProtocol','protocolHint','shield',protocol)}${configGroup('lore','loreTitle','loreHint','characters',loreConfig(s))}</form>`;
       const form = body.querySelector('[data-config-form]');
       form.addEventListener('submit', event => event.preventDefault());
@@ -1445,6 +1456,8 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const root = document.getElementById('cyberpunk-system-settings');
       if (!root) return;
       root.lang = settings().language;
+      root.dataset.cpsVersion = CYBERPUNK_SYSTEM_VERSION;
+      root.querySelectorAll('.cps-version').forEach(node => { node.textContent = `v${CYBERPUNK_SYSTEM_VERSION}`; });
       const enabled = root.querySelector('#cps-enabled');
       if (enabled) enabled.checked = settings().enabled;
       translate(root);
@@ -1452,12 +1465,21 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 
     function bindSettings() {
       const root = document.getElementById('cyberpunk-system-settings');
-      if (!root || settingsBound) return;
+      if (!root) return;
+      bindSettingsValues();
+      // Existing drawer markup may survive an extension refresh. Reconcile new entry points.
+      if (!root.querySelector('#cps-open-cyberware')) {
+        const button = document.createElement('button'); button.id = 'cps-open-cyberware'; button.type = 'button'; button.className = 'cps-button'; button.textContent = 'Cyberware';
+        root.querySelector('.cps-settings-actions')?.append(button);
+      }
+      if (root.dataset.cpsBound === CYBERPUNK_SYSTEM_VERSION) return;
+      root.dataset.cpsBound = CYBERPUNK_SYSTEM_VERSION;
       settingsBound = true;
       root.querySelector('#cps-enabled')?.addEventListener('input', event => {
         settings().enabled = event.target.checked; saveSettings(); refreshPrompt();
       });
       root.querySelector('#cps-open-manager')?.addEventListener('click', openManager);
+      root.querySelector('#cps-open-cyberware')?.addEventListener('click', () => systems?.open());
       root.querySelector('#cps-open-config')?.addEventListener('click', () => { managerTab = 'config'; openManager(); });
       bindSettingsValues();
     }
@@ -1510,7 +1532,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ context, settings, chatBucket, effectiveRecords, findEffectiveNpc, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

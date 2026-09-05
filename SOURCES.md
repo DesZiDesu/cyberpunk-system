@@ -1,4 +1,4 @@
-# Cyberware v2 sources and scope
+# Cyberware v2.1 sources and scope
 
 Reviewed for this update on 2026-09-05. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols and the schematic map are original code.
 
@@ -32,3 +32,11 @@ Factual `Items.*` identifiers and category assignments were extracted from the P
 ## Local mechanics, not canon formulas
 
 Cyberpsychosis probability, implant capacity costs, health/stamina recovery, item power, cooldown turns, weapon slots, Relic point rewards/effects, Blackwall exposure and damage are **extension role-play tuning**. The risk multiplier can be set to zero. A risk roll does not command the AI to take control of the player's character. NPC knowledge remains limited to information established in the scene.
+
+## v2.1 visual refinement references
+
+- [CD PROJEKT RED — What is coming in 2.0: Cyberware](https://www.cyberpunk.net/en/news/49129/whats-coming-in-2-0-cyberware): visual/body-installation and capacity framing. The new extension scan, slots and HUD are original components; they do not bundle the game's UI art.
+- [Official build planner](https://www.cyberpunk.net/en/build-planner): angular panels, concise section hierarchy and distinct progression information informed the revised workspace.
+- [CD PROJEKT RED — Update 2.1 accessibility features](https://www.cyberpunk.net/en/news/49591/update-2-1-accessibility-features): readable HUD scale and optional decoration inform the bounded mobile controls and preserved reduced-motion settings.
+
+Theme colors remain configurable. The mobile matrix uses explicit touch-sized rows instead of growing square cells. Desktop and mobile navigation differ in layout while reading the same authoritative chat state.

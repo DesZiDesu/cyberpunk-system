@@ -1,5 +1,17 @@
 # Cyberpunk System
 
+## v2.1.0 — Cyberware HUD and iPhone Breach polish
+
+- Rebuilt the Cyberware workspace with desktop side navigation and an iPhone section picker. Health has a red segmented HUD, RAM shows memory units, and stamina/capacity/stress have distinct telemetry styling and accessible values. Installed implants have a body schematic and slot list; equipment, skills, accounts, mission objectives and Relic/Blackwall use dedicated components.
+- Replaced the oversized Breach matrix with bounded 44 px mobile controls, safe-area padding, a compact header/buffer and visible top-row controls. Underlying extension dialogs are suspended while Breach is open and restored when minimized/closed. Dragging is constrained to keep the header reachable. ACCESS must be matched before Upload enables. Results appear inside the HUD; they do not create a covering toast or leave a huge disabled matrix on screen. The requested transparent background remains.
+- Fixed the extension drawer's stale `v1.1.0` label. Runtime reconciles the version and adds a direct Cyberware entry even if older drawer markup is already present. Manifest, JavaScript, CSS, module URLs, drawer, in-app protocol reference and current documentation are updated together.
+- Main-chat state records now support earned maximum HP/RAM/stamina/capacity changes as well as current resources. Equipment records support add/remove/equip/unequip/use by stored item ID. Using an item consumes resources once and creates its skill header. Invalid status patches are atomic. Private-call quick actions always use the current call participant, independent of the last NPC asset page opened.
+- State continues updating with the UI closed. Repeated host render events do not replay actions, regenerate resources, rebuild the Cyberware DOM or reset scroll. Live updates retain unsaved preferences and focused inputs. Ordinary story turns regenerate once through the existing response; no extra model request is added.
+
+**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.1.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
+
+**Validation:** 113 checks pass: 41 existing UI, 12 portrait/raster/vision integration and 60 RPG behavior checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the remaining catalog/map scope.
+
 ## v2.0.0 — Cyberware, Breach Protocol and connected world systems
 
 Update the extension, then reload SillyTavern. The manifest and all runtime module URLs use `2.0.0`. Runtime modules have no npm dependency; npm is only for development tests.
@@ -109,7 +121,7 @@ Visual direction was informed by Cyberpunk 2077 Senior UI Artist Vladimír Vilim
 3. Paste `https://github.com/DesZiDesu/cyberpunk-system`.
 4. Reload SillyTavern.
 
-For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The interface header should show **v1.1.0**.
+For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.1.0**.
 
 ## AI protocol
 
@@ -144,7 +156,7 @@ Rules taught to the AI:
 
 ## Version
 
-`1.2.0`
+`2.1.0`
 
 ## Development checks
 

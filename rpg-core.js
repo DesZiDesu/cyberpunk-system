@@ -19,6 +19,18 @@
     a.balance = Number.isSafeInteger(a.balance) && a.balance >= 0 ? Math.min(a.balance, 1e12) : 0;
     return a;
   }
+  function patchActor(a, data) {
+    const next = {};
+    for (const key of ['maxHp','maxRam','maxStamina','capacity','hp','ram','stamina','stress']) {
+      if (data[key] === undefined) continue;
+      const value = Number(data[key]);
+      if (!Number.isFinite(value) || value < 0 || value > 1000 || ((key.startsWith('max') || key === 'capacity') && value < 1)) throw Error('Invalid state value: ' + key);
+      next[key] = value;
+    }
+    for (const [key, maximum] of [['hp','maxHp'],['ram','maxRam'],['stamina','maxStamina']]) next[key] = cap(next[key] ?? a[key], 0, next[maximum] ?? a[maximum]);
+    if (next.stress !== undefined) next.stress = cap(next.stress, 0, 100);
+    Object.assign(a, next); return a;
+  }
   function transfer(from, to, amount, reason, transactionId = uid()) {
     amount = money(amount); if (amount < 1 || from === to) throw Error('Invalid transfer');
     hydrate(from); hydrate(to);
@@ -88,5 +100,5 @@
     return true;
   }
   function finish(p,now=Date.now()){if(!['running','ready'].includes(p.status))return;p.status=p.daemons[0].done&&remaining(p,now)>0?'success':'failed';pause(p,now);p.minimized=false;}
-  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,actor,item,hydrate,transfer,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
+  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,actor,item,hydrate,patchActor,transfer,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
 })();
