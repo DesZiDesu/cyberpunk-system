@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.7.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.7.1','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -14,7 +14,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.7.0');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.7.1');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  w.CyberpunkSystem.startCall('Lucy','@@lucy');
@@ -277,6 +277,14 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  w.CyberpunkSystem.openCyberware();click('[data-rpg="tab:settings"]');
  const switchBd=q('[data-bd-switch]');switchBd.checked=true;switchBd.dispatchEvent(new w.Event('change'));
  test('Braindance toggle exposes its draggable on-screen launcher',()=>{assert.ok(q('#cps-bd-float'));assert.equal(state().bd.enabled,true);});
+ const launcher=q('#cps-bd-float');
+ const dragBd=(type,x,y)=>{const e=new w.Event(type,{bubbles:true});Object.assign(e,{button:0,pointerId:41,clientX:x,clientY:y});launcher['on'+type](e);};
+ dragBd('pointerdown',100,100);dragBd('pointermove',9999,9999);dragBd('pointerup',9999,9999);
+ launcher.dispatchEvent(new w.MouseEvent('click',{bubbles:true,detail:1}));
+ test('Dragging the larger launcher stays in bounds without opening playback',()=>{assert.equal(d.querySelector('.cps-bd-window'),null);assert.ok(parseFloat(launcher.style.left)+88<=w.innerWidth);assert.ok(parseFloat(launcher.style.top)+76<=w.innerHeight);});
+ dragBd('pointerdown',100,100);dragBd('pointercancel',100,100);
+ launcher.dispatchEvent(new w.MouseEvent('click',{bubbles:true,detail:1}));
+ test('Cancelled launcher gestures do not open playback',()=>assert.equal(d.querySelector('.cps-bd-window'),null));
  click('#cps-bd-float');
  test('Braindance OS displays owned recording metadata',()=>{assert.ok(q('.cps-bd-library').textContent.includes('Studio K'));assert.ok(q('.cps-bd-library').textContent.includes('Mystery'));assert.ok(q('.cps-bd-library').textContent.includes('Teen'));});
  let playbackRequests=0;ctx.generate=async()=>{playbackRequests++;};events.get('ended')?.();
