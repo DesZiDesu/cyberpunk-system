@@ -30,7 +30,7 @@ const input=(selector,value)=>{const el=q(selector);el.value=value;el.dispatchEv
 let passed=0;
 const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
- for (const file of ['rpg-core.js','rpg-catalog.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+ for (const file of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()'); await wait();
  assert.ok(w.CyberpunkSystem);
  test('Gear image frames cannot stretch with a tall equipment description',()=>{const values={};postcss.parse(css).walkRules(rule=>{if(rule.selector==='.cps-gear-card .cps-gear-visual')rule.walkDecls(decl=>values[decl.prop]=decl.value);});assert.equal(values['aspect-ratio'],'1 / 1');assert.equal(values['min-height'],'0');assert.equal(values['align-self'],'start');assert.equal(values.height,'auto');});

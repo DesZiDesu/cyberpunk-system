@@ -999,3 +999,25 @@ dialog[data-cps-breach-suspended] .cps-environment * {animation-play-state:pause
  .cps-map-controls {width:100%;justify-content:space-between;}
 }
 @media(max-width:350px) {.cps-loadout-overview {grid-template-columns:110px minmax(0,1fr);}.cps-gear-card {grid-template-columns:90px minmax(0,1fr);}}
+
+/* v2.4 NC Zoning Board: detailed tiles, constant-size markers, explicit touch picking. */
+.cps-ncz-viewport {background:#071018;min-height:300px;}
+.cps-ncz-map {background:#071018;}
+.cps-ncz-map image,.cps-ncz-map [data-map-boundaries] {pointer-events:none;}
+.cps-ncz-map.picking,.cps-ncz-map.picking:active {cursor:crosshair;}
+.cps-ncz-boundary {fill:none;stroke:var(--cps-accent);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.6;}
+.cps-ncz-boundary.completed {stroke:#84f3a4;opacity:.9;}
+.cps-ncz-map [data-map-labels] text {fill:#e9f6f7;font-family:var(--cps-font-en);paint-order:stroke;stroke:#071018;stroke-width:3px;vector-effect:non-scaling-stroke;cursor:pointer;}
+.cps-ncz-map .locked text {fill:#b5c6cc;}
+.cps-ncz-map [data-marker] {cursor:pointer;color:var(--cps-accent);}
+.cps-ncz-map [data-marker].npc {color:#a5e1ff;}
+.cps-ncz-map [data-marker].quest {color:#ffe84f;}
+.cps-ncz-map [data-marker] circle {fill:currentColor;stroke:#071018;stroke-width:2;vector-effect:non-scaling-stroke;}
+.cps-ncz-map [data-marker] text {fill:currentColor;font-family:var(--cps-font-en);paint-order:stroke;stroke:#071018;stroke-width:3px;vector-effect:non-scaling-stroke;}
+.cps-ncz-map [data-marker]:focus-visible circle {stroke:#fff;stroke-width:3;}
+.cps-map-network {display:flex;align-items:center;gap:10px;min-height:36px;font-size:11px;line-height:1.6;color:var(--cps-muted);margin-bottom:12px;}
+.cps-map-network button {min-height:44px;}
+.cps-map-network button[hidden] {display:none!important;}
+.cps-ncz-credit {font-size:10px;line-height:1.8;color:var(--cps-muted);border-top:1px solid var(--cps-line);padding-top:12px;margin-top:18px;}
+.cps-ncz-credit a {color:var(--cps-accent);}
+[data-map-pin][aria-pressed=true] {background:var(--cps-accent);color:#071018;}

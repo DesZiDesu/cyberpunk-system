@@ -27,7 +27,7 @@ const wait=async predicate=>{for(let i=0;i<100;i++){if(predicate())return;await 
 const pointer=(type,id,x,y)=>{const event=new w.Event(type,{bubbles:true,cancelable:true});Object.assign(event,{pointerId:id,clientX:x,clientY:y});q('canvas').dispatchEvent(event);};
 let passed=0;const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
- for (const file of ['rpg-core.js','rpg-catalog.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+ for (const file of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()');w.CyberpunkSystem.open();click('[data-record-add]');
  const testImage=createCanvas(1600,800);const pen=testImage.getContext('2d');pen.fillStyle='#ff0000';pen.fillRect(0,0,800,800);pen.fillStyle='#0000ff';pen.fillRect(800,0,800,800);const bytes=testImage.toBuffer('image/png');
  const paste=new w.Event('paste',{bubbles:true,cancelable:true});Object.assign(paste,{clipboardData:{items:[{type:'image/png',getAsFile:()=>({type:'image/png',size:bytes.length,bytes})}]}});q('.cps-modal').dispatchEvent(paste);

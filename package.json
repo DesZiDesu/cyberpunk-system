@@ -1,11 +1,11 @@
 {
   "name": "cyberpunk-system",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check index.js && node --check rpg-core.js && node --check rpg-ui.js && node --check rpg-catalog.js",
-    "test": "node tests/ui-regression.cjs && node tests/portrait-regression.cjs && node tests/rpg-regression.cjs"
+    "check": "node --check index.js && node --check rpg-core.js && node --check rpg-ui.js && node --check rpg-catalog.js && node --check rpg-map-data.js && node --check rpg-map.js",
+    "test": "node tests/ui-regression.cjs && node tests/portrait-regression.cjs && node tests/rpg-regression.cjs && node tests/map-regression.cjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "0.1.100",

@@ -1,6 +1,6 @@
-# Cyberware v2.3 sources and scope
+# Cyberware v2.4 sources and scope
 
-Reviewed through 2026-09-06. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols and the schematic map are original code.
+Reviewed through 2026-09-06. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols are original code. The v2.4 map uses attributed NC Zoning Board geometry and remotely loaded map tiles, described below.
 
 ## Official setting and gameplay references
 
@@ -53,3 +53,14 @@ Reviewed 2026-09-06: [NameThatUI — drawers/sheets](https://namethatui.com/web/
 - [Piggyback official map](https://maps.piggyback.com/cyberpunk-2077/maps/night-city): provided as an external link. No official map image, paid tile or marker database is bundled. The local atlas is original illustrative geometry and must not be used as exact in-game street navigation.
 
 Base sockets: frontal cortex 3, face 1, operating system 1, arms 1, hands 1, skeleton 2, nervous system 3, circulatory system 3, integumentary system 3 and legs 1 (19 total). The two optional sockets bring the total to 21. Slot restrictions preserve existing installations on migration; capacity costs, combat effects and cooldowns remain editable local role-play tuning. New anatomy paths and named square equipment glyphs are original SVG, not traced game art.
+
+## v2.4.0 NC Zoning Board integration
+
+Source snapshot: [nczoning/nc-zoning-board, 3a3ddc2](https://github.com/nczoning/nc-zoning-board/tree/3a3ddc2f3e015206ec7d619b4ba7ebcb4daf93ff), reviewed 2026-09-06.
+
+- [Tile generation](https://github.com/nczoning/nc-zoning-board/blob/3a3ddc2f3e015206ec7d619b4ba7ebcb4daf93ff/docs/tile-generation.md): the current satellite tiles are generated from a 16,384-square source, with 256-square WebP tiles at levels 0–6. The extension loads visible tiles from the pinned upstream GitHub revision. Tiles are not copied into this repository. No upstream application code or mod registration API runs in the extension.
+- [Runtime projection constants](https://github.com/nczoning/nc-zoning-board/blob/3a3ddc2f3e015206ec7d619b4ba7ebcb4daf93ff/assets/js/constants.js): CET extent X −6298..5815, Y −7684..4427. These current runtime constants take precedence over the older calibration coefficients in the upstream coordinate guide. Elevation Z does not determine a narrative floor.
+- [Boundary dataset](https://github.com/nczoning/nc-zoning-board/blob/3a3ddc2f3e015206ec7d619b4ba7ebcb4daf93ff/data/subdistricts.json): 9 district areas and 27 subdistricts, projected into a 1000-square internal coordinate system in `rpg-map-data.js`. Area marker anchors are approximate interior points, not building entrances. Badlands has no enclosing source polygon; the exploration mask treats it as the area outside the other district polygons.
+- [MIT license](third-party/NC-ZONING-LICENSE.txt): retained for the adapted coordinate projection and source documentation. [Upstream assets notice](https://github.com/nczoning/nc-zoning-board/blob/3a3ddc2f3e015206ec7d619b4ba7ebcb4daf93ff/ASSETS.md) distinguishes game-derived imagery and geometry from MIT code. Map imagery © CD PROJEKT RED. This is an unofficial, non-commercial fan project, not approved or endorsed by CD PROJEKT RED; [fan-content guidelines](https://www.cdprojektred.com/en/fan-content) apply separately to game-derived assets.
+
+Runtime safeguards: at most 64 visible detail tiles, bounded zoom, a coarse overview underlay, capped device pixel ratio, request-animation-frame updates, failed-tile retry, and removal of resize/callback work when the map closes. No story text, NPC profile or quest data is submitted to NC Zoning Board. Requests contain only the fixed public tile path. Browser rendering and real iPhone Safari remain unverified in this environment.

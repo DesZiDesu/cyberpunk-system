@@ -1,5 +1,13 @@
 # Cyberpunk System
 
+## v2.4.0 — NC Zoning Board detailed map
+
+- Night City now uses NC Zoning Board satellite tiles generated from its 16K source, loaded only for the visible area. No external JavaScript, iframe, mod-registry login or extra AI request is used. Tiles require internet access; failed requests show a Retry control and source link.
+- Actual district/subdistrict boundaries replace the illustrative geography. Dogtown and NCX Spaceport / Morro Rock are included. The map has touch pan/pinch, desktop wheel zoom, district/subdistrict search, layer switches, and an optional exploration mask. Turn off **Exploration mask** to browse the full map without changing story discovery.
+- **Set my position** arms one deliberate map tap to save CET coordinates; normal browsing never moves the player. Update location accepts optional paired X/Y and elevation Z. Building/floor/interior remain narrative fields; a named area without coordinates displays an approximate marker. This is story tracking, not a live game connection.
+- Shared NPC positions and active mission locations have separate markers. Private NPC locations remain hidden. Main-chat location/mission records update the same saved map, with no additional model call. Existing inventory, cyberware, portraits and story addresses are retained; only the old schematic camera resets for the new geography.
+- Attribution is visible below the map. Map imagery and geometry are game-derived fan content, separate from NC Zoning Board’s MIT-licensed code. See [SOURCES.md](SOURCES.md) and [third-party/ASSETS.md](third-party/ASSETS.md).
+
 ## v2.3.0 — Implant sockets and Night City atlas
 
 - Equipment art stays in a true square inspection frame on mobile and desktop. Named SVG silhouettes distinguish arm implants, optics, medical implants, leg upgrades and weapon types; supplied images fit without distortion.
@@ -34,9 +42,9 @@
 - Main-chat state records now support earned maximum HP/RAM/stamina/capacity changes as well as current resources. Equipment records support add/remove/equip/unequip/use by stored item ID. Using an item consumes resources once and creates its skill header. Invalid status patches are atomic. Private-call quick actions always use the current call participant, independent of the last NPC asset page opened.
 - State continues updating with the UI closed. Repeated host render events do not replay actions, regenerate resources, rebuild the Cyberware DOM or reset scroll. Live updates retain unsaved preferences and focused inputs. Ordinary story turns regenerate once through the existing response; no extra model request is added.
 
-**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.3.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
+**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.4.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
 
-**Validation:** 143 checks pass: 44 UI, 12 portrait/raster/vision integration and 87 RPG behavior checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the remaining catalog/map scope.
+**Validation:** 162 checks pass: 44 UI, 12 portrait/raster/vision integration, 91 RPG behavior and 15 detailed-map checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the catalog and map scope.
 
 ## v2.0.0 — Cyberware, Breach Protocol and connected world systems
 
@@ -50,14 +58,14 @@ Update the extension, then reload SillyTavern. The manifest and all runtime modu
 - **Breach Protocol:** access-point/shard events open a fullscreen HUD with an opaque readability backing. Start in the top row; alternate column/row without reusing cells; match ACCESS before the buffer/time runs out. Finish upload once ACCESS is matched, or pursue the extra sequences. Drag the header vertically or use the slider. Minimize pauses and preserves the puzzle; Resume restores it; Cancel records denial. Hidden data becomes visible only after success, including during streamed generation. A training puzzle is available under Skills/Hacking.
 - **Transfers:** Balance → Transfer, the call `€$` button, or `/cp transfer @lucy 500` in main chat/private composer. Thai command: `โอนเงิน 500 ให้ @lucy`. Exact stored names/handles and positive whole amounts are required. A successful transfer debits and credits both accounts atomically and saves receipts. AI NPCs can pay from their own funded accounts; AI records cannot debit the player. Replayed events cannot spend twice.
 - **Call data:** send the current location, freeform data/mission/location cards, inventory information or mission details. NPCs can attach item/contact cards and end their own call after their final words. A contact card must contain name, handle, role, status, affiliation, age, gender, personality, appearance and notes; pressing Add contact stores the complete profile with its own supplied starting assets. Duplicate and incomplete contacts are rejected. Received cards are also retained in notification history.
-- **Night City:** original layered atlas with pan/pinch zoom, discovered/completed areas, district dossiers and narrative district/subdistrict/building/floor/interior location. Undiscovered zones hide their details. The marker is district-level and routes/buildings are illustrative. An external official-map button opens the actual Night City geography; the extension is **not** a GPS tracker. Location updates come from the story or manual setup; tapping a district does not teleport the player.
+- **Night City:** NC Zoning Board detailed satellite tiles, touch/desktop navigation, exploration mask, district/subdistrict search, player/shared-contact/mission markers and narrative building/floor/interior fields. Exact markers require established CET coordinates or a deliberate map pick. Map tiles load online; no live game or device GPS tracking is performed.
 - **Immersion notifications:** dangerous-zone, mission, money and neural alerts disappear after a configurable 2–60 seconds. Hover/focus pauses dismissal; tap opens details. Status → Notification history retains recent information and received cards. Disable notices in Cyberware Settings.
 - **Relic/Blackwall:** scenario-gated unlocks, earned/manual setup points, local Relic abilities, RAM cost, Blackwall exposure, health/stress consequences and disconnect recovery. No automatic main-story unlocks or forced spoilers. Numeric tuning and simplified effects are described in [SOURCES.md](SOURCES.md).
 - **Equipment data:** 58 named item/family entries plus an opt-in searchable index of 3,420 factual game IDs. All have transparent square SVG fallbacks. **The index is not a verified complete catalog; technical labels and local stats are explicitly marked.** Provenance, source snapshot and regeneration instructions are in [SOURCES.md](SOURCES.md).
 
 **AI integration:** regular events use the existing main response. The call AI button still makes one quiet request; NPC Generate still makes one request and optional vision reference. No background API polling is added. The prompt includes private narrator state plus precise JSON schemas; a model that ignores these schemas will not automatically trigger the new systems. Global Config → prompt injection/extension enable controls still apply. New events are idempotent across render notifications and repeated event IDs. Historical state is not automatically rolled back when editing/swiping/deleting old story messages; use status/equipment controls to reconcile an alternate outcome.
 
-**Verification:** `npm run check` and `npm test` cover 44 DOM checks, 12 native-raster portrait/vision integration checks, and new RPG transaction, skill, call-card, map, puzzle, isolation and security checks. Browser events/ST APIs are simulated. Real iOS Safari rendering, keyboard, touch gestures, live AI compliance and model vision still require device testing. `tests/preview.html` has manager/call/Cyberware/implant/atlas/Breach controls for manual review via an HTTP server.
+**Verification:** `npm run check` and `npm test` cover 44 DOM checks, 12 native-raster portrait/vision integration checks, and new RPG transaction, skill, call-card, map, puzzle, isolation and security checks. Browser events/ST APIs are simulated. Real iOS Safari rendering, remote tile loading, keyboard, touch gestures, live AI compliance and model vision still require device testing. `tests/preview.html` has manager/call/Cyberware/implant/atlas/Breach controls for manual review via an HTTP server.
 
 ## v1.2.0 — Connected identities and private signals
 
@@ -147,7 +155,7 @@ Visual direction was informed by Cyberpunk 2077 Senior UI Artist Vladimír Vilim
 3. Paste `https://github.com/DesZiDesu/cyberpunk-system`.
 4. Reload SillyTavern.
 
-For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.3.0**.
+For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.4.0**.
 
 ## AI protocol
 
@@ -182,7 +190,7 @@ Rules taught to the AI:
 
 ## Version
 
-`2.3.0`
+`2.4.0`
 
 ## Development checks
 
