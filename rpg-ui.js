@@ -3,7 +3,7 @@
 'use strict';
 globalThis.CyberpunkSystemsFactory = api => {
   const C=globalThis.CyberpunkRpgCore, DB=globalThis.CyberpunkCatalog, E=api.htmlEscape;
-  const tr=(en,th)=>api.settings().language==='th'?th:en;
+  const tr=(en,th)=>api.settings?.()?.language==='th'?th:en;
   let panel=null, breach=null, timer=null, actorName='user', tab='status', popup=null;
   const noticeTimers=new Map();
   const tags='STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
@@ -29,7 +29,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   function closePanel(){api.removeUiDialog(panel);panel=null;}
   function dialog(title,body,cls=''){
     const d=document.createElement('dialog');d.className=`cps-ui cps-rpg-dialog ${cls}`;d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '2.1.2')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '2.2.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
   }
   function detail(title,content){api.removeUiDialog(popup);popup=dialog(title,`<div class="cps-rpg-detail">${E(content)}</div>`);}
@@ -89,6 +89,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     for(const draft of drafts){const el=[...body.querySelectorAll('[name]')].find(x=>x.name===draft.name);if(el){el.value=draft.value;el.checked=draft.checked;}}
     if(focused)[...body.querySelectorAll('[name]')].find(x=>x.name===focused)?.focus({preventScroll:true});
     area.scrollTop=scroll;
+    if(!sameTab){area.classList.add('cps-page-enter');area.style.setProperty('--cps-page-direction','1');}
   }
   function form(title,fields,submit){
     const owner=safeOwner();
@@ -129,7 +130,34 @@ globalThis.CyberpunkSystemsFactory = api => {
   function addContact(contact){if(!contact?.name)throw Error('Invalid contact');if(api.findEffectiveNpc(contact.name)||api.findEffectiveNpc(contact.handle)){api.toast('Contact already exists');return;}
     const npc={...contact,id:C.uid(),handle:C.handle(contact.handle),createdAt:new Date().toISOString()};delete npc.rpg;api.chatBucket().npcs.push(npc);const a=actor(npc.name);a.balance=C.money(contact.rpg?.balance??0);a.inventory=(contact.rpg?.inventory||[]).map(C.item);save();notify('CONTACT ADDED',`${npc.name} · @${npc.handle}`);}
   function shareDialog(){form('Send data',[['kind','Type',['data','location','mission'].map(k=>`<option>${k}</option>`).join(''),'select'],['title','Title','','text','required maxlength="180"'],['description','Details','','textarea','required maxlength="5000"']],v=>share(v,'user',api.context()?.name1||'User'));}
-  function callToolbar(overlay){if(overlay.querySelector('.cps-call-tools'))return;const bar=document.createElement('div');bar.className='cps-call-tools';bar.innerHTML=buttons('€$','transfer')+buttons(tr('Location','โลเคชั่น'),'send-location')+buttons(tr('Send data','ส่งข้อมูล'),'share')+buttons('Cyberware','open');bar.querySelectorAll('button').forEach(b=>b.onclick=()=>guard(()=>{if(b.dataset.rpg==='transfer')return transferDialog(api.chatBucket().call.peer?.name);if(b.dataset.rpg==='open')return open('user');if(b.dataset.rpg==='share')return shareDialog();if(b.dataset.rpg==='send-location')return share({kind:'location',title:'Location pin',description:Object.entries(state().map.location).map(([k,v])=>`${k}: ${v}`).join('\n')},'user',api.context()?.name1||'User');}));overlay.querySelector('.cps-call-composer')?.prepend(bar);}
+  function callToolbar(overlay){
+    if(overlay.querySelector('.cps-call-tools-toggle'))return;
+    const trigger=document.createElement('button');trigger.type='button';trigger.className='cps-button cps-call-tools-toggle';
+    trigger.setAttribute('aria-label',tr('Call tools','เครื่องมือระหว่างสาย'));trigger.setAttribute('aria-haspopup','dialog');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','cps-call-tools-drawer');
+    trigger.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>';
+    overlay.querySelector('.cps-end-call')?.after(trigger);
+    let drawer=null;
+    const close=(restore=true)=>{if(!drawer)return;const old=drawer;drawer=null;api.removeUiDialog(old);trigger.setAttribute('aria-expanded','false');if(restore&&trigger.isConnected)trigger.focus({preventScroll:true});};
+    overlay.cpsCloseTools=()=>close(false);
+    trigger.onclick=()=>{
+      if(drawer)return close();
+      drawer=document.createElement('dialog');drawer.id='cps-call-tools-drawer';drawer.className='cps-ui cps-call-drawer';drawer.setAttribute('aria-labelledby','cps-call-tools-title');
+      const choices=[['transfer','component','Eurodollars','Eurodollars','Transfer to your contact','โอนเงินให้ผู้ติดต่อ'],['send-location','mod','Location','โลเคชั่น','Send your current location','ส่งตำแหน่งปัจจุบัน'],['share','data','Information','ส่งข้อมูล','Share a briefing or message','ส่งรายละเอียดภารกิจหรือข้อมูล'],['open','cyberware','Cyberware','Cyberware','Inspect your status and loadout','ดูสถานะและอุปกรณ์ของคุณ']];
+      drawer.innerHTML=`<section class="cps-call-tool-sheet"><div class="cps-drawer-grip" aria-hidden="true"></div><header><div><small>PRIVATE LINK / ACTIONS</small><h2 id="cps-call-tools-title">${E(tr('Call tools','เครื่องมือระหว่างสาย'))}</h2></div><button type="button" class="cps-icon-button" data-tools-close aria-label="${E(tr('Close tools','ปิดเครื่องมือ'))}">×</button></header><div class="cps-call-tools">${choices.map(([action,ic,en,th,hint,hintTh],i)=>`<button type="button" class="cps-call-tool" data-rpg="${action}">${icon(ic)}<span><strong>${E(tr(en,th))}</strong><small>${E(tr(hint,hintTh))}</small></span><b aria-hidden="true">0${i+1} ↗</b></button>`).join('')}</div></section>`;
+      drawer.querySelector('[data-tools-close]').onclick=()=>close();
+      drawer.addEventListener('cancel',e=>{e.preventDefault();e.stopPropagation();close();});
+      drawer.addEventListener('click',e=>{if(e.target===drawer)close();});
+      drawer.querySelectorAll('[data-rpg]').forEach(button=>button.onclick=()=>{const action=button.dataset.rpg;close();guard(()=>{
+        if(action==='transfer')return transferDialog(api.chatBucket().call.peer?.name);
+        if(action==='open')return open('user');
+        if(action==='share')return shareDialog();
+        const location=state().map.location,parts=Object.entries(location).filter(([,v])=>String(v??'').trim());
+        if(!parts.length)throw Error(tr('No location recorded yet. Set it in Cyberware → Night City.','ยังไม่มีตำแหน่ง ตั้งค่าใน Cyberware → แผนที่ก่อน'));
+        return share({kind:'location',title:tr('Location pin','พิกัดตำแหน่ง'),description:parts.map(([k,v])=>`${k}: ${v}`).join('\n')},'user',api.context()?.name1||'User');
+      });});
+      overlay.append(drawer);trigger.setAttribute('aria-expanded','true');api.showUiDialog(drawer);drawer.querySelector('[data-tools-close]').focus({preventScroll:true});
+    };
+  }
   function catalog(){const target=actorName;const d=dialog('Equipment database',`<label>${tr('Search names or game IDs','ค้นชื่อหรือรหัสไอเท็ม')}<input type="search" data-catalog-search placeholder="Monowire / Items…"></label><label><input type="checkbox" data-technical> ${tr('Include 3,420 technical IDs (unverified display names)','รวมรหัสเทคนิค 3,420 รายการ (ยังไม่ยืนยันชื่อแสดงผล)')}</label>${note(tr('50 named entries plus an imported ID index. Not a verified complete game catalog. SVG symbols are original; role-play stats are editable. Adding an item records a manual grant, not a purchase.','มี 50 รายการชื่ออ่านง่ายและดัชนีรหัสนำเข้า ยังไม่ใช่รายการทุกอย่างที่ตรวจสอบครบ ไอคอน SVG วาดใหม่ ค่าสำหรับโรลเพลย์แก้ไขได้ การเพิ่มเป็นการตั้งอุปกรณ์เอง ไม่ใช่การซื้อ'))}<p data-count></p><div class="cps-rpg-catalog"></div>`);
     const draw=()=>{const q=d.querySelector('input[type=search]').value.trim().toLowerCase(),technical=d.querySelector('[data-technical]').checked;
       const all=[...DB.curated,...(technical?DB.records:[])].filter(x=>`${x.name} ${x.id} ${x.category}`.toLowerCase().includes(q));d.querySelector('[data-count]').textContent=`${all.length} results · showing ${Math.min(60,all.length)}`;
@@ -190,7 +218,7 @@ globalThis.CyberpunkSystemsFactory = api => {
       blackwall:()=>{if(!a.blackwall.unlocked||a.ram<4)throw Error('Blackwall locked or insufficient RAM');a.ram-=4;a.blackwall.exposure=C.cap(a.blackwall.exposure+20,0,100);a.stress=C.cap(a.stress+10,0,100);if(a.blackwall.exposure>=60){a.hp=C.cap(a.hp-15,0,a.maxHp);notify('BLACKWALL CONTAMINATION','Neural feedback: −15 health / +10 stress',true);}event('Blackwall',`${actorName} interfaces: exposure ${a.blackwall.exposure}`);},
       disconnect:()=>{a.blackwall.exposure=C.cap(a.blackwall.exposure-15,0,100);a.stress=C.cap(a.stress-5,0,100);s.turn++;event('Blackwall','Disconnected; recovered for one turn');},
     };
-    if(actions[kind])actions[kind]();else if(kind==='equip'){C.equip(a,value);event('equipment',`${actorName}: equipment changed`);}else if(kind==='use'){const it=C.use(a,value,s.turn);event('item used',`${actorName}: ${it.name}`);localSkill(actorName,it.name,it.effect);notify('ABILITY / '+it.name,it.effect||`${actorName} activated ${it.name}`);}else if(kind==='edit-item')editItem(a.inventory.find(x=>x.id===value));
+    if(actions[kind])actions[kind]();else if(kind==='equip'){C.equip(a,value);event('equipment',`${actorName}: equipment changed`);}else if(kind==='use'){const it=C.use(a,value,s.turn);event('item used',`${actorName}: ${it.name}`);localSkill(actorName,it.name,it.effect,it);notify('ABILITY / '+it.name,it.effect||`${actorName} activated ${it.name}`);}else if(kind==='edit-item')editItem(a.inventory.find(x=>x.id===value));
     else if(kind==='remove-item'){const it=a.inventory.find(x=>x.id===value);if(it){it.quantity--;a.inventory=a.inventory.filter(x=>x.quantity>0);event('equipment removed',`${actorName}: ${it.name}`);}}
     else if(kind==='share-item'){const it=a.inventory.find(x=>x.id===value);if(it)share({kind:'item',title:it.name,item:it,description:it.effect},'user',api.context()?.name1||'User');}
     else if(kind==='skill'){const sk=a.skills.find(x=>x.id===value);if(sk){C.useSkill(a,sk,s.turn);event('skill',`${actorName}: ${sk.name}`);localSkill(actorName,sk.name,sk.description);}}
@@ -199,12 +227,35 @@ globalThis.CyberpunkSystemsFactory = api => {
     else if(kind==='relic'){if(!a.relic.unlocked||a.relic.points<1||a.relic.abilities.includes(value))throw Error('Relic locked or no points');a.relic.points--;a.relic.abilities.push(value);if(value==='Jailbreak')a.capacity+=20;if(value==='Emergency Cloaking')C.addSkill(a,{name:value,cost:20,resource:'stamina',cooldown:3,description:'Break visual contact in the role-play scene.'});if(value==='Vulnerability Analytics')C.addSkill(a,{name:value,cost:2,resource:'ram',cooldown:2,description:'Analyze an observable weak point; does not reveal secrets.'});event('Relic',`${actorName}: ${value} unlocked`);}
     save();render();
   }
-  function skillHtml(name,skill,description=''){return `<section class="cps-chat-block cps-chat-skill"><div class="cps-chat-kicker">${icon('quickhack')}<span>${E(name)}</span><small>SKILL ACTIVATED</small></div><strong>${E(skill)}</strong>${note(description)}</section>`;}
-  function localSkill(name,skill,description){const s=state(),index=(api.context()?.chat?.length||0)-1;s.skillCards??=[];s.skillCards.push({id:C.uid(),index,name,skill,description});s.skillCards=s.skillCards.slice(-100);save();document.querySelectorAll('.mes_text').forEach(decorate);}
-  function decorate(element){const index=Number(element.closest('[mesid]')?.getAttribute('mesid'));if(!element.closest('[mesid]')||!Number.isInteger(index))return;for(const card of state().skillCards||[]){if(card.index!==index||[...element.querySelectorAll('[data-local-skill]')].some(n=>n.dataset.localSkill===card.id))continue;const block=document.createElement('div');block.dataset.localSkill=card.id;block.innerHTML=skillHtml(card.name,card.skill,card.description);element.append(block);}}
+  // Read-only card data: displaying history must never create an actor or spend resources.
+  function skillReading(name,skill,record={},itemRecord=null){
+    const player=['user','player',api.context?.()?.name1].includes(name),rpg=api.chatBucket?.()?.rpg;
+    const npc=player?null:api.findEffectiveNpc?.(C.handle(name));
+    const a=player?rpg?.player:rpg?.actors?.[`npc:${npc?.id||npc?.name?.toLowerCase()}`];
+    const match=v=>String(v.name).toLowerCase()===String(skill).toLowerCase();
+    const sk=a?.skills?.find(match),it=itemRecord||(!sk&&a?.inventory?.find(match));
+    const legacy=player?api.effectiveRecords?.('skills')?.find(match):null;
+    const info={description:record.description||sk?.description||it?.effect||legacy?.notes||'',category:it?.category||legacy?.category||'ABILITY',rank:legacy?.rank||'',level:legacy?.level??sk?.level,progress:legacy?.level??sk?.xp,maximum:legacy?.max??(sk?100:undefined),cost:sk?.cost??record.cost,resource:sk?.resource??record.resource,cooldown:sk?.cooldown??it?.cooldown??record.cooldown,slot:it?.slot,capacity:it?.category==='cyberware'?it.capacity:undefined};
+    if(it){info.cost=it.category==='quickhack'?Math.max(1,Math.round(it.power/10)):undefined;info.resource=it.category==='quickhack'?'ram':undefined;}
+    return info;
+  }
+  function skillKey(data){return data.id?`id:${C.text(data.id,160)}`:`payload:${api.fingerprint?.(JSON.stringify(data))||JSON.stringify(data)}`;}
+  function rememberSkill(data,info){const s=state();s.skillReadings??=[];s.skillReadings.push({key:skillKey(data),info});s.skillReadings=s.skillReadings.slice(-300);}
+  function skillHtml(name,skill,description='',info=null){
+    info=info||skillReading(name,skill,{description});
+    const number=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
+    const field=(label,value)=>`<div><dt>${E(label)}</dt><dd>${E(value)}</dd></div>`;
+    const stats=[number(info.cost)?field(tr('COST','ค่าใช้'),`${info.cost} ${String(info.resource||'').toUpperCase()}`):'',number(info.cooldown)?field(tr('COOLDOWN','คูลดาวน์'),`${info.cooldown} ${tr('turns','เทิร์น')}`):'',number(info.capacity)?field(tr('CAPACITY','ภาระติดตั้ง'),info.capacity):'',info.slot?field(tr('SLOT','ตำแหน่ง'),info.slot):''].join('');
+    const progress=number(info.progress)&&number(info.maximum)&&Number(info.maximum)>0?C.cap(Number(info.progress)/Number(info.maximum)*100,0,100):null;
+    const displayName=['user','player'].includes(name)?api.context?.()?.name1||tr('You','คุณ'):C.handle(name);
+    return `<section class="cps-chat-block cps-chat-skill ${info.rejected?'rejected':''}"><div class="cps-chat-kicker">${icon('quickhack')}<span>${E(displayName)}</span><small>${E(info.rejected?tr('NOT ACTIVATED','ไม่ได้ใช้งาน'):tr('SKILL ACTIVATED','ใช้งานสกิล'))}</small></div><div class="cps-chat-skill-heading"><div><small>${E(String(info.category||'ABILITY').toUpperCase())}${number(info.level)?` / LV.${E(info.level)}`:''}</small><strong>${E(skill)}</strong></div>${info.rank?`<span class="cps-chat-skill-rank"><small>${E(tr('RANK','แรงก์'))}</small><b>${E(info.rank)}</b></span>`:''}</div>${(description||info.description)?note(description||info.description):''}${stats?`<dl class="cps-chat-skill-specs">${stats}</dl>`:''}${progress===null?'':`<div class="cps-chat-mastery"><div><span>${E(tr('MASTERY','ความชำนาญ'))}</span><b>${E(info.progress)} / ${E(info.maximum)}</b></div><div class="cps-progress" role="progressbar" aria-label="${E(tr('Mastery','ความชำนาญ'))}" aria-valuemin="0" aria-valuemax="${E(info.maximum)}" aria-valuenow="${C.cap(info.progress,0,info.maximum)}" style="--cps-progress:${progress}%"><i></i></div></div>`}${info.rejected?note(info.rejected):''}</section>`;
+  }
+  function localSkill(name,skill,description,itemRecord=null){const s=state(),index=(api.context()?.chat?.length||0)-1;s.skillCards??=[];s.skillCards.push({id:C.uid(),index,name,skill,description,info:skillReading(name,skill,{description},itemRecord)});s.skillCards=s.skillCards.slice(-100);save();document.querySelectorAll('.mes_text').forEach(decorate);}
+  function decorate(element){const index=Number(element.closest('[mesid]')?.getAttribute('mesid'));if(!element.closest('[mesid]')||!Number.isInteger(index))return;for(const card of state().skillCards||[]){if(card.index!==index||[...element.querySelectorAll('[data-local-skill]')].some(n=>n.dataset.localSkill===card.id))continue;const block=document.createElement('div');block.dataset.localSkill=card.id;block.innerHTML=skillHtml(card.name,card.skill,card.description,card.info);element.append(block);}}
+  function recordedSkill(data){const info=api.chatBucket?.()?.rpg?.skillReadings?.find(x=>x.key===skillKey(data))?.info;return skillHtml(data.actor||'user',data.name||'Ability',data.description||'',info||skillReading(data.actor||'user',data.name,{description:data.description,cost:data.cost,resource:data.resource,cooldown:data.cooldown}));}
   function decode(value){const n=document.createElement('div');n.innerHTML=value;return n.textContent||'';}
-  function transform(value){let out=String(value||'').replace(/\[CP_SKILL\|([^\]|]+)\|([^\]]+)\]([\s\S]*?)\[\/CP_SKILL\]/gi,(_,name,skill,desc)=>skillHtml(decode(name),decode(skill),decode(desc)));
-    out=out.replace(/\[CP_SKILL\]([\s\S]*?)\[\/CP_SKILL\]/gi,(_,json)=>{try{const v=JSON.parse(decode(json));return skillHtml(v.actor||'user',v.name||'Ability',v.description||'');}catch{return '';}});
+  function transform(value){let out=String(value||'').replace(/\[CP_SKILL\|([^\]|]+)\|([^\]]+)\]([\s\S]*?)\[\/CP_SKILL\]/gi,(_,name,skill,desc)=>recordedSkill({actor:decode(name),name:decode(skill),description:decode(desc)}));
+    out=out.replace(/\[CP_SKILL\]([\s\S]*?)\[\/CP_SKILL\]/gi,(_,json)=>{try{const v=JSON.parse(decode(json));return recordedSkill(v);}catch{return '';}});
     out=out.replace(new RegExp(`\\[CP_(${tags})\\](?:[\\s\\S]*?)\\[\\/CP_\\1\\]`,'gi'),'');
     // Streamed machine payloads (especially breach secrets) must never flash in chat.
     return out.replace(new RegExp(`\\[CP_(?:${tags})\\][\\s\\S]*$`,'gi'),'');
@@ -218,14 +269,14 @@ globalThis.CyberpunkSystemsFactory = api => {
     for(const m of records){let data;try{data=JSON.parse(m[2]);if(!data||Array.isArray(data)||typeof data!=='object')continue;}catch{continue;}
       const type=m[1].toUpperCase(),receipt=`record:${data.id?C.text(data.id,160):key+':'+type+':'+api.fingerprint(m[2])}`;if(claimed.has(receipt))continue;claimed.add(receipt);changed=true;
       try{
-        if(type==='SKILL'){const a=actor(data.actor||'user');C.useSkill(a,data,s.turn);event('skill',`${data.actor||'user'}: ${data.name}`);}
+        if(type==='SKILL'){const a=actor(data.actor||'user');C.useSkill(a,data,s.turn);rememberSkill(data,skillReading(data.actor||'user',data.name,data));event('skill',`${data.actor||'user'}: ${data.name}`);}
         if(type==='STATE'){C.patchActor(actor(data.actor||'user'),data);event('status',`${data.actor||'user'}: ${C.text(data.reason||'Story status updated',500)}`);}
         if(type==='ITEM'){
           const a=actor(data.actor||'user');
           const it=a.inventory.find(x=>x.id===data.itemId||x.catalogId===data.itemId);
           if(data.operation==='remove') {if(!it)throw Error('Item missing');it.quantity-=Math.max(1,Math.round(C.cap(data.quantity??1,1,9999)));a.inventory=a.inventory.filter(x=>x.quantity>0);}
           else if(['equip','unequip'].includes(data.operation)) {if(!it)throw Error('Item missing');if(data.operation==='equip'&&!it.equipped)C.equip(a,it.id);else if(data.operation==='unequip')it.equipped=false;}
-          else if(data.operation==='use') {if(!it)throw Error('Item missing');C.use(a,it.id,s.turn);localSkill(data.actor||'user',it.name,it.effect);}
+          else if(data.operation==='use') {if(!it)throw Error('Item missing');C.use(a,it.id,s.turn);localSkill(data.actor||'user',it.name,it.effect,it);}
           else if((!data.operation||data.operation==='add')&&data.item?.name) {const added=C.item(data.item);if(a.inventory.some(x=>x.id===added.id))throw Error('Item ID already stored; use its existing record');a.inventory.push(added);notify('EQUIPMENT RECEIVED',data.item.name);}
           else throw Error('Invalid equipment operation');
           event('equipment',`${data.actor||'user'}: ${data.operation||'add'} ${it?.name||data.item?.name||''}`);
@@ -238,7 +289,7 @@ globalThis.CyberpunkSystemsFactory = api => {
         if(type==='RELIC'){const a=actor(data.actor||'user');if(data.unlock===true)a.relic.unlocked=true;if(a.relic.unlocked&&data.points!==undefined)a.relic.points=C.cap(a.relic.points+Math.round(C.cap(data.points,-10,10)),0,99);}
         if(type==='BLACKWALL'){const a=actor(data.actor||'user');if(data.unlock===true)a.blackwall.unlocked=true;if(a.blackwall.unlocked&&data.exposure!==undefined)a.blackwall.exposure=C.cap(a.blackwall.exposure+C.cap(data.exposure,-100,100),0,100);}
         if(type==='CALL_END'){const call=api.chatBucket().call;if(call.active&&C.handle(data.actor).toLowerCase()===C.handle(call.peer?.name).toLowerCase()){if(data.reason)api.appendCallMessage('system',call.peer.name,C.text(data.reason));api.endCall();}}
-      }catch(e){notify('SYSTEM RECORD REJECTED',`${type}: ${e.message}`);}
+      }catch(e){if(type==='SKILL')rememberSkill(data,{...skillReading(data.actor||'user',data.name,data),rejected:e.message});notify('SYSTEM RECORD REJECTED',`${type}: ${e.message}`);}
     }
     // Nested notifications and transfers may save; commit the full claim set last.
     if(!changed)return;

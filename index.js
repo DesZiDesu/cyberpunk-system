@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.1.2';
+const CYBERPUNK_SYSTEM_VERSION = '2.2.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -288,6 +288,18 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       return `<time datetime="${date.toISOString()}">${htmlEscape(date.toLocaleTimeString(settings().language === 'th' ? 'th-TH' : 'en-GB', { hour: '2-digit', minute: '2-digit' }))}</time>`;
     }
 
+    function mountEnvironment(node) {
+      if (node.matches('.cps-overlay, .cps-rpg-main')) {
+        const host = node.querySelector('.cps-panel') || node;
+        if (!host.querySelector(':scope > .cps-environment')) {
+          const environment = document.createElement('div');
+          environment.className = 'cps-environment'; environment.setAttribute('aria-hidden', 'true');
+          environment.innerHTML = '<i class="cps-environment-grid"></i><i class="cps-environment-beam"></i>' + Array.from({length:12}, (_,i) => `<i class="cps-particle" style="--particle-x:${(i*37+11)%100}%;--particle-y:${(i*23+7)%100}%;--particle-delay:${-i*1.7}s;--particle-duration:${13+i%5*3}s"></i>`).join('');
+          host.prepend(environment);
+        }
+      }
+    }
+
     // Bind only while an overlay is open; visualViewport follows the iOS keyboard.
     function showUiDialog(node) {
       const viewport = globalThis.visualViewport;
@@ -317,6 +329,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       node.addEventListener('click', event => event.stopPropagation());
       node.addEventListener('keydown', event => event.stopPropagation());
       node.lang = settings().language;
+      mountEnvironment(node);
       measure();
       if (typeof node.showModal === 'function') node.showModal();
       else node.setAttribute('open', '');
@@ -324,6 +337,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
 
     function removeUiDialog(node) {
       if (!node) return;
+      node.cpsCloseTools?.();
       node.cpsCleanup?.();
       try { node.close?.(); } catch {}
       node.remove();
@@ -1396,6 +1410,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const body = manager?.querySelector('.cps-panel-body');
       if (!body) return;
       const scroll = body.scrollTop;
+      body.classList.remove('cps-page-enter');
       body.setAttribute('aria-labelledby', `cps-tab-${managerTab}`);
       if (managerTab === 'characters') renderCharacters(body);
       else if (managerTab === 'hacking') renderHacking(body);
@@ -1405,6 +1420,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
     }
 
     function selectManagerTab(tab) {
+      const changed = managerTab !== tab;
       managerTab = tab;
       manager.querySelectorAll('[data-tab]').forEach(button => {
         const selected = button.dataset.tab === tab;
@@ -1413,6 +1429,12 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       });
       manager.querySelector('.cps-panel-body').scrollTop = 0;
       renderManagerBody();
+      if (changed) {
+        const body = manager.querySelector('.cps-panel-body');
+        body.classList.remove('cps-page-enter');
+        void body.offsetWidth;
+        body.classList.add('cps-page-enter');
+      }
     }
 
     function renderManager() {
@@ -1430,6 +1452,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         });
       });
       renderManagerBody();
+      mountEnvironment(manager);
     }
 
     function closeManager() {

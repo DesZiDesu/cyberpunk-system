@@ -16,7 +16,7 @@ Reviewed for this update on 2026-09-05. This is an unofficial SillyTavern role-p
 - [Polygon — Breach Protocol guide](https://www.polygon.com/cyberpunk-2077-guide-walkthrough/22163900/breach-protocol-encrypted-shard-militech-datashard-access-point-quickhack-buffer/).
 - [Steam Community — Breach Protocol guide](https://steamcommunity.com/sharedfiles/filedetails/?id=2318375253).
 
-The local puzzle starts in the top row, alternates column/row, forbids reuse of a selected cell and checks contiguous code sequences in a limited buffer. Timer starts on the first choice. **Extension conveniences:** minimizing pauses the timer; a slider/drag moves the transparent HUD; generated sequences and rewards are local. ACCESS unlocks data, DATAMINE/BONUS are optional sequence goals. These are inspired mechanics and original presentation, not an exact replica of the game UI.
+The local puzzle starts in the top row, alternates column/row, forbids reuse of a selected cell and checks contiguous code sequences in a limited buffer. Timer starts on the first choice. **Extension conveniences:** minimizing pauses the timer; a slider/drag moves the outline HUD over its opaque workspace; generated sequences and rewards are local. ACCESS unlocks data, DATAMINE/BONUS are optional sequence goals. These are inspired mechanics and original presentation, not an exact replica of the game UI.
 
 ## Equipment index provenance
 
@@ -40,3 +40,7 @@ Cyberpsychosis probability, implant capacity costs, health/stamina recovery, ite
 - [CD PROJEKT RED — Update 2.1 accessibility features](https://www.cyberpunk.net/en/news/49591/update-2-1-accessibility-features): readable HUD scale and optional decoration inform the bounded mobile controls and preserved reduced-motion settings.
 
 Theme colors remain configurable. The mobile matrix uses explicit touch-sized rows instead of growing square cells. Desktop and mobile navigation differ in layout while reading the same authoritative chat state.
+
+## v2.2.0 interaction references
+
+Reviewed 2026-09-06: [NameThatUI — drawers/sheets](https://namethatui.com/web/dialog-drawer-sheet), [easing](https://namethatui.com/web/easing), and [21st — background components](https://21st.dev/community/components/s/background). Used as pattern references for an original dependency-free implementation: contextual bottom sheet, eased page reveals, sparse particle/grid/light layers. No third-party component source copied.

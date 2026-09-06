@@ -62,6 +62,7 @@ const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
  test('Switch updates state and turns decorative texture off',()=>{assert.equal(ctx.extensionSettings.cyberpunk_system.scanlines,false);assert.equal(d.documentElement.style.getPropertyValue('--cps-scan-opacity'),'0');assert.equal(q('[data-switch-state="scanlines"]').textContent,'Off');});
  input('[name="language"]','th');await wait();
  test('Thai translation keeps the active accordion and selected values',()=>{assert.equal(q('.cps-overlay').lang,'th');assert.equal(q('[data-tab="config"]').textContent.includes('ตั้งค่า'),true);assert.equal(q('[data-config-section="layout"]').open,true);assert.equal(q('[name="callBlur"]').value,'7');});
+ test('Language rebuild retains exactly one decorative environment',()=>{assert.equal(d.querySelectorAll('.cps-panel > .cps-environment').length,1);assert.equal(d.querySelectorAll('.cps-panel .cps-particle').length,12);});
  input('[name="language"]','en');await wait();
  const lore=q('[name="loreEnabled"]');
  test('World data defaults off without adding lore to the AI prompt',()=>{w.CyberpunkSystem.refreshPrompt(true);assert.equal(lore.checked,false);assert.equal(lastPrompt.includes('Optional Cyberpunk 2077'),false);});

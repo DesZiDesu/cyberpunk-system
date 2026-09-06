@@ -832,3 +832,80 @@ dialog.cps-breach::backdrop {background:#04080c;backdrop-filter:none;}
 .cps-gear-visual .cps-item-image {width:88px;height:88px;max-width:65%;object-fit:contain;}
 @media(max-width:600px){.cps-status-overview {grid-template-columns:minmax(0,1fr) 125px;}.cps-loadout-overview {grid-template-columns:135px minmax(0,1fr);gap:14px;}.cps-body-scan {padding:8px;}.cps-scan-caption {flex-wrap:wrap;font-size:8px;}}
 @media(max-width:350px){.cps-status-overview {grid-template-columns:minmax(0,1fr) 105px;}.cps-loadout-overview {grid-template-columns:115px minmax(0,1fr);gap:10px;}}
+
+/* v2.2: ability telemetry, contextual call sheet and ambient environments. */
+.cps-chat-skill {padding:0;background:var(--cps-surface);border-top:2px solid var(--cps-accent);border-left-width:1px;}
+.cps-chat-skill .cps-chat-kicker {padding:10px 16px;background:linear-gradient(90deg,color-mix(in srgb,var(--cps-accent) 10%,transparent),transparent);font-size:12px;}
+.cps-chat-skill-heading {display:flex;align-items:center;gap:16px;padding:18px 16px 8px;}
+.cps-chat-skill-heading > div {flex:1;min-width:0;}
+.cps-chat-skill-heading small {display:block;color:var(--cps-muted);font-size:10px;letter-spacing:.1em;}
+.cps-chat-skill-heading strong {display:block;font-size:clamp(19px,3vw,25px);line-height:1.4;margin-top:6px;color:var(--cps-accent);}
+.cps-chat-skill-rank {display:grid;place-items:center;gap:4px;min-width:48px;min-height:54px;border:1px solid var(--cps-line);}
+.cps-chat-skill-rank b {font:600 22px var(--cps-font-en);color:var(--cps-accent);}
+.cps-chat-skill > .cps-rpg-note {padding:0 16px;font-size:13px;}
+.cps-chat-skill-specs {display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:1px;margin:14px 16px;background:var(--cps-line);border:1px solid var(--cps-line);}
+.cps-chat-skill-specs > div {min-width:0;padding:10px 12px;background:var(--cps-surface);}
+.cps-chat-skill-specs dt {font-size:9px;letter-spacing:.08em;color:var(--cps-muted);}
+.cps-chat-skill-specs dd {margin:6px 0 0;font-size:13px;color:var(--cps-text);}
+.cps-chat-mastery {padding:0 16px 18px;}
+.cps-chat-mastery > div:first-child {display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:10px;color:var(--cps-muted);}
+.cps-chat-mastery b {color:var(--cps-accent);}
+.cps-chat-mastery .cps-progress {height:8px;}
+.cps-chat-mastery .cps-progress::after {content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),var(--cps-surface) calc(10% - 2px) 10%);}
+.cps-chat-skill.rejected {border-top-color:var(--cps-danger);}
+.cps-chat-skill.rejected .cps-chat-kicker small {color:var(--cps-danger);}
+.cps-chat-skill-heading:last-child {padding-bottom:18px;}
+.cps-call-actions .cps-end-call {margin-right:0;}
+.cps-call-actions .cps-call-tools-toggle {flex:0 0 44px;padding:10px;min-height:44px;margin-right:auto;}
+.cps-call-tools-toggle svg {display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.4;}
+.cps-call-tools-toggle[aria-expanded=true] {color:var(--cps-accent);border-color:var(--cps-accent);}
+dialog.cps-ui.cps-call-drawer {padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:transparent;}
+dialog.cps-call-drawer[open] {display:flex;align-items:flex-end;justify-content:flex-end;}
+dialog.cps-call-drawer::backdrop {background:rgb(2 7 11 / .78);}
+.cps-call-tool-sheet {width:min(440px,100%);max-height:100%;min-height:0;overflow:auto;overscroll-behavior:contain;background:#0a1118;color:var(--cps-text);border:1px solid var(--cps-line);border-top:2px solid var(--cps-accent);padding:10px 18px 18px;box-shadow:0 -12px 50px #0006;animation:cps-sheet-enter calc(260ms * var(--cps-motion)) cubic-bezier(.16,1,.3,1);}
+.cps-drawer-grip {width:36px;height:3px;margin:0 auto 15px;background:var(--cps-accent);opacity:.6;}
+.cps-call-tool-sheet > header {display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.cps-call-tool-sheet > header > div {flex:1;min-width:0;}
+.cps-call-tool-sheet h2 {font-size:20px;line-height:1.45;}
+.cps-call-tool-sheet header small {font-size:9px;letter-spacing:.12em;color:var(--cps-accent);}
+.cps-call-tool-sheet .cps-call-tools {display:grid;gap:8px;margin:0;}
+.cps-call-tools .cps-call-tool {display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:70px;width:100%;padding:12px;text-align:left;border:1px solid var(--cps-line);border-left:2px solid var(--cps-accent);color:var(--cps-text);background:#101b23;border-radius:0;}
+.cps-call-tool .cps-item-image {width:28px;height:28px;color:var(--cps-accent);}
+.cps-call-tool span {min-width:0;}
+.cps-call-tool strong {display:block;font-size:14px;}
+.cps-call-tool small {display:block;margin-top:4px;color:var(--cps-muted);font-size:11px;line-height:1.5;}
+.cps-call-tool > b {font:10px var(--cps-font-en);color:var(--cps-accent);}
+.cps-call-tool:hover,.cps-call-tool:focus-visible {border-color:var(--cps-accent);background:#172630;}
+@keyframes cps-sheet-enter {from {opacity:.2;transform:translateY(30px);}to {opacity:1;transform:translateY(0);}}
+.cps-panel,dialog.cps-rpg-main {isolation:isolate;}
+.cps-panel > :not(.cps-environment),.cps-rpg-main > :not(.cps-environment) {position:relative;z-index:1;}
+.cps-environment {display:none;position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;contain:strict;color:var(--cps-accent);}
+html[data-cps-ambient=on] .cps-environment {display:block;}
+.cps-environment i {position:absolute;display:block;pointer-events:none;}
+.cps-environment-grid {inset:-8%;opacity:.1;background:repeating-linear-gradient(90deg,transparent 0 59px,currentColor 59px 60px),repeating-linear-gradient(0deg,transparent 0 59px,currentColor 59px 60px);transform:skewY(-7deg);}
+.cps-environment-beam {inset:-30%;opacity:0;background:linear-gradient(125deg,transparent 38%,color-mix(in srgb,var(--cps-accent) 12%,transparent) 48%,transparent 58%);}
+.cps-particle {left:var(--particle-x);top:var(--particle-y);width:2px;height:2px;background:currentColor;opacity:.22;box-shadow:0 0 7px currentColor;}
+html[data-cps-motion=on] .cps-environment-grid {animation:cps-grid-flow calc(28s * var(--cps-motion)) ease-in-out infinite alternate;}
+html[data-cps-motion=on] .cps-environment-beam {animation:cps-light-pass calc(18s * var(--cps-motion)) ease-in-out infinite;}
+html[data-cps-motion=on] .cps-particle {animation:cps-particle-drift calc(var(--particle-duration) * var(--cps-motion)) var(--particle-delay) linear infinite;}
+@keyframes cps-grid-flow {from {transform:translateY(-10px) skewY(-7deg);}to {transform:translateY(25px) skewY(-7deg);}}
+@keyframes cps-light-pass {0%,100% {opacity:0;transform:translateX(-12%);}45%,65% {opacity:1;transform:translateX(12%);}}
+@keyframes cps-particle-drift {0% {opacity:0;transform:translate3d(0,20px,0);}20%,75% {opacity:.38;}100% {opacity:0;transform:translate3d(20px,-100px,0);}}
+.cps-page-enter > :not(.cps-environment) {animation:cps-page-enter calc(290ms * var(--cps-motion)) cubic-bezier(.16,1,.3,1) both;}
+.cps-page-enter > :nth-child(2) {animation-delay:30ms;}
+.cps-page-enter > :nth-child(3) {animation-delay:55ms;}
+@keyframes cps-page-enter {from {opacity:0;transform:translateY(10px);}to {opacity:1;transform:none;}}
+@media(max-width:480px) {
+ .cps-call-actions {display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr) minmax(0,1.2fr);gap:5px;}
+ .cps-call-actions .cps-button {padding:8px 5px;font-size:11px;}
+ .cps-call-actions .cps-call-tools-toggle {margin:0;}
+ .cps-call-actions .cps-icon {display:none;}
+ .cps-call-tool-sheet {width:100%;padding-inline:14px;}
+ .cps-chat-skill-specs {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .cps-particle:nth-child(n+9) {display:none;}
+}
+html[data-cps-motion=off] .cps-environment *,
+html[data-cps-motion=off] .cps-page-enter > *,
+html[data-cps-motion=off] .cps-call-tool-sheet {animation:none!important;}
+@media(prefers-reduced-motion:reduce) {.cps-environment *,.cps-page-enter > *,.cps-call-tool-sheet {animation:none!important;transition:none!important;}}
+dialog[data-cps-breach-suspended] .cps-environment * {animation-play-state:paused!important;}

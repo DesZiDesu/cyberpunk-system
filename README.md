@@ -1,5 +1,12 @@
 # Cyberpunk System
 
+## v2.2.0 — Ability telemetry and contextual call tools
+
+- Main-chat skill cards show the actor name, known rank/category, mastery, resource cost, cooldown and equipment slot/capacity when recorded. Matching player Hacking records supply their rank and mastery; other abilities use the actor’s RPG skill data. Unknown fields are omitted. New uses retain up to 300 historical telemetry snapshots per chat; rejected uses are labeled accordingly.
+- One compact button next to End call opens a bottom drawer with Eurodollars, Location, Information and Cyberware. Escape/backdrop/Close dismiss only the drawer; minimizing or ending the call cleans it up. Drafts and existing send/transfer behavior are preserved.
+- Both workspaces gain layered grid drift, soft light passes and sparse particles. Navigation reveals sections in a short stagger; live chat updates do not replay the entrance. Ambient Motion and Animation Speed controls apply, with reduced-motion support and fewer particles on small screens. No animation framework, new API request or runtime dependency is added.
+- Visual patterns adapted in original HTML/CSS from [NameThatUI drawers](https://namethatui.com/web/dialog-drawer-sheet), [easing](https://namethatui.com/web/easing), and [21st background examples](https://21st.dev/community/components/s/background).
+
 ## v2.1.2 — Anatomy and equipment detail
 
 - Layered anatomy schematic with face plates, torso armor, articulated limbs, joints and neural pathways. Numbered OS/arm/leg nodes reflect equipped cyberware.
@@ -19,9 +26,9 @@
 - Main-chat state records now support earned maximum HP/RAM/stamina/capacity changes as well as current resources. Equipment records support add/remove/equip/unequip/use by stored item ID. Using an item consumes resources once and creates its skill header. Invalid status patches are atomic. Private-call quick actions always use the current call participant, independent of the last NPC asset page opened.
 - State continues updating with the UI closed. Repeated host render events do not replay actions, regenerate resources, rebuild the Cyberware DOM or reset scroll. Live updates retain unsaved preferences and focused inputs. Ordinary story turns regenerate once through the existing response; no extra model request is added.
 
-**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.1.2**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
+**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.2.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
 
-**Validation:** 113 checks pass: 41 existing UI, 12 portrait/raster/vision integration and 60 RPG behavior checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the remaining catalog/map scope.
+**Validation:** 130 checks pass: 43 UI, 12 portrait/raster/vision integration and 75 RPG behavior checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the remaining catalog/map scope.
 
 ## v2.0.0 — Cyberware, Breach Protocol and connected world systems
 
@@ -42,7 +49,7 @@ Update the extension, then reload SillyTavern. The manifest and all runtime modu
 
 **AI integration:** regular events use the existing main response. The call AI button still makes one quiet request; NPC Generate still makes one request and optional vision reference. No background API polling is added. The prompt includes private narrator state plus precise JSON schemas; a model that ignores these schemas will not automatically trigger the new systems. Global Config → prompt injection/extension enable controls still apply. New events are idempotent across render notifications and repeated event IDs. Historical state is not automatically rolled back when editing/swiping/deleting old story messages; use status/equipment controls to reconcile an alternate outcome.
 
-**Verification:** `npm run check` and `npm test` cover the original 41 DOM checks, 12 native-raster portrait/vision integration checks, and new RPG transaction, skill, call-card, map, puzzle, isolation and security checks. Browser events/ST APIs are simulated. Real iOS Safari rendering, keyboard, touch gestures, live AI compliance and model vision still require device testing. `tests/preview.html` has manager/call/Cyberware/Breach controls for manual review via an HTTP server.
+**Verification:** `npm run check` and `npm test` cover 43 DOM checks, 12 native-raster portrait/vision integration checks, and new RPG transaction, skill, call-card, map, puzzle, isolation and security checks. Browser events/ST APIs are simulated. Real iOS Safari rendering, keyboard, touch gestures, live AI compliance and model vision still require device testing. `tests/preview.html` has manager/call/Cyberware/Breach controls for manual review via an HTTP server.
 
 ## v1.2.0 — Connected identities and private signals
 
@@ -132,7 +139,7 @@ Visual direction was informed by Cyberpunk 2077 Senior UI Artist Vladimír Vilim
 3. Paste `https://github.com/DesZiDesu/cyberpunk-system`.
 4. Reload SillyTavern.
 
-For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.1.2**.
+For an existing installation, update the extension and reload the page. Versioned JS, CSS, and settings-template URLs request the new assets. The extension drawer and interface header should show **v2.2.0**.
 
 ## AI protocol
 
@@ -167,7 +174,7 @@ Rules taught to the AI:
 
 ## Version
 
-`2.1.2`
+`2.2.0`
 
 ## Development checks
 
