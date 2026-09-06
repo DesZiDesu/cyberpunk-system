@@ -68,3 +68,9 @@ Runtime safeguards: at most 64 visible detail tiles, bounded zoom, a coarse over
 ## v2.5.0 story systems
 
 XP thresholds, attribute bonuses, external story-income records and contract reward settlement are original configurable-role-play extension mechanics, not official game formulas. Detailed file contents come from the current role-play response, not an external canonical database.
+
+## v2.6.0 optional network lore (checked 2026-09-06)
+
+- [NetWatch game-database transcription, community guide](https://steamcommunity.com/sharedfiles/filedetails/?id=3594999196): supports the Blackwall barrier, NetWatch oversight, rogue AI and post-Krash threat summaries. This is community-hosted game text, not an official CDPR publication. The extension uses brief original paraphrases.
+- [CDPR Hack-&-Slash Netrunner breakdown](https://www.cyberpunk.net/en/news/50026/hack-slash-netrunner-build-breakdown): cyberdecks, RAM, queues and the Cyberware Malfunction/Short Circuit and Contagion/Overheat interactions.
+- Knowledge/privacy restrictions and transaction accounting are original role-play rules, not claims of official mechanics.

@@ -6,7 +6,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   const tr=(en,th)=>api.settings?.()?.language==='th'?th:en;
   let panel=null, breach=null, timer=null, actorName='user', tab='status', popup=null, mapCleanup=null;
   const noticeTimers=new Map();
-  const tags='PROGRESS|INCOME|LOOT|STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
+  const tags='TRADE|PROGRESS|INCOME|LOOT|STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
   const buttons=(label,action,extra='')=>`<button type="button" class="cps-button" data-rpg="${E(action)}" ${extra}>${E(label)}</button>`;
   const note=v=>`<p class="cps-rpg-note">${E(v)}</p>`;
   function state(){
@@ -62,19 +62,31 @@ globalThis.CyberpunkSystemsFactory = api => {
   function closePanel(){mapCleanup?.();mapCleanup=null;api.removeUiDialog(panel);panel=null;}
   function dialog(title,body,cls=''){
     const d=document.createElement('dialog');d.className=`cps-ui cps-rpg-dialog ${cls}`;d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '2.5.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '2.6.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
   }
   function detail(title,content){api.removeUiDialog(popup);popup=dialog(title,`<div class="cps-rpg-detail">${E(content)}</div>`);}
+  function notificationPages(){
+    const entries=state().notifications.slice().reverse();let page=0;
+    api.removeUiDialog(popup);popup=dialog(tr('Signal archive','ประวัติแจ้งเตือน'),'<div class="cps-notice-page"></div>','cps-notice-dialog');
+    const current=popup,host=current.querySelector('.cps-notice-page');
+    const draw=()=>{const n=entries[page];host.innerHTML=n?`<article class="cps-notice-dossier ${n.danger?'danger':''}"><small>NEURAL LINK / ${E(new Date(n.at).toLocaleString())}</small><h3>${E(n.title)}</h3><div class="cps-rpg-detail">${E(n.body)}</div></article><nav class="cps-notice-pagination" aria-label="Notification pages">${buttons('←','previous',page===0?'disabled':'')}<output aria-live="polite">${page+1} / ${entries.length}</output>${buttons('→','next',page===entries.length-1?'disabled':'')}</nav>`:note(tr('No notifications yet.','ยังไม่มีการแจ้งเตือน'));host.querySelector('[data-rpg=previous]')?.addEventListener('click',()=>move(-1));host.querySelector('[data-rpg=next]')?.addEventListener('click',()=>move(1));};
+    const move=step=>{page=Math.max(0,Math.min(entries.length-1,page+step));draw();host.querySelector(step>0?'[data-rpg=previous]':'[data-rpg=next]')?.focus();};
+    current.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move(e.key==='ArrowRight'?1:-1);}});
+    draw();
+  }
   function notify(title,body,danger=false){
     const s=state(),n={id:C.uid(),title:C.text(title,180),body:C.text(body,3000),danger,at:Date.now()};s.notifications.push(n);s.notifications=s.notifications.slice(-60);save();
     if(!s.settings.notifications||(breach&&/^ACCESS (GRANTED|DENIED)$/.test(title)))return;
+    noticeTimers.forEach(clearTimeout);noticeTimers.clear();
     let host=document.getElementById('cps-immersion');if(!host){host=document.createElement('aside');host.id='cps-immersion';host.setAttribute('aria-live','polite');document.body.append(host);if(typeof host.showPopover==='function'){host.setAttribute('popover','manual');try{host.showPopover();}catch{}}else document.querySelector('dialog.cps-ui[open]:last-of-type')?.append(host);}
-    const b=document.createElement('button');b.className=`cps-immersion-card ${danger?'danger':''}`;b.type='button';b.innerHTML=`<small>${danger?'⚠ RESTRICTED ZONE':'◆ INCOMING DATA'}</small><strong>${E(n.title)}</strong><span>${E(tr('Tap for details','แตะดูรายละเอียด'))}</span>`;
-    b.onclick=()=>{detail(n.title,n.body);remove();};const remove=()=>{clearTimeout(noticeTimers.get(n.id));noticeTimers.delete(n.id);b.remove();};
+    const b=document.createElement('button');b.className=`cps-immersion-card cps-signal-island ${danger?'danger':''}`;b.type='button';b.setAttribute('aria-haspopup','dialog');
+    b.innerHTML=`<i class="cps-island-pulse" aria-hidden="true"></i><div><small>NEURAL LINK / ${E(tr('SIGNAL RECEIVED','รับสัญญาณแล้ว'))}</small><strong>${E(n.title)}</strong></div><span class="cps-island-count">${s.notifications.length}</span>`;
+    const remove=()=>{clearTimeout(noticeTimers.get(n.id));noticeTimers.delete(n.id);b.remove();};
+    b.onclick=()=>{notificationPages();remove();};
     const schedule=()=>{clearTimeout(noticeTimers.get(n.id));noticeTimers.set(n.id,setTimeout(remove,C.cap(s.settings.noticeSeconds,2,60)*1000));};
     b.onpointerenter=b.onfocus=()=>clearTimeout(noticeTimers.get(n.id));b.onpointerleave=b.onblur=schedule;
-    host.append(b);while(host.children.length>3)host.firstElementChild.remove();schedule();
+    host.replaceChildren(b);schedule();
   }
   function icon(category='item',variant=''){
     const paths={cyberware:'M32 13v10m0 18v10M13 32h10m18 0h10M22 22h20v20H22zM28 28h8v8h-8z',weapons:'M12 23h36v10H33l-5 15H17l4-15h-9zM39 19v4',quickhack:'M36 9 17 35h14l-3 20 20-29H33z',consumable:'M25 12h14v12h12v16H39v12H25V40H13V24h12z',clothing:'M22 13l10 6 10-6 14 12-9 10-5-5v22H22V30l-5 5-9-10z',data:'M18 9h21l9 10v36H18zM38 9v12h10M25 30h15M25 38h15M25 46h9',mod:'M32 10l7 10h12v24H39L32 54l-7-10H13V20h12zM26 26h12v12H26z',component:'M32 10 52 22v22L32 56 12 44V22zM12 22l20 12 20-12M32 34v22',item:'M13 20h38v32H13zM24 20v-8h16v8M13 32h38'};
@@ -141,7 +153,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     const sender=displayName(from),recipient=displayName(to);
     if(!C.transfer(actor(from),actor(to),amount,reason||`${sender} → ${recipient}`,txid))return false;
     const description=`${sender} → ${recipient} · €$${amount}`;
-    event('transfer',description+'. '+C.text(reason,500));notify('TRANSFER COMPLETE',description+'\n'+(reason||''));
+    event('transfer',description+'. '+C.text(reason,500));
     share({kind:'receipt',title:'TRANSFER COMPLETE',description,id:txid,receipt:{sender,recipient,amount:'€$'+amount,reason:C.text(reason,500),status:'Completed',date:new Date().toISOString(),transaction:txid}},actor(from)===state().player?'user':'assistant',sender);
     return true;
   }
@@ -161,7 +173,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     }
     const s=state();if(s.shares.some(x=>x.id===entry.id))return; s.shares.push(entry);s.shares=s.shares.slice(-100);
     if(api.chatBucket().call.active){const m=api.appendCallMessage(role,displayName(name),entry.title,role==='user'&&entry.kind!=='receipt');if(m){m.attachment=entry;api.renderCallLog();}}
-    else notify(entry.title,entry.description||tr('Open Cyberware to inspect received data.','เปิด Cyberware เพื่อดูข้อมูล'));
+    notify(entry.title,entry.description||tr('Open Cyberware to inspect received data.','เปิด Cyberware เพื่อดูข้อมูล'));
     event('share',`${role}: ${entry.kind}: ${entry.title} · ${entry.description}`);save();return entry;
   }
   function attachment(node,message){const v=message.attachment;if(!v||node.querySelector('.cps-attachment'))return;
@@ -266,7 +278,7 @@ globalThis.CyberpunkSystemsFactory = api => {
       'complete-zone':()=>{if(!s.map.location.district)throw Error('Set a location first');if(!s.map.completed.includes(s.map.location.district))s.map.completed.push(s.map.location.district);event('area completed',s.map.location.district);},
       'add-skill':()=>form('Add ability',[['name','Skill name','','text','required'],['description','Description','','textarea'],['cost','Resource cost',0,'number','min="0" max="100"'],['resource','Resource','<option>stamina</option><option>ram</option>','select'],['cooldown','Cooldown turns',1,'number','min="0" max="30"']],v=>{C.addSkill(a,v);event('skill learned',`${actorName}: ${v.name}`);}),
       'add-quest':()=>form('Mission',[['title','Title','','text','required'],['description','Brief','','textarea'],['objective','Current objective','','textarea']],v=>{s.quests.push({id:C.uid(),...v,status:'active'});event('quest',v.title);}),
-      notices:()=>{const d=dialog('Notification history',s.notifications.slice().reverse().map(n=>`<article class="cps-rpg-skill"><h3>${E(n.title)}</h3>${note(n.body)}</article>`).join('')+s.shares.slice().reverse().map((x,i)=>`<article class="cps-rpg-skill"><h3>${E(x.title)}</h3>${note(x.description)}${buttons('Open',`received:${s.shares.length-1-i}`)}</article>`).join(''));d.querySelectorAll('[data-rpg^="received:"]').forEach(b=>b.onclick=()=>guard(()=>{const x=s.shares[Number(b.dataset.rpg.split(':')[1])];if(x.kind==='contact')addContact(x.contact);else openData(x);}));},
+      notices:()=>{const d=dialog('Notification history',buttons(tr('Browse notifications','ไล่ดูแจ้งเตือน'),'notification-pages')+s.notifications.slice().reverse().map(n=>`<article class="cps-rpg-skill"><h3>${E(n.title)}</h3>${note(n.body)}</article>`).join('')+s.shares.slice().reverse().map((x,i)=>`<article class="cps-rpg-skill"><h3>${E(x.title)}</h3>${note(x.description)}${buttons('Open',`received:${s.shares.length-1-i}`)}</article>`).join(''));d.querySelector('[data-rpg=notification-pages]').onclick=notificationPages;d.querySelectorAll('[data-rpg^="received:"]').forEach(b=>b.onclick=()=>guard(()=>{const x=s.shares[Number(b.dataset.rpg.split(':')[1])];if(x.kind==='contact')addContact(x.contact);else openData(x);}));},
       'unlock-relic':()=>{a.relic.unlocked=true;event('Relic','Manually unlocked for scenario');},'relic-point':()=>{if(!a.relic.unlocked)throw Error('Unlock Relic first');a.relic.points=C.cap(a.relic.points+1,0,99);event('Relic','Manual story award: 1 point');},
       'unlock-blackwall':()=>{a.blackwall.unlocked=true;event('Blackwall','Manually unlocked for scenario');},
       blackwall:()=>{if(!a.blackwall.unlocked||a.ram<4)throw Error('Blackwall locked or insufficient RAM');a.ram-=4;a.blackwall.exposure=C.cap(a.blackwall.exposure+20,0,100);a.stress=C.cap(a.stress+10,0,100);if(a.blackwall.exposure>=60){a.hp=C.cap(a.hp-15,0,a.maxHp);notify('BLACKWALL CONTAMINATION','Neural feedback: −15 health / +10 stress',true);}event('Blackwall',`${actorName} interfaces: exposure ${a.blackwall.exposure}`);},
@@ -345,10 +357,19 @@ globalThis.CyberpunkSystemsFactory = api => {
           const who=data.actor||'user',result=C.award(actor(who),payload,receipt);
           if(result){const description=displayName(who)+' · '+(type==='PROGRESS'?'+'+result.xp+' XP':type==='INCOME'?'€$'+result.amount:result.items.map(it=>it.name+' ×'+it.quantity).join(', '));event(type.toLowerCase(),description);
             if(type==='INCOME')share({id:receipt,kind:'receipt',title:'PAYMENT RECEIVED',description,receipt:{sender:data.source,recipient:displayName(who),amount:'€$'+result.amount,reason:data.reason,funding:'Story income / external funds',status:'Completed',date:new Date().toISOString()}},'assistant',data.source);
-            notify(type==='LOOT'?'LOOT ACQUIRED':type==='INCOME'?'PAYMENT RECEIVED':'EXPERIENCE GAINED',description);
+            if(type!=='INCOME')notify(type==='LOOT'?'LOOT ACQUIRED':type==='INCOME'?'PAYMENT RECEIVED':'EXPERIENCE GAINED',description);
           }
         }
-        if(type==='TRANSFER'){if(!data.from||['user','player',api.context()?.name1].includes(data.from))throw Error('Player transfers require the Transfer button or /cp transfer command.');transfer(data.from,data.to||'user',data.amount,data.reason,receipt);}
+        if(type==='TRADE'){
+          if(!C.text(data.merchant))throw Error('Merchant name missing');
+          const npc=api.findEffectiveNpc(C.handle(data.merchant)),merchant=npc?actor(npc.name):null;
+          const result=C.trade(s.player,merchant,data,receipt);
+          if(result){const description=`${displayName('user')} · ${data.operation==='buy'?'-':'+'}€$${result.amount} · ${displayName(data.merchant)}`;
+            event('trade',description+' · '+data.reason);
+            share({id:receipt,kind:'receipt',title:data.operation==='buy'?'PURCHASE COMPLETE':'SALE COMPLETE',description,receipt:{merchant:displayName(data.merchant),operation:data.operation,total:'€$'+result.amount,reason:data.reason,status:'Completed',date:new Date().toISOString()},content:result.items.map(x=>x.name+' ×'+x.quantity).join('\n')},'user',displayName('user'));
+          }
+        }
+        if(type==='TRANSFER'){if(!data.from||(['user','player',api.context()?.name1].includes(data.from)&&!C.text(data.reason)))throw Error('Player payment requires a completed story action and reason.');transfer(data.from,data.to||'user',data.amount,data.reason,receipt);}
         if(type==='SHARE')share({...data,id:receipt},'assistant',data.from||api.chatBucket().call.peer?.name||'System');
         if(type==='LOCATION')location(data);
         if(type==='QUEST')updateQuest(data);
@@ -373,8 +394,9 @@ Evaluate status, equipment, skills, missions and location changes after every no
 - Character growth: [CP_PROGRESS]{"id":"unique-event","actor":"user","xp":25,"reason":"completed training or meaningful successful action"}[/CP_PROGRESS]. Award only earned XP, never passive dialogue, not again for mission rewards. Level/attribute points are computed by the extension; player spends points in Status.
 - Collected loot: [CP_LOOT]{"id":"unique-loot-event","actor":"user","source":"established container or defeated enemy","items":[{"name":"item name","category":"item","quantity":1,"effect":"full description"}]}[/CP_LOOT]. Emit when actually picked up, not merely seen/offered. Inventory updates automatically; do not also CP_ITEM-add the same loot.
 - External story payment (cash, employer payment, mission advance; funds outside tracked NPC wallets): [CP_INCOME]{"id":"unique-payment","actor":"user","source":"payer name","amount":100,"reason":"established completed payment"}[/CP_INCOME]. Credits recipient with an audited receipt. Only actual received payments, not promises. Never also TRANSFER or quest rewards for the same payment. Do not use income to bypass an insufficient tracked-wallet transfer.
-- NPC pays another stored contact or user: [CP_TRANSFER]{"id":"event-id","from":"exact NPC","to":"user","amount":100,"reason":"..."}[/CP_TRANSFER]. Insufficient balances reject. Never debit user; ask the user to use Transfer or /cp transfer @handle AMOUNT. A narration is not a completed transfer.
-- Equipment acquired/lost: [CP_ITEM]{"id":"event-id","actor":"user","operation":"add","item":{"name":"...","category":"cyberware/weapons/quickhack/consumable/clothing/mod/component/data/item","quantity":1,"slot":"...","capacity":15,"effect":"..."}}[/CP_ITEM]. Cyberware slot must be frontal-cortex, face, operating-system, arms, hands, skeleton, nervous-system, circulatory-system, integumentary-system or legs. Existing inventory operations use operation remove/equip/unequip/use, exact itemId and quantity for removal. Use consumes resources, handles cooldown and shows a skill header automatically: do not emit an extra CP_SKILL for that same item action. Do not re-add equipped objects every turn.
+- NPC pays another stored contact or user: [CP_TRANSFER]{"id":"event-id","from":"exact NPC","to":"user","amount":100,"reason":"..."}[/CP_TRANSFER]. Insufficient balances reject. For player payments use from:user only when the user actually paid/agreed to pay in the current role-play; reason is mandatory. Never debit a quote, offer, hypothetical, refusal or merely browsed item. Existing UI payments in recent outcomes are already settled: never repeat them.
+- Completed purchases/sales: [CP_TRADE]{"id":"unique-trade-event","operation":"buy","merchant":"seller name","amount":100,"reason":"User completed the agreed purchase","items":[{"name":"item name","category":"weapons","quantity":1,"equipped":false}]}[/CP_TRADE]. amount is the TOTAL agreed price. Buy atomically debits player and adds all items; optional equipped:true only if user actually equips/installs them. Sell uses operation:sell and items:[{itemId:"exact inventory id",quantity:1}], removes sold units and credits money. Known NPC wallets are debited/credited; unnamed shop accounts are external economy. No auto-generated NPC contact required for a shop. Do not also emit TRANSFER, INCOME, ITEM add/remove or LOOT for the same trade. Never settle merely quoted/offered/refused purchases. Insufficient funds or invalid items reject the entire trade.
+- Equipment acquired/lost: [CP_ITEM]{"id":"event-id","actor":"user","operation":"add","item":{"name":"...","category":"cyberware/weapons/quickhack/consumable/clothing/mod/component/data/item","quantity":1,"slot":"...","capacity":15,"effect":"..."}}[/CP_ITEM]. Cyberware slot must be frontal-cortex, face, operating-system, arms, hands, skeleton, nervous-system, circulatory-system, integumentary-system or legs. Existing inventory operations use operation remove/equip/unequip/use, exact itemId and quantity for removal. Use consumes resources, handles cooldown and shows a skill header automatically: do not emit an extra CP_SKILL for that same item action. Do not re-add equipped objects every turn. When the user actually equips, removes, consumes, drops or hands over an owned item in main chat, emit the corresponding operation immediately using its exact saved itemId; never require them to repeat the action in a UI.
 - Attach a card inside a call or notifications: [CP_SHARE]{"id":"event-id","from":"NPC name","kind":"location/mission/item/contact/data","title":"...","description":"..."}[/CP_SHARE]. kind must be ONE enum value. For readable files include content (complete in-world text, up to 20000 chars) and optional sections:[{heading:"...",body:"..."}]. A description is just a preview, not file contents. Include useful specific evidence, instructions or briefing details actually known in the scene; do not fill hidden secrets. For item add item object as above. For contact add contact object containing ALL nonempty fields: name, handle WITHOUT @, role, status, affiliation, age, gender, personality, appearance, notes; optional balance (nonnegative integer) and inventory (full item objects). Invent a coherent complete fictional profile when introducing a new contact; never merely create a name/handle stub. User clicks Add contact to accept.
 - NPC may end its active call: [CP_CALL_END]{"id":"event-id","actor":"exact active caller name","reason":"..."}[/CP_CALL_END]. Use AFTER final CP_SIGNAL/attachments.
 - Location change: [CP_LOCATION]{"id":"event-id","district":"watson/westbrook/city-center/heywood/santo-domingo/pacifica/dogtown/ncx-morro-rock/badlands (choose ONE)","subdistrict":"...","building":"...","floor":"...","area":"...","danger":false,"reason":"..."}[/CP_LOCATION]. Use actual established narrative location, not guesses; can trigger dangerous-zone alert. Optional numeric x,y are a paired CET game coordinate; z is elevation, separate from narrative floor. Omit coordinates unless established by a saved pin or supplied by the user; never invent exact coordinates from a place name. With actor:"exact NPC name", update only that contact location. Set knownToUser:true only when their location has been shared with the user; otherwise it stays private and has no visible map marker.

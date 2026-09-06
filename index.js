@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.5.0';
+const CYBERPUNK_SYSTEM_VERSION = '2.6.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -426,6 +426,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     // Original summaries; sources and the distinction between canon and role-play
     // knowledge policy are visible to the user. No RED 2045 mechanics are injected.
     const LORE_SOURCES = {
+      blackwall: ['Community transcription · NetWatch game database', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3594999196'],
       slang: ['Game8 · slang glossary', 'https://game8.co/games/Cyberpunk-2077/archives/Slang-Explained-Street-Talk-Dictionary'],
       chrome: ['R. Talsorian · Cyberpunk', 'https://rtalsoriangames.com/cyberpunk/'],
       city: ['CD PROJEKT RED · Night City guide', 'https://www.nightcity.love/en/'],
@@ -434,6 +435,11 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       fixers: ['CD PROJEKT RED · Additional gigs', 'https://www.cyberpunk.net/en/dlc'],
     };
     const WORLD_LORE = [
+      {id:'blackwall',title:'Blackwall / เขตแดนเครือข่าย',en:'The Blackwall separates usable network space from dangerous rogue AIs beyond it. NetWatch maintains this barrier. Crossing it is not an ordinary quickhack or a routine way to open a locked door. Its technical secrets require expertise and established access; it does not grant universal knowledge.',th:'Blackwall แยกพื้นที่เครือข่ายที่ใช้งานได้ออกจาก AI อิสระอันตราย โดย NetWatch ดูแลแนวกั้นนี้ การข้ามไม่ใช่ quickhack ทั่วไปหรือวิธีเปิดประตูธรรมดา ความลับเชิงเทคนิคต้องมีความเชี่ยวชาญและช่องทางเข้าถึง ไม่ได้ทำให้รู้ทุกอย่าง',source:'blackwall'},
+      {id:'netwatch',title:'NetWatch / การควบคุมเครือข่าย',en:'NetWatch polices network threats, pursues unauthorized AI activity and restricts movement across the Blackwall. Corporate support and security interests shape its operations. Do not assume a character is being tracked without evidence in the scene.',th:'NetWatch จัดการภัยเครือข่าย ไล่ตามกิจกรรม AI ที่ไม่ได้รับอนุญาต และควบคุมการข้าม Blackwall โดยมีผลประโยชน์ด้านความปลอดภัยและแรงสนับสนุนจากบริษัทเกี่ยวข้อง อย่าสมมติว่าตัวละครถูกติดตามหากไม่มีหลักฐานในฉาก',source:'blackwall'},
+      {id:'old-net',title:'Old NET / เครือข่ายหลัง DataKrash',en:'The post-Krash network contains dangerous AI threats. Access to a local terminal does not imply access to every corporate data fortress or the space beyond the Blackwall. Treat recovered files as specific evidence, not unrestricted access to all secrets.',th:'เครือข่ายหลัง DataKrash มีภัยจาก AI การเข้าถึงเทอร์มินัลท้องถิ่นไม่ได้แปลว่าเข้าถึงป้อมข้อมูลทุกบริษัทหรือพื้นที่หลัง Blackwall ไฟล์ที่กู้ได้เป็นหลักฐานเฉพาะเรื่อง ไม่ใช่สิทธิ์อ่านความลับทั้งหมด',source:'blackwall'},
+      {id:'quickhack-queues',title:'Quickhack queues & cyberdecks',en:'Cyberdecks enable netrunning; RAM management and queued quickhack interactions matter. Cyberware Malfunction can complement Short Circuit, while Contagion and Overheat can interact explosively. These references describe game interactions, not automatic powers: require installed tools and learned abilities in this role-play.',th:'Cyberdeck ใช้ทำ netrunning โดยการบริหาร RAM และลำดับ quickhack มีความสำคัญ Cyberware Malfunction ช่วยเสริม Short Circuit ส่วน Contagion กับ Overheat ทำงานร่วมกันจนระเบิดได้ ข้อมูลนี้อธิบายเกม ไม่ได้ให้พลังอัตโนมัติ ต้องมีอุปกรณ์และทักษะในเรื่องก่อน',source:'netrunning'},
+
       { id: 'choom', title: 'Choom / Choomba', en: 'Friend or buddy. Use as a casual address between familiar people, e.g. “Thanks, choom.” It does not prove trust or a close relationship.', th: 'เพื่อนหรือพวกพ้อง ใช้เรียกกันอย่างเป็นกันเอง เช่น “ขอบใจนะ choom” ไม่ได้แปลว่าสนิทหรือเชื่อใจกันเสมอ', source: 'slang' },
       { id: 'chrome', title: 'Chrome', en: 'Street term for cyberware: technological implants or replacements integrated with the body. “New chrome” can mean a new implant, not just shiny metal.', th: 'คำเรียก cyberware หรืออุปกรณ์เทคโนโลยีที่ฝังหรือใช้แทนส่วนของร่างกาย “New chrome” จึงอาจหมายถึงอวัยวะเสริมใหม่ ไม่ใช่แค่โลหะเงา', source: 'chrome' },
       { id: 'eddies', title: 'Eddies / Eurodollars', en: 'Eddies means eurodollars, the money used for jobs and purchases. Use it naturally when discussing payment; do not invent the user’s balance.', th: 'Eddies หมายถึงเงินยูโรดอลลาร์ ใช้คุยเรื่องค่าจ้างและการซื้อขาย โดยไม่แต่งยอดเงินของผู้ใช้ขึ้นเอง', source: 'slang' },
@@ -640,14 +646,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
@@ -932,7 +938,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (!sameCall()) return;
         const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
         const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
-        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)\]/i.test(result)) throw new Error('Empty private response');
+        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|TRADE|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)\]/i.test(result)) throw new Error('Empty private response');
         if (reply) appendCallMessage('assistant', peer.name, reply);
         systems?.process(result, `call:${pending.map(item => item.id).join(',')}`);
       } catch (error) {
@@ -1354,6 +1360,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 [CP_ITEM]{"id":"e2","actor":"user","operation":"equip","itemId":"stored-id"}[/CP_ITEM]
 [CP_SKILL]{"id":"e3","actor":"user","name":"Short Circuit","cost":2,"resource":"ram"}[/CP_SKILL]
 [CP_BREACH]{"id":"e4","target":"Access point","data":"Locked data"}[/CP_BREACH]
+[CP_TRADE]{"id":"trade1","operation":"buy","merchant":"Shop","amount":100,"reason":"Completed purchase","items":[{"name":"Pistol","category":"weapons","quantity":1}]}[/CP_TRADE]
 [CP_TRANSFER]{"id":"e5","from":"NPC name","to":"user","amount":100}[/CP_TRANSFER]
 [CP_SHARE]{"id":"e6","kind":"data","title":"Briefing","description":"Details"}[/CP_SHARE]
 [CP_LOCATION]{"id":"e7","district":"watson","subdistrict":"Kabuki","floor":"12"}[/CP_LOCATION]

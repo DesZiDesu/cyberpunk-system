@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.5.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.6.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -14,7 +14,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.5.0');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.6.0');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  w.CyberpunkSystem.startCall('Lucy','@@lucy');
@@ -57,7 +57,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  await message(record('TRANSFER',{id:'paid-1',from:'Lucy',to:'user',amount:100,reason:'Gig advance'}));
  test('Same event id cannot replay in another AI response',()=>assert.equal(state().player.balance,800));
  await message(record('TRANSFER',{id:'unsafe-debit',from:'user',to:'Lucy',amount:100}));
- test('AI cannot debit player through its transfer record',()=>assert.equal(state().player.balance,800));
+ test('Player payments without a completed-action reason are rejected',()=>assert.equal(state().player.balance,800));
  const skill=await message(record('SKILL',{id:'skill-1',actor:'user',name:'Short Circuit',cost:2,resource:'ram',description:'Circuit disabled'}));
  test('User skill record displays a main-chat skill header and charges RAM',()=>{assert.ok(skill.t.querySelector('.cps-chat-skill'));assert.equal(state().player.ram,6);assert.equal(state().player.skills[0].name,'Short Circuit');});
  test('Skill telemetry includes player name, level, mastery, actual cost and cooldown',()=>{const card=skill.t.querySelector('.cps-chat-skill');assert.ok(card.textContent.includes('Mael'));assert.ok(card.textContent.includes('LV.1'));assert.ok(card.textContent.includes('2 RAM'));assert.equal(card.querySelector('[role=progressbar]').getAttribute('aria-valuenow'),'5');assert.ok(card.querySelector('.cps-chat-skill-specs').textContent.includes('1 turns'));});
@@ -224,6 +224,33 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Invalid mixed resource delta does not partially apply',()=>{const a=C.actor();assert.throws(()=>C.patchActor(a,{delta:{hp:-20,balance:100}}));assert.equal(a.hp,100);assert.throws(()=>C.patchActor(a,{hp:50,delta:{hp:-10}}));assert.equal(a.hp,100);});
  test('Invalid loot or reward overflow rolls back all award components',()=>{const a=C.actor();assert.throws(()=>C.award(a,{amount:10,xp:100,items:[{name:'Good'},{name:''}]},'bad'));assert.equal(a.balance,0);assert.equal(a.inventory.length,0);assert.equal(a.progression.level,1);a.balance=1e12;assert.throws(()=>C.award(a,{amount:1,xp:100},'overflow'));assert.equal(a.progression.level,1);});
  test('Protocol instructs the model on persona, story consequences and detailed files',()=>{assert.ok(lastPrompt.includes('Active player persona: Mael'));for(const t of ['CP_INCOME','CP_LOOT','CP_PROGRESS','delta:','complete in-world text'])assert.ok(lastPrompt.includes(t),t);});
+
+ const buyRecord=record('TRADE',{id:'buy-new',operation:'buy',merchant:'Street vendor',amount:100,reason:'Mael agreed and paid for two pistols',items:[{name:'Unity purchase',category:'weapons',quantity:2,equipped:true}]});
+ const bought=await message(buyRecord);
+ test('Confirmed main-chat purchase charges money, receives goods and equips them',()=>{assert.equal(state().player.balance,400);const it=state().player.inventory.find(x=>x.name==='Unity purchase');assert.equal(it.quantity,2);assert.equal(it.equipped,true);assert.ok(!bought.t.textContent.includes('CP_TRADE'));});
+ await message(buyRecord);
+ test('Repeated purchase cannot debit money or duplicate goods',()=>{assert.equal(state().player.balance,400);assert.equal(state().player.inventory.filter(x=>x.name==='Unity purchase').length,1);});
+ const purchased=state().player.inventory.find(x=>x.name==='Unity purchase');
+ await message(record('TRADE',{id:'sell-new',operation:'sell',merchant:'Street vendor',amount:40,reason:'Sold one pistol',items:[{itemId:purchased.id,quantity:1}]}));
+ test('Selling removes only the sold quantity and credits the agreed total',()=>{assert.equal(state().player.balance,440);assert.equal(state().player.inventory.find(x=>x.id===purchased.id).quantity,1);});
+ await message(record('TRADE',{id:'buy-too-expensive',operation:'buy',merchant:'Street vendor',amount:9999,reason:'Attempted purchase',items:[{name:'Expensive implant'}]}));
+ test('Insufficient funds reject the whole purchase without free items',()=>{assert.equal(state().player.balance,440);assert.equal(state().player.inventory.some(x=>x.name==='Expensive implant'),false);});
+ await message(record('ITEM',{id:'unequip-story',operation:'unequip',itemId:purchased.id}));
+ test('Main-chat unequip changes the same purchased item',()=>assert.equal(state().player.inventory.find(x=>x.id===purchased.id).equipped,false));
+ await message(record('ITEM',{id:'equip-story',operation:'equip',itemId:purchased.id}));
+ test('Main-chat equip works without reopening equipment UI',()=>assert.equal(state().player.inventory.find(x=>x.id===purchased.id).equipped,true));
+ await message(record('ITEM',{id:'discard-story',operation:'remove',itemId:purchased.id,quantity:1}));
+ test('Main-chat handing over or discarding removes the owned item',()=>assert.equal(state().player.inventory.some(x=>x.id===purchased.id),false));
+ ctx.chatMetadata.cyberpunk_system.npcs.push({id:'test-vendor',name:'Vendor',handle:'vendor'});
+ await message(record('TRANSFER',{id:'pay-service',from:'user',to:'Vendor',amount:10,reason:'Mael paid for the agreed repair service'}));
+ test('Completed story payment can debit the player and credit a stored NPC',()=>{assert.equal(state().player.balance,430);assert.equal(state().actors['npc:test-vendor'].balance,10);});
+ test('A notification burst leaves exactly one compact island',()=>assert.equal(d.querySelectorAll('#cps-immersion .cps-immersion-card').length,1));
+ click('#cps-immersion .cps-immersion-card');
+ test('Island opens a paginated archive on its newest entry',()=>{assert.ok(q('.cps-notice-dossier').textContent.includes('TRANSFER COMPLETE'));assert.equal(q('.cps-notice-pagination [data-rpg=previous]').disabled,true);assert.ok(q('.cps-notice-pagination output').textContent.startsWith('1 /'));});
+ const latest=q('.cps-notice-dossier').textContent;click('.cps-notice-pagination [data-rpg=next]');
+ test('Pagination shows the previous notification and can return to the latest',()=>{assert.notEqual(q('.cps-notice-dossier').textContent,latest);click('.cps-notice-pagination [data-rpg=previous]');assert.equal(q('.cps-notice-dossier').textContent,latest);});
+ test('Invalid purchase auto-equip rolls back money and inventory',()=>{const a=C.actor();a.balance=100;assert.throws(()=>C.trade(a,null,{operation:'buy',amount:20,reason:'Bought',items:[{name:'Food',category:'consumable',equipped:true}]},'bad-equip'));assert.equal(a.balance,100);assert.equal(a.inventory.length,0);});
+ test('Sale rejection preserves both tracked wallets and inventory',()=>{const a=C.actor(),b=C.actor();a.inventory.push(C.item({id:'sale',name:'Pistol',quantity:1}));assert.throws(()=>C.trade(a,b,{operation:'sell',amount:20,reason:'Sold',items:[{itemId:'sale'}]},'no-cash'));assert.equal(a.inventory.length,1);assert.equal(a.balance,0);assert.equal(b.balance,0);});
  test('No unhandled DOM/module errors',()=>assert.deepEqual(errors,[]));
  console.log(`\n${count} RPG behavior checks passed. Host APIs and browser events simulated; real Safari still needs device testing.`);dom.window.close();
 })().catch(e=>{console.error(e.stack);dom.window.close();process.exitCode=1;});

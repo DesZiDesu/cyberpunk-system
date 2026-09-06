@@ -109,6 +109,35 @@
     if(key==='intelligence')a.maxRam=Math.min(1000,a.maxRam+1);
     if(key==='cool')a.stress=Math.max(0,a.stress-3);
   }
+  function trade(player,merchant,data,id=uid()){
+    hydrate(player);if(player.awards.includes(id))return false;
+    if(merchant===player)throw Error('Cannot trade with yourself');
+    const a=JSON.parse(JSON.stringify(player)),b=merchant?JSON.parse(JSON.stringify(hydrate(merchant))):null;
+    const amount=money(data.amount);if(amount<1||!text(data.reason)||!['buy','sell'].includes(data.operation))throw Error('Trade requires operation, positive total price and completed-action reason');
+    let goods=[];
+    if(data.operation==='buy'){
+      if(a.balance<amount)throw Error('Insufficient balance');
+      if(!Array.isArray(data.items)||!data.items.length||data.items.length>50)throw Error('Purchased items missing');
+      award(a,{items:data.items},id);
+      goods=a.inventory.slice(-data.items.length);
+      for(let i=0;i<goods.length;i++)if(data.items[i].equipped===true)equip(a,goods[i].id);
+      a.balance-=amount;if(b)b.balance=money(b.balance+amount);
+    }else{
+      if(!Array.isArray(data.items)||!data.items.length||data.items.length>50)throw Error('Sold items missing');
+      for(const row of data.items){
+        const it=a.inventory.find(x=>x.id===row.itemId),qty=Number(row.quantity??1);
+        if(!it||!Number.isInteger(qty)||qty<1||qty>it.quantity)throw Error('Invalid sold item or quantity');
+        goods.push({...it,quantity:qty});it.quantity-=qty;
+      }
+      a.inventory=a.inventory.filter(x=>x.quantity>0);
+      if(b){if(b.balance<amount)throw Error('Merchant has insufficient balance');b.balance-=amount;}
+      a.balance=money(a.balance+amount);a.awards.push(id);
+    }
+    const receipt={id,amount,reason:text(data.reason,500),at:new Date().toISOString(),delta:data.operation==='buy'?-amount:amount};
+    a.ledger.push(receipt);a.ledger=a.ledger.slice(-300);
+    if(b){b.ledger.push({...receipt,delta:-receipt.delta});b.ledger=b.ledger.slice(-300);}
+    Object.assign(player,a);if(b)Object.assign(merchant,b);return {amount,items:goods};
+  }
   function load(a) { return a.inventory.filter(x=>x.category==='cyberware'&&x.equipped).reduce((n,x)=>n+cap(x.capacity,0,300),0); }
   function risk(a, scale = 1) { const ratio=load(a)/Math.max(1,a.capacity); return cap((Math.max(0,ratio-.6)*20 + Math.max(0,ratio-1)*50 + cap(a.stress,0,100)*.15) * scale, 0, 95); }
   function equip(a, id) {
@@ -172,5 +201,5 @@
     return true;
   }
   function finish(p,now=Date.now()){if(!['running','ready'].includes(p.status))return;p.status=p.daemons[0].done&&remaining(p,now)>0?'success':'failed';pause(p,now);p.minimized=false;}
-  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,hydrate,patchActor,transfer,xpGoal,award,train,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
+  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
 })();
