@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.7.0';
+const CYBERPUNK_SYSTEM_VERSION = '2.7.1';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -308,8 +308,9 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
         frame = 0;
         if (!node.isConnected) return;
         if (viewport && viewport.scale === 1) {
-          node.style.setProperty('--cps-viewport-height', `${viewport.height}px`);
-          node.style.setProperty('--cps-viewport-top', `${viewport.offsetTop}px`);
+          const height = `${Math.round(viewport.height)}px`, top = `${Math.round(viewport.offsetTop)}px`;
+          if (node.style.getPropertyValue('--cps-viewport-height') !== height) node.style.setProperty('--cps-viewport-height', height);
+          if (node.style.getPropertyValue('--cps-viewport-top') !== top) node.style.setProperty('--cps-viewport-top', top);
         } else {
           node.style.removeProperty('--cps-viewport-height');
           node.style.removeProperty('--cps-viewport-top');
@@ -1029,7 +1030,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
     function mountNpcStudio(modal, source) {
       const form = modal.querySelector('form');
       const studio = document.createElement('section'); studio.className = 'cps-npc-studio';
-      studio.innerHTML = `<div class="cps-portrait-controls"><div class="cps-crop-stage"><canvas width="384" height="384" tabindex="0" aria-label="${htmlEscape(t('cropHint'))}"></canvas><span class="cps-crop-empty">1:1<br>${htmlEscape(t('portrait'))}</span></div><div class="cps-portrait-tools"><label class="cps-button"><span>${htmlEscape(t('uploadPortrait'))}</span><input type="file" accept="image/jpeg,image/png,image/webp" data-portrait-file></label><button type="button" class="cps-button" data-portrait-remove>${htmlEscape(t('removePortrait'))}</button><label><span>${htmlEscape(t('zoomPortrait'))}</span><input type="range" min="1" max="3" step=".01" value="1" data-portrait-zoom></label><button type="button" class="cps-button" data-portrait-reset>${htmlEscape(t('resetCrop'))}</button></div></div><p class="cps-muted">${htmlEscape(t('cropHint'))}</p><label><span>${htmlEscape(t('npcIdea'))}</span><textarea data-npc-idea rows="3" maxlength="4000" placeholder="${htmlEscape(t('npcIdeaHint'))}"></textarea></label><label class="cps-reference-toggle"><input type="checkbox" data-use-reference checked> ${htmlEscape(t('useReference'))}</label><p class="cps-muted">${htmlEscape(t('npcAiHint'))}</p><button type="button" class="cps-button primary" data-npc-generate>${uiIcon('chip')}<span>${htmlEscape(t('generateNpc'))}</span></button><p class="cps-studio-status" role="status" aria-live="polite"></p>`;
+      studio.innerHTML = `<div class="cps-portrait-controls"><div class="cps-crop-stage"><canvas width="384" height="384" tabindex="0" aria-label="${htmlEscape(t('cropHint'))}"></canvas><span class="cps-crop-empty">1:1<br>${htmlEscape(t('portrait'))}</span></div><div class="cps-portrait-tools"><label class="cps-portrait-picker"><span>${htmlEscape(t('uploadPortrait'))}</span><input type="file" aria-label="${htmlEscape(t('uploadPortrait'))}" accept="image/jpeg,image/png,image/webp" data-portrait-file></label><button type="button" class="cps-button" data-portrait-remove>${htmlEscape(t('removePortrait'))}</button><label><span>${htmlEscape(t('zoomPortrait'))}</span><input type="range" min="1" max="3" step=".01" value="1" data-portrait-zoom></label><button type="button" class="cps-button" data-portrait-reset>${htmlEscape(t('resetCrop'))}</button></div></div><p class="cps-muted">${htmlEscape(t('cropHint'))}</p><label><span>${htmlEscape(t('npcIdea'))}</span><textarea data-npc-idea rows="3" maxlength="4000" placeholder="${htmlEscape(t('npcIdeaHint'))}"></textarea></label><label class="cps-reference-toggle"><input type="checkbox" data-use-reference checked> ${htmlEscape(t('useReference'))}</label><p class="cps-muted">${htmlEscape(t('npcAiHint'))}</p><button type="button" class="cps-button primary" data-npc-generate>${uiIcon('chip')}<span>${htmlEscape(t('generateNpc'))}</span></button><p class="cps-studio-status" role="status" aria-live="polite"></p>`;
       const fieldsPanel = form.querySelector('.cps-form');
       const scroller = document.createElement('div'); scroller.className = 'cps-editor-scroll';
       fieldsPanel.before(scroller); scroller.append(studio, fieldsPanel);
@@ -1057,7 +1058,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         pen.fillStyle = '#101116'; pen.fillRect(0, 0, 384, 384);
         pen.drawImage(image, (384 - width) * crop.x, (384 - height) * crop.y, width, height);
       };
-      const setBusy = () => { generate.disabled = busy || loading; save.disabled = busy || loading; fileInput.disabled = busy; };
+      const setBusy = () => { generate.disabled = busy || loading; save.disabled = busy || loading; fileInput.disabled = busy || loading; };
       const load = async (data, reset = true) => {
         const version = ++revision; loading = true; setBusy();
         try {
@@ -1068,7 +1069,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         finally { if (version === revision) { loading = false; setBusy(); } }
       };
       const acceptFile = async file => {
-        if (!file || busy) return;
+        if (!file || busy || loading) return;
         const version = ++revision; loading = true; setBusy();
         try {
           const data = await compressPortrait(file);
@@ -1174,7 +1175,14 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       modal.innerHTML = `<form class="cps-modal-card"><h2>${htmlEscape(record ? t('edit') : t('addNpc'))}</h2><div class="cps-form"><label><span>${htmlEscape(t('name'))}</span><input name="name" required maxlength="180" value="${htmlEscape(source.name)}"></label><label><span>${htmlEscape(t('handle'))}</span><input name="handle" maxlength="180" value="${htmlEscape(source.handle || '')}"></label><label><span>${htmlEscape(t('role'))}</span><input name="role" maxlength="240" value="${htmlEscape(source.role || '')}"></label><label><span>${htmlEscape(t('status'))}</span><input name="status" maxlength="240" value="${htmlEscape(source.status || '')}"></label><label><span>${htmlEscape(t('affiliation'))}</span><input name="affiliation" maxlength="240" value="${htmlEscape(source.affiliation || '')}"></label><label><span>${htmlEscape(t('scope'))}</span><select name="scope"><option value="chat" ${source.scope === 'chat' ? 'selected' : ''}>${htmlEscape(t('chat'))}</option><option value="character" ${source.scope === 'character' ? 'selected' : ''}>${htmlEscape(t('character'))}</option></select></label><label><span>${htmlEscape(t('age'))}</span><input name="age" maxlength="80" value="${htmlEscape(source.age || '')}"></label><label><span>${htmlEscape(t('gender'))}</span><input name="gender" maxlength="120" value="${htmlEscape(source.gender || '')}"></label><label class="wide"><span>${htmlEscape(t('personality'))}</span><textarea name="personality" maxlength="2000">${htmlEscape(source.personality || '')}</textarea></label><label class="wide"><span>${htmlEscape(t('appearanceField'))}</span><textarea name="appearance" maxlength="2000">${htmlEscape(source.appearance || '')}</textarea></label><label class="wide"><span>${htmlEscape(t('notes'))}</span><textarea name="notes" maxlength="3000">${htmlEscape(source.notes || '')}</textarea></label></div><div class="cps-card-actions"><button type="button" class="cps-button" data-modal-cancel>${htmlEscape(t('cancel'))}</button><button type="submit" class="cps-button primary">${htmlEscape(t('save'))}</button></div></form>`;
       const studio = mountNpcStudio(modal, source);
       const trigger = document.activeElement;
-      const close = () => { removeUiDialog(modal); if (trigger?.isConnected) trigger.focus({ preventScroll: true }); };
+      const returnToManager = Boolean(manager?.open), editorOwner = chatBucket();
+      // Keep just one extension modal in the top layer when iOS presents its photo picker.
+      if (returnToManager) { removeUiDialog(manager); manager = null; }
+      const close = () => {
+        removeUiDialog(modal);
+        if (returnToManager && editorOwner === chatBucket()) openManager();
+        else if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+      };
       const heading = modal.querySelector('h2');
       const headingId = id('editor-title'); heading.id = headingId;
       const header = document.createElement('header'); header.className = 'cps-editor-header';
@@ -1183,7 +1191,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       closeButton.setAttribute('aria-label', t('close')); closeButton.innerHTML = uiIcon('close');
       closeButton.addEventListener('click', close); header.append(closeButton); modal.setAttribute('aria-labelledby', headingId);
       modal.querySelector('[data-modal-cancel]').addEventListener('click', close);
-      modal.addEventListener('cancel', event => { event.preventDefault(); close(); });
+      modal.addEventListener('cancel', event => { if (event.target !== modal) return; event.preventDefault(); close(); });
       modal.addEventListener('click', event => { if (event.target === modal) close(); });
       modal.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();
@@ -1220,7 +1228,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       closeButton.setAttribute('aria-label', t('close')); closeButton.innerHTML = uiIcon('close');
       closeButton.addEventListener('click', close); header.append(closeButton); modal.setAttribute('aria-labelledby', headingId);
       modal.querySelector('[data-modal-cancel]').addEventListener('click', close);
-      modal.addEventListener('cancel', event => { event.preventDefault(); close(); });
+      modal.addEventListener('cancel', event => { if (event.target !== modal) return; event.preventDefault(); close(); });
       modal.addEventListener('click', event => { if (event.target === modal) close(); });
       modal.querySelector('form').addEventListener('submit', event => {
         event.preventDefault();

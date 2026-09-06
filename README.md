@@ -229,3 +229,12 @@ The DOM regression suite covers record-level call replay prevention, world-data 
 The portrait suite uses a native raster canvas to test real image downsampling, square JPEG export and framing. It simulates pointer/pinch events and the host vision API to check upload/paste integration, quota guards, crop persistence and chat isolation. It does not call an actual AI provider. `tests/preview.html` is a manual browser fixture with synthetic imagery and a simulated AI; serve the repository over HTTP to inspect it. Vision generation in that standalone fixture needs the host API or a test stub.
 
 Validation for v1.2.0: JavaScript syntax and CSS parse checks, 41 DOM checks and 12 image/integration checks passed. Native browser visual review was blocked by the review environment's local-URL policy; real iOS Safari rendering, keyboard and touch behavior remain to be checked on-device.
+
+
+### v2.7.1 — Portrait picker and Braindance deck
+
+- NPC editing uses one extension modal at a time. Cancelling the native photo picker keeps the editor open; cancelling or saving the editor returns to the manager.
+- The portrait picker is a visible native file control. Further uploads and saving are disabled while a portrait is decoding.
+- Braindance has a headset launcher with viewport-aware dragging, a sensory monitor, playback state, and recording cards. Motion respects reduced-motion and extension animation settings.
+
+Device verification still required: on iOS Safari, open Create NPC, choose a JPEG/PNG/WebP portrait, cancel and reopen the picker, then crop/save and reopen the NPC. Check a large phone photo and keyboard/orientation changes. Confirm the Braindance launcher drags without opening, taps to open, and playback/pause/resume/exit work. Automated tests simulate the host and events; they do not reproduce an iOS process crash.
