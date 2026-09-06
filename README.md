@@ -1,5 +1,14 @@
 # Cyberpunk System
 
+## v2.5.0 — Story consequences, progression and full data files
+
+- Active persona names replace internal `user` labels in call receipts and message labels. Completed transfers are recorded immediately, not queued as unsent messages. The data reader includes sender, recipient, amount, reason, timestamp and transaction status. Existing summary-only files remain honest about missing contents. New files support full text and named sections; item dossiers include quantity, category, slot, power, capacity and cooldown.
+- Main-chat events now support resource deltas (damage/healing/stamina/RAM/stress), batch loot, earned character XP and external story income. Tracked NPC-to-player transfers still debit the NPC wallet and reject insufficient funds. External payments such as cash or employer escrow credit the named recipient with a separate audited income receipt; they must not duplicate a tracked transfer or contract reward.
+- Status shows character level, XP and spendable attribute points. Local RP progression: level 1 starts at 100 XP, each threshold rises by 25, maximum level 60; each level grants one attribute point. Body adds 5 maximum HP, Reflexes adds 5 maximum stamina, Technical adds 3 capacity, Intelligence adds 1 maximum RAM and Cool relieves 3 stress. Attributes cap at 20. Increasing maxima never heals/refills the character. These are extension rules, not official 2077 balance.
+- Missions show client, individual objectives, completion state and money/XP/item rewards. Complete every objective before settlement. Rewards are granted once, with persistent award IDs; reopening or restating a settled quest cannot grant them again. Manual objective controls are available for scenario correction.
+- All consequences use the existing response through the main-chat protocol, with no second AI request. The model must emit the matching records for actual events; arbitrary prose alone cannot reliably update numeric state. A rejected event appears in Activity & notifications. Old chats migrate without resetting money, gear, health or map data.
+
+
 ## v2.4.0 — NC Zoning Board detailed map
 
 - Night City now uses NC Zoning Board satellite tiles generated from its 16K source, loaded only for the visible area. No external JavaScript, iframe, mod-registry login or extra AI request is used. Tiles require internet access; failed requests show a Retry control and source link.
@@ -44,7 +53,7 @@
 
 **Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.4.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
 
-**Validation:** 162 checks pass: 44 UI, 12 portrait/raster/vision integration, 91 RPG behavior and 15 detailed-map checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the catalog and map scope.
+**Validation:** 177 checks pass: 44 UI, 12 portrait/raster/vision integration, 106 RPG behavior and 15 detailed-map checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the catalog and map scope.
 
 ## v2.0.0 — Cyberware, Breach Protocol and connected world systems
 

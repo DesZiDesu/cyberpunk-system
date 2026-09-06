@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.4.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.5.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -14,7 +14,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.4.0');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.5.0');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  w.CyberpunkSystem.startCall('Lucy','@@lucy');
@@ -45,7 +45,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Second Wand entry opens the player workspace',()=>{click('#cyberpunk-cyberware-wand');assert.ok(q('.cps-rpg-main'));assert.equal(d.querySelectorAll('.cps-rpg-tabs button').length,10);});
  state().player.balance=1000;state().actors['npc:lucy'].balance=200;
  await message('/cp transfer @lucy 250',true);
- test('Main-chat command atomically transfers funds',()=>{assert.equal(state().player.balance,750);assert.equal(state().actors['npc:lucy'].balance,450);});
+ test('Main-chat command atomically transfers funds',()=>{assert.equal(state().player.balance,750);assert.equal(state().actors['npc:lucy'].balance,450);const receipt=state().shares.find(m=>m.kind==='receipt');assert.equal(receipt.receipt.sender,'Mael');assert.equal(receipt.receipt.status,'Completed');assert.ok(receipt.description.startsWith('Mael → Lucy'));});
  events.get('sent')(0);await wait();
  test('Repeated MESSAGE_SENT does not repeat a transfer',()=>assert.equal(state().player.balance,750));
  await message('โอนเงิน 50 ให้ @lucy',true);
@@ -189,6 +189,41 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Known hacking records supply matching rank, category and mastery without mutating state',()=>{const snapshot=JSON.stringify(ctx.chatMetadata);const f=w.CyberpunkSystemsFactory({htmlEscape:String,context:()=>({name1:'Mael'}),chatBucket:()=>({rpg:{player:{skills:[],inventory:[]}}}),effectiveRecords:()=>[{name:'Netrunner',level:75,max:100,rank:'B',category:'Intrusion',notes:'Access analysis'}]});const host=d.createElement('div');host.innerHTML=f.transform('[CP_SKILL|user|Netrunner][/CP_SKILL]');assert.equal(host.querySelector('.cps-chat-skill-rank b').textContent,'B');assert.equal(host.querySelector('[role=progressbar]').getAttribute('aria-valuenow'),'75');assert.ok(host.textContent.includes('INTRUSION'));assert.equal(JSON.stringify(ctx.chatMetadata),snapshot);});
  test('Structured record rendering escapes malicious text',()=>{const host=d.createElement('div');const factory=w.CyberpunkSystemsFactory({htmlEscape:v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))});host.innerHTML=factory.transform(record('SKILL',{actor:'user',name:'<img src=x onerror=alert(1)>',description:'safe'}).replaceAll('<','&lt;').replaceAll('>','&gt;'));assert.equal(host.querySelector('img'),null);});
  test('Incomplete streamed breach payload stays hidden',()=>{const f=w.CyberpunkSystemsFactory({htmlEscape:v=>v});assert.equal(f.transform('Before [CP_BREACH]{"data":"hidden secret'), 'Before ');});
+
+ // Exercise story events through the actual host MESSAGE_RECEIVED path, after chat isolation.
+ const payment=record('INCOME',{id:'income-new',source:'Fixer escrow',amount:300,reason:'Job advance'});
+ const incomeMessage=await message(payment);
+ test('Main-chat external payment credits persona and stores a complete receipt',()=>{assert.equal(state().player.balance,300);const r=state().shares.find(x=>x.title==='PAYMENT RECEIVED');assert.equal(r.receipt.recipient,'Mael');assert.equal(r.receipt.sender,'Fixer escrow');assert.equal(r.receipt.status,'Completed');assert.ok(r.receipt.date);assert.ok(!incomeMessage.t.textContent.includes('CP_INCOME'));});
+ await message(payment);
+ test('Replayed payment is idempotent across different main-chat messages',()=>assert.equal(state().player.balance,300));
+ await message(record('STATE',{id:'injury-new',delta:{hp:-27,stamina:-12},reason:'Impact'}));
+ test('Story damage reduces HP and preserves the injury on subsequent turns',()=>assert.equal(state().player.hp,73));
+ await message(record('LOOT',{id:'loot-new',source:'Locker',items:[{name:'Access shard',category:'data',quantity:2,effect:'Coordinates and access instructions'}]}));
+ test('Main-chat loot enters inventory automatically without equipping',()=>{const it=state().player.inventory.find(x=>x.name==='Access shard');assert.equal(it.quantity,2);assert.equal(it.equipped,false);assert.equal(state().player.hp,73);});
+ await message(record('LOOT',{id:'loot-new',items:[{name:'Access shard',quantity:2}]}));
+ test('Loot restatement does not create a second stack',()=>assert.equal(state().player.inventory.filter(x=>x.name==='Access shard').length,1));
+ await message(record('PROGRESS',{id:'training-new',actor:'Mael',xp:125,reason:'Completed training'}));
+ test('Earned XP levels the active persona without healing injuries',()=>{assert.equal(state().player.progression.level,2);assert.equal(state().player.progression.xp,25);assert.equal(state().player.progression.points,1);assert.equal(state().player.hp,73);});
+ w.CyberpunkSystem.openCyberware();click('[data-rpg="train:body"]');
+ test('Status attribute training spends one point and applies its documented bonus',()=>{assert.equal(state().player.progression.points,0);assert.equal(state().player.progression.attributes.body,4);assert.equal(state().player.maxHp,105);assert.equal(state().player.hp,73);});
+ const contract={questId:'contract-new',title:'Recover archive',issuer:'Regina',description:'Recover the intact server shard.',objectives:[{id:'retrieve',text:'Retrieve the shard',done:false}],rewards:{amount:200,xp:100,items:[{name:'Medical kit',category:'consumable',quantity:1}]}};
+ await message(record('QUEST',{id:'contract-accept',...contract}));
+ await message(record('QUEST',{id:'contract-early',questId:contract.questId,status:'completed'}));
+ test('Incomplete objectives block reward payout atomically',()=>{assert.equal(state().player.balance,300);assert.equal(state().quests.find(q=>q.id===contract.questId).status,'active');});
+ await message(record('QUEST',{id:'contract-done',questId:contract.questId,status:'completed',objectives:[{id:'retrieve',text:'Retrieve the shard',done:true}]}));
+ test('Mission completion pays money, XP and items once',()=>{const q=state().quests.find(q=>q.id===contract.questId);assert.equal(q.paid,true);assert.equal(state().player.balance,500);assert.equal(state().player.progression.level,3);assert.equal(state().player.inventory.filter(x=>x.name==='Medical kit').length,1);});
+ await message(record('QUEST',{id:'contract-cycle',questId:contract.questId,status:'active'}));
+ await message(record('QUEST',{id:'contract-again',questId:contract.questId,status:'completed',rewards:{amount:9999,xp:9999}}));
+ test('Cycling quest status or changing settled rewards cannot farm payment',()=>{assert.equal(state().player.balance,500);assert.equal(state().player.progression.level,3);assert.equal(state().quests.find(q=>q.id===contract.questId).rewards.amount,200);});
+ click('[data-rpg="tab:quests"]');
+ test('Mission journal exposes objective completion and received reward details',()=>{assert.ok(q('.cps-quest-objectives').textContent.includes('Retrieve the shard'));assert.ok(q('.cps-quest-rewards').textContent.includes('200'));});
+ await message(record('SHARE',{id:'file-full',kind:'data',title:'Recovered archive',description:'Route evidence',content:'Detailed route: service stairs, level 4. <img src=x onerror=alert(1)>',sections:[{heading:'Access instructions',body:'Use the east service door after 22:00.'}]}));
+ click('[data-rpg="tab:status"]');click('[data-rpg=notices]');
+ const received=[...d.querySelectorAll('[data-rpg^="received:"]')].find(b=>b.closest('article').textContent.includes('Recovered archive'));received.click();
+ test('Archive reader preserves full content and sections while escaping markup',()=>{const reader=q('.cps-data-reader');assert.ok(reader.textContent.includes('service stairs, level 4'));assert.ok(reader.textContent.includes('east service door'));assert.equal(reader.querySelector('img'),null);});
+ test('Invalid mixed resource delta does not partially apply',()=>{const a=C.actor();assert.throws(()=>C.patchActor(a,{delta:{hp:-20,balance:100}}));assert.equal(a.hp,100);assert.throws(()=>C.patchActor(a,{hp:50,delta:{hp:-10}}));assert.equal(a.hp,100);});
+ test('Invalid loot or reward overflow rolls back all award components',()=>{const a=C.actor();assert.throws(()=>C.award(a,{amount:10,xp:100,items:[{name:'Good'},{name:''}]},'bad'));assert.equal(a.balance,0);assert.equal(a.inventory.length,0);assert.equal(a.progression.level,1);a.balance=1e12;assert.throws(()=>C.award(a,{amount:1,xp:100},'overflow'));assert.equal(a.progression.level,1);});
+ test('Protocol instructs the model on persona, story consequences and detailed files',()=>{assert.ok(lastPrompt.includes('Active player persona: Mael'));for(const t of ['CP_INCOME','CP_LOOT','CP_PROGRESS','delta:','complete in-world text'])assert.ok(lastPrompt.includes(t),t);});
  test('No unhandled DOM/module errors',()=>assert.deepEqual(errors,[]));
  console.log(`\n${count} RPG behavior checks passed. Host APIs and browser events simulated; real Safari still needs device testing.`);dom.window.close();
 })().catch(e=>{console.error(e.stack);dom.window.close();process.exitCode=1;});

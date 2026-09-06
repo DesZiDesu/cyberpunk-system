@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.4.0';
+const CYBERPUNK_SYSTEM_VERSION = '2.5.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -640,14 +640,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
@@ -867,7 +867,7 @@ ${systems?.prompt() || ''}`.trim();
         const node = document.createElement('div');
         node.className = `cps-call-message ${role}${item.pending ? ' pending' : ''}`;
         const label = document.createElement('header');
-        label.innerHTML = `<small>${htmlEscape(role === 'system' ? t('systemLabel') : role === 'user' ? t('userLabel') : item.name)}</small>${timeMarkup(item.at)}`;
+        label.innerHTML = `<small>${htmlEscape(role === 'system' ? t('systemLabel') : role === 'user' ? context()?.name1 || item.name || t('userLabel') : item.name)}</small>${timeMarkup(item.at)}`;
         const copy = document.createElement('div'); copy.className = 'cps-signal-copy';
         copy.textContent = item.text;
         node.append(label, copy);
@@ -932,7 +932,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (!sameCall()) return;
         const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
         const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
-        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER)\]/i.test(result)) throw new Error('Empty private response');
+        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)\]/i.test(result)) throw new Error('Empty private response');
         if (reply) appendCallMessage('assistant', peer.name, reply);
         systems?.process(result, `call:${pending.map(item => item.id).join(',')}`);
       } catch (error) {
@@ -1347,6 +1347,9 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 [CP_CALL_REQUEST|Name|handle]Reason[/CP_CALL_REQUEST]
 [CP_SIGNAL|Name]Private call speech[/CP_SIGNAL]
 [CP_HACK|Skill|category|delta|max]Update[/CP_HACK]
+[CP_PROGRESS]{"id":"xp1","actor":"user","xp":25,"reason":"Completed training"}[/CP_PROGRESS]
+[CP_INCOME]{"id":"pay1","actor":"user","source":"Employer escrow","amount":100,"reason":"Actual job payment"}[/CP_INCOME]
+[CP_LOOT]{"id":"loot1","actor":"user","source":"Opened container","items":[{"name":"Data shard","category":"data","quantity":1}]}[/CP_LOOT]
 [CP_STATE]{"id":"e1","actor":"user","hp":85,"maxHp":100}[/CP_STATE]
 [CP_ITEM]{"id":"e2","actor":"user","operation":"equip","itemId":"stored-id"}[/CP_ITEM]
 [CP_SKILL]{"id":"e3","actor":"user","name":"Short Circuit","cost":2,"resource":"ram"}[/CP_SKILL]

@@ -64,3 +64,7 @@ Source snapshot: [nczoning/nc-zoning-board, 3a3ddc2](https://github.com/nczoning
 - [MIT license](third-party/NC-ZONING-LICENSE.txt): retained for the adapted coordinate projection and source documentation. [Upstream assets notice](https://github.com/nczoning/nc-zoning-board/blob/3a3ddc2f3e015206ec7d619b4ba7ebcb4daf93ff/ASSETS.md) distinguishes game-derived imagery and geometry from MIT code. Map imagery © CD PROJEKT RED. This is an unofficial, non-commercial fan project, not approved or endorsed by CD PROJEKT RED; [fan-content guidelines](https://www.cdprojektred.com/en/fan-content) apply separately to game-derived assets.
 
 Runtime safeguards: at most 64 visible detail tiles, bounded zoom, a coarse overview underlay, capped device pixel ratio, request-animation-frame updates, failed-tile retry, and removal of resize/callback work when the map closes. No story text, NPC profile or quest data is submitted to NC Zoning Board. Requests contain only the fixed public tile path. Browser rendering and real iPhone Safari remain unverified in this environment.
+
+## v2.5.0 story systems
+
+XP thresholds, attribute bonuses, external story-income records and contract reward settlement are original configurable-role-play extension mechanics, not official game formulas. Detailed file contents come from the current role-play response, not an external canonical database.

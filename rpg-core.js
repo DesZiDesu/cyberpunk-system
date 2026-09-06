@@ -22,21 +22,31 @@
   const slotAliases={'gorilla-arms':'arms','mantis-blades':'arms',monowire:'arms','projectile-launch-system':'arms','reinforced-tendons':'legs','fortified-ankles':'legs','ex-disk':'frontal-cortex','memory-boost':'frontal-cortex',kerenzikov:'nervous-system',neofiber:'nervous-system','bionic-joints':'skeleton','titanium-bones':'skeleton','smart-link':'hands','ballistic-coprocessor':'hands',ocular:'face','ocular-system':'face',eyes:'face',optics:'face','kiroshi-optics':'face',os:'operating-system',cyberdeck:'operating-system',sandevistan:'operating-system',berserk:'operating-system',arm:'arms',leg:'legs',hand:'hands',circulatory:'circulatory-system',biomonitor:'circulatory-system','blood-pump':'circulatory-system','second-heart':'circulatory-system',integumentary:'integumentary-system',skin:'integumentary-system','subdermal-armor':'integumentary-system','optical-camo':'integumentary-system',nervous:'nervous-system',cortex:'frontal-cortex'};
   const implantSlot=value=>{const key=text(value,80).toLowerCase().replace(/[ _]+/g,'-');return slotAliases[key]||key;};
   const slotLimit=(a,slot)=>(implantGroups.find(g=>g.id===implantSlot(slot))?.slots||1)+(['skeleton','hands'].includes(implantSlot(slot))&&a.implantUnlocks?.[implantSlot(slot)]===true?1:0);
-  const actor = () => ({ balance: 0, hp: 100, maxHp: 100, stamina: 100, maxStamina: 100, ram: 8, maxRam: 8, capacity: 100, stress: 0, cyberpsychosis: false, implantUnlocks: {skeleton:false,hands:false}, inventory: [], skills: [], relic: { unlocked: false, points: 0, abilities: [] }, blackwall: { unlocked: false, exposure: 0 }, ledger: [] });
+  const actor = () => ({ progression: {level:1,xp:0,points:0,attributes:{body:3,reflexes:3,technical:3,intelligence:3,cool:3}}, awards: [], balance: 0, hp: 100, maxHp: 100, stamina: 100, maxStamina: 100, ram: 8, maxRam: 8, capacity: 100, stress: 0, cyberpsychosis: false, implantUnlocks: {skeleton:false,hands:false}, inventory: [], skills: [], relic: { unlocked: false, points: 0, abilities: [] }, blackwall: { unlocked: false, exposure: 0 }, ledger: [] });
   const item = value => ({ id: text(value.id || uid(), 160), name: text(value.name || value.id || 'Unknown', 180), category: ['cyberware','weapons','consumable','quickhack','clothing','mod','component','data','item'].includes(value.category) ? value.category : 'item', quantity: Math.round(cap(value.quantity ?? 1, 1, 9999)), equipped: value.equipped === true, slot: value.category==='cyberware'?implantSlot(value.slot||slotAliases[text(value.name,180).toLowerCase().replace(/[ _]+/g,'-')]||''):text(value.slot,80), capacity: cap(value.capacity ?? (value.category === 'cyberware' ? 10 : 0), 0, 300), effect: text(value.effect), power: cap(value.power ?? 20, 0, 1000), charges: Math.round(cap(value.charges ?? 1, 0, 99)), cooldown: Math.round(cap(value.cooldown ?? 2, 0, 30)), cooldownUntil: 0, catalogId: text(value.catalogId, 180), image: typeof value.image === 'string' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.image) && value.image.length < 500000 ? value.image : '' });
   function hydrate(a) {
     if (!a || typeof a !== 'object') a = actor();
     const defaults = actor(); for (const [k,v] of Object.entries(defaults)) if (a[k] === undefined) a[k] = v;
-    for (const k of ['inventory','skills','ledger']) if (!Array.isArray(a[k])) a[k] = [];
-    for (const k of ['relic','blackwall','implantUnlocks']) { if (!a[k] || typeof a[k] !== 'object' || Array.isArray(a[k])) a[k] = defaults[k]; for (const [field,value] of Object.entries(defaults[k])) if (a[k][field] === undefined) a[k][field] = value; }
+    for (const k of ['inventory','skills','ledger','awards']) if (!Array.isArray(a[k])) a[k] = [];
+    for (const k of ['relic','blackwall','implantUnlocks','progression']) { if (!a[k] || typeof a[k] !== 'object' || Array.isArray(a[k])) a[k] = defaults[k]; for (const [field,value] of Object.entries(defaults[k])) if (a[k][field] === undefined) a[k][field] = value; }
     for(const it of a.inventory)if(it.category==='cyberware')it.slot=implantSlot(it.slot||slotAliases[text(it.name,180).toLowerCase().replace(/[ _]+/g,'-')]||'');
     if (!Array.isArray(a.relic.abilities)) a.relic.abilities = [];
     for (const k of ['hp','maxHp','stamina','maxStamina','ram','maxRam','capacity','stress']) a[k] = cap(a[k], k.startsWith('max') || k === 'capacity' ? 1 : 0, k === 'stress' ? 100 : 1000);
+    a.progression.attributes={...defaults.progression.attributes,...a.progression.attributes};
+    for(const k of Object.keys(defaults.progression.attributes))a.progression.attributes[k]=Math.round(cap(a.progression.attributes[k],3,20));
+    a.progression.level=Math.round(cap(a.progression.level,1,60));a.progression.xp=Math.round(cap(a.progression.xp,0,1000000));a.progression.points=Math.round(cap(a.progression.points,0,1000));
     a.balance = Number.isSafeInteger(a.balance) && a.balance >= 0 ? Math.min(a.balance, 1e12) : 0;
     return a;
   }
   function patchActor(a, data) {
     const next = {};
+    if(data.delta!==undefined){
+      if(!data.delta||typeof data.delta!=='object'||Array.isArray(data.delta))throw Error('Invalid resource delta');
+      for(const [key,value] of Object.entries(data.delta)){
+        if(!['hp','ram','stamina','stress'].includes(key)||typeof value!=='number'||!Number.isFinite(value)||Math.abs(value)>1000||data[key]!==undefined)throw Error('Invalid or conflicting delta: '+key);
+        next[key]=cap(a[key]+value,0,key==='stress'?100:a[{hp:'maxHp',ram:'maxRam',stamina:'maxStamina'}[key]]);
+      }
+    }
     for (const key of ['maxHp','maxRam','maxStamina','capacity','hp','ram','stamina','stress']) {
       if (data[key] === undefined) continue;
       const value = Number(data[key]);
@@ -67,6 +77,37 @@
     const receipt = { id: transactionId, amount, reason: text(reason, 500), at: new Date().toISOString() };
     from.ledger.push({ ...receipt, delta: -amount }); to.ledger.push({ ...receipt, delta: amount });
     from.ledger = from.ledger.slice(-300); to.ledger = to.ledger.slice(-300); return true;
+  }
+  const xpGoal = level => 100+(level-1)*25;
+  function award(a,data,id=uid()){
+    hydrate(a);if(a.awards.includes(id))return false;
+    const next=JSON.parse(JSON.stringify(a)),amount=money(data.amount??0),xp=Number(data.xp??0);
+    if(!Number.isSafeInteger(xp)||xp<0||xp>10000)throw Error('Invalid XP award');
+    next.balance=money(next.balance+amount);
+    if(data.items!==undefined&&(!Array.isArray(data.items)||data.items.length>50))throw Error('Invalid loot batch');
+    const added=(data.items||[]).map((v,i)=>{
+      if(!v||!text(v.name)||!Number.isInteger(Number(v.quantity??1))||Number(v.quantity??1)<1||Number(v.quantity??1)>9999)throw Error('Invalid loot item');
+      const it=item({...v,id:v.id||id+':item:'+i,equipped:false});
+      if(next.inventory.some(x=>x.id===it.id))throw Error('Loot ID already stored');
+      next.inventory.push(it);return it;
+    });
+    const p=next.progression;p.xp+=xp;
+    while(p.level<60&&p.xp>=xpGoal(p.level)){p.xp-=xpGoal(p.level);p.level++;p.points++;}
+    if(p.level===60)p.xp=0;
+    if(amount)next.ledger.push({id,delta:amount,amount,reason:text(data.reason||data.source||'Story reward',500),source:text(data.source,180),at:new Date().toISOString()});
+    next.ledger=next.ledger.slice(-300);next.awards.push(id);
+    Object.assign(a,next);return {amount,xp,items:added};
+  }
+  function train(a,key){
+    hydrate(a);const p=a.progression;
+    if(!Object.hasOwn(p.attributes,key)||p.points<1||p.attributes[key]>=20)throw Error('No attribute point available or attribute capped');
+    p.points--;p.attributes[key]++;
+    // Local RP bonuses: increase maxima only, never heal or refill on level-up.
+    if(key==='body')a.maxHp=Math.min(1000,a.maxHp+5);
+    if(key==='reflexes')a.maxStamina=Math.min(1000,a.maxStamina+5);
+    if(key==='technical')a.capacity=Math.min(1000,a.capacity+3);
+    if(key==='intelligence')a.maxRam=Math.min(1000,a.maxRam+1);
+    if(key==='cool')a.stress=Math.max(0,a.stress-3);
   }
   function load(a) { return a.inventory.filter(x=>x.category==='cyberware'&&x.equipped).reduce((n,x)=>n+cap(x.capacity,0,300),0); }
   function risk(a, scale = 1) { const ratio=load(a)/Math.max(1,a.capacity); return cap((Math.max(0,ratio-.6)*20 + Math.max(0,ratio-1)*50 + cap(a.stress,0,100)*.15) * scale, 0, 95); }
@@ -131,5 +172,5 @@
     return true;
   }
   function finish(p,now=Date.now()){if(!['running','ready'].includes(p.status))return;p.status=p.daemons[0].done&&remaining(p,now)>0?'success':'failed';pause(p,now);p.minimized=false;}
-  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,hydrate,patchActor,transfer,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
+  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,hydrate,patchActor,transfer,xpGoal,award,train,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
 })();
