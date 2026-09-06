@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.7.1';
+const CYBERPUNK_SYSTEM_VERSION = '2.8.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -46,7 +46,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
         appName: 'Cyberpunk System', openInterface: 'Open interface', settingsIntro: 'Characters, private calls, Cyberware, equipment, quests and Breach Protocol for the active chat.',
         coreBehavior: 'Core behavior', enableSystem: 'Enable Cyberpunk System', showWand: 'Show in Wand menu', teachAi: 'Teach the AI when to use each Cyberpunk UI', autoProfiles: 'Create sparse NPC records from tagged speakers', hackingTracking: 'Enable hacking-skill tracking', callSignals: 'Receive active-call signals from normal AI replies',
         language: 'Language / ภาษา', defaultScope: 'Default save scope', headerPosition: 'Header position', callHistory: 'Call history limit', appearance: 'Cyberpunk appearance', accent: 'Primary neon', danger: 'Alert neon', surface: 'Panel surface', textColor: 'Text color', uiScale: 'UI scale', callOpacity: 'Call surface tint', callBlur: 'Call backdrop blur', animationSpeed: 'Animation speed', aiProtocol: 'AI protocol', customInstructions: 'Additional instructions', quotaNote: 'Normal tracking uses the main AI reply. Only the call window AI-send button starts an additional request.', tagReference: 'Tag reference', resetAppearance: 'Reset appearance',
-        network: 'Neural Network', characters: 'Characters', hacking: 'Hacking', calls: 'Calls', config: 'Config', close: 'Close', addNpc: 'Add NPC', addSkill: 'Add skill', noNpcs: 'No linked identities in Character or Chat scope.', noSkills: 'No hacking skills stored for this character or chat.', noCalls: 'No private signal history in this chat.', edit: 'Edit', remove: 'Remove', call: 'Call', character: 'Character', chat: 'Chat', name: 'Name', handle: 'Handle', role: 'Role', status: 'Signal status', affiliation: 'Affiliation', age: 'Age', gender: 'Gender', appearanceField: 'Appearance', notes: 'Notes', scope: 'Scope', save: 'Save', cancel: 'Cancel', category: 'Category', level: 'Progress', maximum: 'Maximum', rank: 'Rank',
+        npcEnabled: 'Enabled', npcDisabled: 'Disabled', enableNpc: 'Enable NPC', disabledNpcHint: 'This NPC is disabled. Enable it in NPC List.', cancelGeneration: 'Cancel generation', regenerateReply: 'Regenerate', editUserMessage: 'Edit user message', network: 'Neural Network', characters: 'NPC List', hacking: 'Hacking', calls: 'Calls', config: 'Config', close: 'Close', addNpc: 'Add NPC', addSkill: 'Add skill', noNpcs: 'No linked identities in Character or Chat scope.', noSkills: 'No hacking skills stored for this character or chat.', noCalls: 'No private signal history in this chat.', edit: 'Edit', remove: 'Remove', call: 'Call', character: 'Character', chat: 'Chat', name: 'Name', handle: 'Handle', role: 'Role', status: 'Signal status', affiliation: 'Affiliation', age: 'Age', gender: 'Gender', appearanceField: 'Appearance', notes: 'Notes', scope: 'Scope', save: 'Save', cancel: 'Cancel', category: 'Category', level: 'Progress', maximum: 'Maximum', rank: 'Rank',
         incoming: 'Incoming private signal', accept: 'Accept', decline: 'Decline', encrypted: 'Encrypted channel', connected: 'Signal connected', ended: 'Signal terminated', minimize: 'Minimize', endCall: 'End call', inputPlaceholder: 'Type private signal…', queueHint: 'Enter queues locally · AI button requests response', generating: 'Tracing signal…', callFailed: 'Private response failed', queued: 'Message queued without AI generation.', unread: 'unread', active: 'Active', restore: 'Restore', settingsSaved: 'Configuration saved.', profileSaved: 'Identity saved.', skillSaved: 'Skill saved.', confirmRemove: 'Remove this record?', promptUnavailable: 'SillyTavern generation is unavailable.',
         general: 'General', stealth: 'Stealth', intrusion: 'Intrusion', hardware: 'Hardware', social: 'Social Engineering', combat: 'Combat Hacking', currentCall: 'Current signal', history: 'Signal history', noActiveCall: 'No active private signal.', customize: 'Every visible value and behavior below is saved immediately.',
       },
@@ -54,7 +54,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
         appName: 'ระบบไซเบอร์พังก์', openInterface: 'เปิดอินเทอร์เฟซ', settingsIntro: 'ตัวละคร สายส่วนตัว Cyberware อุปกรณ์ ภารกิจ และ Breach Protocol สำหรับแชตปัจจุบัน',
         coreBehavior: 'การทำงานหลัก', enableSystem: 'เปิดใช้ระบบไซเบอร์พังก์', showWand: 'แสดงในเมนูไม้กายสิทธิ์', teachAi: 'สอน AI ว่าควรใช้ UI แต่ละแบบเมื่อใด', autoProfiles: 'สร้างข้อมูล NPC แบบย่อจากแท็กผู้พูด', hackingTracking: 'เปิดการติดตามทักษะแฮ็ก', callSignals: 'รับสัญญาณสายที่กำลังใช้งานจากคำตอบ AI ปกติ',
         language: 'ภาษา / Language', defaultScope: 'ขอบเขตบันทึกเริ่มต้น', headerPosition: 'ตำแหน่งส่วนหัว', callHistory: 'จำนวนประวัติสาย', appearance: 'รูปลักษณ์ไซเบอร์พังก์', accent: 'สีนีออนหลัก', danger: 'สีนีออนแจ้งเตือน', surface: 'สีพื้นแผง', textColor: 'สีตัวอักษร', uiScale: 'ขนาด UI', callOpacity: 'ความทึบพื้นหลังสาย', callBlur: 'ความเบลอพื้นหลังสาย', animationSpeed: 'ความเร็วแอนิเมชัน', aiProtocol: 'โปรโตคอล AI', customInstructions: 'คำสั่งเพิ่มเติม', quotaNote: 'การติดตามปกติใช้คำตอบ AI หลัก เฉพาะปุ่มส่งหา AI ในหน้าสายเท่านั้นที่สร้างคำขอเพิ่ม', tagReference: 'รายการแท็ก', resetAppearance: 'รีเซ็ตรูปลักษณ์',
-        network: 'โครงข่ายประสาท', characters: 'ตัวละคร', hacking: 'การแฮ็ก', calls: 'สาย', config: 'ตั้งค่า', close: 'ปิด', addNpc: 'เพิ่ม NPC', addSkill: 'เพิ่มทักษะ', noNpcs: 'ยังไม่มีตัวตนที่เชื่อมในขอบเขตตัวละครหรือแชต', noSkills: 'ยังไม่มีทักษะแฮ็กสำหรับตัวละครหรือแชตนี้', noCalls: 'ยังไม่มีประวัติสัญญาณส่วนตัวในแชตนี้', edit: 'แก้ไข', remove: 'ลบ', call: 'โทร', character: 'ตัวละคร', chat: 'แชต', name: 'ชื่อ', handle: 'ชื่อในเครือข่าย', role: 'บทบาท', status: 'สถานะสัญญาณ', affiliation: 'สังกัด', age: 'อายุ', gender: 'เพศ', appearanceField: 'รูปลักษณ์', notes: 'หมายเหตุ', scope: 'ขอบเขต', save: 'บันทึก', cancel: 'ยกเลิก', category: 'หมวดหมู่', level: 'ความก้าวหน้า', maximum: 'ค่าสูงสุด', rank: 'แรงก์',
+        npcEnabled: 'เปิดใช้', npcDisabled: 'ปิดใช้', enableNpc: 'เปิดใช้ NPC', disabledNpcHint: 'NPC นี้ปิดใช้อยู่ เปิดใช้ได้ในรายชื่อ NPC', cancelGeneration: 'ยกเลิกการสร้าง', regenerateReply: 'สร้างใหม่', editUserMessage: 'แก้ไขข้อความผู้ใช้', network: 'โครงข่ายประสาท', characters: 'รายชื่อ NPC', hacking: 'การแฮ็ก', calls: 'สาย', config: 'ตั้งค่า', close: 'ปิด', addNpc: 'เพิ่ม NPC', addSkill: 'เพิ่มทักษะ', noNpcs: 'ยังไม่มีตัวตนที่เชื่อมในขอบเขตตัวละครหรือแชต', noSkills: 'ยังไม่มีทักษะแฮ็กสำหรับตัวละครหรือแชตนี้', noCalls: 'ยังไม่มีประวัติสัญญาณส่วนตัวในแชตนี้', edit: 'แก้ไข', remove: 'ลบ', call: 'โทร', character: 'ตัวละคร', chat: 'แชต', name: 'ชื่อ', handle: 'ชื่อในเครือข่าย', role: 'บทบาท', status: 'สถานะสัญญาณ', affiliation: 'สังกัด', age: 'อายุ', gender: 'เพศ', appearanceField: 'รูปลักษณ์', notes: 'หมายเหตุ', scope: 'ขอบเขต', save: 'บันทึก', cancel: 'ยกเลิก', category: 'หมวดหมู่', level: 'ความก้าวหน้า', maximum: 'ค่าสูงสุด', rank: 'แรงก์',
         incoming: 'สัญญาณส่วนตัวเข้า', accept: 'รับสาย', decline: 'ปฏิเสธ', encrypted: 'ช่องสัญญาณเข้ารหัส', connected: 'เชื่อมต่อสัญญาณแล้ว', ended: 'ตัดสัญญาณแล้ว', minimize: 'ย่อ', endCall: 'วางสาย', inputPlaceholder: 'พิมพ์สัญญาณส่วนตัว…', queueHint: 'Enter เก็บข้อความ · ปุ่ม AI ขอคำตอบ', generating: 'กำลังติดตามสัญญาณ…', callFailed: 'รับคำตอบส่วนตัวไม่สำเร็จ', queued: 'เก็บข้อความแล้วโดยไม่เรียก AI', unread: 'ยังไม่อ่าน', active: 'กำลังใช้งาน', restore: 'เปิดกลับ', settingsSaved: 'บันทึกการตั้งค่าแล้ว', profileSaved: 'บันทึกตัวตนแล้ว', skillSaved: 'บันทึกทักษะแล้ว', confirmRemove: 'ลบข้อมูลนี้หรือไม่?', promptUnavailable: 'ไม่พบระบบสร้างข้อความของ SillyTavern',
         general: 'ทั่วไป', stealth: 'ลอบเร้น', intrusion: 'บุกรุก', hardware: 'ฮาร์ดแวร์', social: 'วิศวกรรมสังคม', combat: 'แฮ็กต่อสู้', currentCall: 'สัญญาณปัจจุบัน', history: 'ประวัติสัญญาณ', noActiveCall: 'ไม่มีสัญญาณส่วนตัวที่กำลังใช้งาน', customize: 'ค่าที่มองเห็นและพฤติกรรมทั้งหมดด้านล่างจะบันทึกทันที',
       },
@@ -127,6 +127,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     let promptTimer = null;
     let settingsBound = false;
     let callGenerating = false;
+    let callRequest = null;
     let npcGenerating = false;
     let systems = null;
     let managerTrigger = null;
@@ -208,7 +209,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     const saveChat = () => context()?.saveMetadataDebounced?.();
     const saveScope = scope => scope === 'character' ? saveSettings() : saveChat();
 
-    function effectiveRecords(kind) {
+    function effectiveRecords(kind, includeDisabled = false) {
       const map = new Map();
       for (const [scope, list] of [['character', characterBucket()[kind]], ['chat', chatBucket()[kind]]]) {
         let normalized = false;
@@ -219,8 +220,10 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
         }
         if (normalized) saveScope(scope);
       }
-      return [...map.values()];
+      return [...map.values()].filter(record => includeDisabled || kind !== 'npcs' || record.enabled !== false);
     }
+
+    const npcDisabled = name => Boolean(cleanHandle(name)) && effectiveRecords('npcs', true).some(n => n.enabled === false && [n.name, n.handle].some(v => cleanHandle(v).toLowerCase() === cleanHandle(name).toLowerCase()));
 
     const findEffectiveNpc = name => effectiveRecords('npcs').find(item => {
       const needle = cleanHandle(name).toLocaleLowerCase();
@@ -503,7 +506,7 @@ ${systems?.prompt() || ''}`.trim();
     }
 
     function createSparseNpc(name, role = '', status = '', handle = '') {
-      if (!settings().autoProfiles || !clean(name, 180) || findEffectiveNpc(name)) return;
+      if (!settings().autoProfiles || !clean(name, 180) || findEffectiveNpc(name) || npcDisabled(name)) return;
       const scope = settings().defaultScope === 'character' ? 'character' : 'chat';
       bucketFor(scope).npcs.push({ id: id('npc'), name: clean(name, 180), handle: cleanHandle(handle), role: clean(role, 240), status: clean(status, 240), affiliation: '', age: '', gender: '', appearance: '', notes: '', createdAt: new Date().toISOString() });
       saveScope(scope);
@@ -707,7 +710,7 @@ ${systems?.prompt() || ''}`.trim();
     }
 
     function showIncomingCall(peer) {
-      if (!peer?.name) return;
+      if (!peer?.name || npcDisabled(peer.name)) return;
       incomingWindow?.remove();
       pendingIncomingCall = { ...peer, signals: [] };
       const node = document.createElement('section');
@@ -746,6 +749,8 @@ ${systems?.prompt() || ''}`.trim();
     }
 
     function startCall(peer, incoming = false) {
+      if (npcDisabled(peer.name)) { toast(t('disabledNpcHint')); return; }
+      cancelCallGeneration();
       const call = chatBucket().call;
       removeCallOverlay();
       callDraft = '';
@@ -785,6 +790,7 @@ ${systems?.prompt() || ''}`.trim();
     }
 
     function endCall() {
+      cancelCallGeneration();
       const call = chatBucket().call;
       if (call.active) appendCallMessage('system', 'SYSTEM', t('ended'));
       call.active = false;
@@ -841,6 +847,8 @@ ${systems?.prompt() || ''}`.trim();
       send.disabled = callGenerating || (!hasDraft && !pending);
       send.innerHTML = `${uiIcon(callGenerating ? 'signal' : 'send')}<span>${htmlEscape(t('sendAi'))}</span>`;
       send.setAttribute('aria-busy', String(callGenerating));
+      callOverlay.querySelector('[data-call-action="cancel-generation"]').hidden = !callGenerating;
+      callOverlay.querySelectorAll('[data-message-action]').forEach(button => { button.disabled = callGenerating; });
       callOverlay.querySelector('[data-call-action="queue"]').disabled = !hasDraft;
       callOverlay.querySelector('.cps-call-status').textContent = callGenerating ? t('generating') : pending ? `${pending} · ${t('queuedShort')}` : t('signalReady');
     }
@@ -895,11 +903,27 @@ ${systems?.prompt() || ''}`.trim();
         const copy = document.createElement('div'); copy.className = 'cps-signal-copy';
         copy.textContent = item.text;
         node.append(label, copy);
+        if (role !== 'system') {
+          const actions = document.createElement('div'); actions.className = 'cps-message-actions';
+          const add = (action, title, handler) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'cps-button'; b.dataset.messageAction = action; b.textContent = title; b.onclick = () => { if (!callGenerating) handler(); }; actions.append(b); };
+          const owner = chatBucket().call;
+          const changed = () => { if (owner !== chatBucket().call) return; row.remove(); animatedSignals.add(item.id); saveChat(); refreshPrompt(true); renderCallLog(); };
+          if (role === 'user') add('edit', t('edit'), () => {
+            if (node.querySelector('textarea')) return;
+            const editor = document.createElement('textarea'); editor.className = 'cps-message-editor'; editor.maxLength = 4000; editor.value = item.text; editor.setAttribute('aria-label', t('editUserMessage'));
+            const controls = document.createElement('div'); controls.className = 'cps-message-actions';
+            for (const [title, save] of [[t('save'), true], [t('cancel'), false]]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'cps-button'; b.textContent = title; b.dataset.messageAction = save ? 'save-edit' : 'cancel-edit'; b.onclick = () => { if (callGenerating || owner !== chatBucket().call) return; if (save) { const value = clean(editor.value, 4000); if (!value) { editor.focus(); return; } item.text = value; item.pending = true; } changed(); }; controls.append(b); }
+            copy.hidden = true; actions.hidden = true; node.append(editor, controls); editor.focus();
+          });
+          if (role === 'assistant') add('regenerate', t('regenerateReply'), () => requestCallResponse(item));
+          add('delete', t('remove'), () => { if (owner !== chatBucket().call) return; owner.messages = owner.messages.filter(m => m.id !== item.id); changed(); });
+          node.append(actions);
+        }
         if (item.pending) {
           const status = document.createElement('span'); status.className = 'cps-pending-label'; status.textContent = t('queuedShort'); node.append(status);
         }
         systems?.attachment(node, item);
-        row.append(node); log.append(row);
+        row.append(node); log.insertBefore(row, log.children[chatBucket().call.messages.indexOf(item)] || null);
         animateSignal(copy, item);
       }
       requestAnimationFrame(() => { log.scrollTop = atBottom ? log.scrollHeight : scroll; });
@@ -924,25 +948,39 @@ ${systems?.prompt() || ''}`.trim();
       return chat.slice(-8).map(item => `${item.is_user ? 'USER' : 'MAIN AI'}: ${clean(stripTags(item.mes), 900)}`).join('\n');
     }
 
-    async function requestCallResponse() {
-      if (callGenerating || npcGenerating) { if (npcGenerating) toast(t('npcGenerating')); return; }
+    function cancelCallGeneration() {
+      const request = callRequest;
+      if (!request) return;
+      callRequest = null; callGenerating = false;
+      request.cancel();
+      request.pending.forEach(item => { if (request.call.messages.includes(item)) item.pending = true; });
+      try { context()?.stopGeneration?.(); } catch (error) { console.warn('[Cyberpunk System] Stop request failed', error); }
+      if (chatBucket().call === request.call) { saveChat(); refreshPrompt(true); renderCallLog(); }
+    }
+
+    async function requestCallResponse(replace = null) {
+      if (callGenerating || npcGenerating || generationBusy) { toast(t('generating')); return; }
       const call = chatBucket().call;
       if (!call.active || !call.peer) return;
       const input = callOverlay?.querySelector('.cps-call-input');
-      if (clean(input?.value, 4000)) queueCallInput();
-      const pending = call.messages.filter(item => item.role === 'user' && item.pending);
-      if (!pending.length) return;
+      if (!replace && clean(input?.value, 4000)) queueCallInput();
+      const pending = replace ? [] : call.messages.filter(item => item.role === 'user' && item.pending);
+      if (replace && (!call.messages.includes(replace) || replace.role !== 'assistant')) return;
+      if (!replace && !pending.length) return;
       const generator = context()?.generateQuietPrompt;
       if (typeof generator !== 'function') { toast(t('promptUnavailable')); return; }
       const callId = call.id;
       const peer = call.peer;
-      const sameCall = () => chatBucket().call === call && call.active && call.id === callId && call.peer === peer;
+      let cancel;
+      const cancelled = new Promise((_, reject) => { cancel = () => reject(new Error('Cancelled')); });
+      const request = { call, pending, cancel }; callRequest = request;
+      const sameCall = () => callRequest === request && chatBucket().call === call && call.active && call.id === callId && call.peer === peer;
       pending.forEach(item => { item.pending = false; });
       saveChat(); renderCallLog();
       callGenerating = true;
       updateCallComposer();
       const profile = findEffectiveNpc(call.peer.name);
-      const transcript = call.messages.slice(-30).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer.name : 'SYSTEM'}: ${item.text}`).join('\n');
+      const transcript = (replace ? call.messages.slice(0, call.messages.indexOf(replace)) : call.messages).slice(-30).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer.name : 'SYSTEM'}: ${item.text}`).join('\n');
       const prompt = `You are continuing a private cyberpunk call as ${call.peer.name}${call.peer.handle ? `, network handle @${cleanHandle(call.peer.handle)}` : ''}.
 NPC dossier: ${profile ? JSON.stringify({ role: profile.role, status: profile.status, affiliation: profile.affiliation, personality: profile.personality, appearance: profile.appearance, notes: profile.notes }) : 'Use the established main-chat characterization.'}
 Recent main-chat context (context only; do not continue it as public dialogue):
@@ -950,24 +988,31 @@ ${recentMainChat()}
 ${worldLorePrompt()}
 Private call transcript:
 ${transcript}
-Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record, with optional structured Cyberware records after it. ${systems?.prompt() || ''} Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
+Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record, with optional structured Cyberware records after it. ${replace ? 'Rewrite only the next spoken reply. Do not emit game actions or structured records other than CP_SIGNAL.' : systems?.prompt() || ''} Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
       try {
-        const result = await generator.call(context(), prompt, false, false);
+        const result = await Promise.race([generator.call(context(), prompt, false, false), cancelled]);
         if (!sameCall()) return;
         const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
         const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
-        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|PAYMENT|BD_UPDATE|TRADE|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)\]/i.test(result)) throw new Error('Empty private response');
-        if (reply) appendCallMessage('assistant', peer.name, reply);
-        systems?.process(result, `call:${pending.map(item => item.id).join(',')}`);
+        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|PAYMENT|BD_UPDATE|TRADE|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)(?:\||\])/i.test(result)) throw new Error('Empty private response');
+        if (replace) {
+          if (!reply) throw new Error('Empty regenerated reply');
+          replace.text = reply;
+          callOverlay?.querySelectorAll('[data-signal-id]').forEach(row => { if (row.dataset.signalId === replace.id) row.remove(); });
+          animatedSignals.delete(replace.id); saveChat(); refreshPrompt(true); renderCallLog();
+        } else {
+          if (reply) appendCallMessage('assistant', peer.name, reply);
+          callRequest = null; callGenerating = false; updateCallComposer();
+          systems?.process(result, `call:${pending.map(item => item.id).join(',')}`);
+        }
       } catch (error) {
-        console.warn('[Cyberpunk System] Private call generation failed', error);
+        if (sameCall()) console.warn('[Cyberpunk System] Private call generation failed', error);
         if (sameCall()) {
           pending.forEach(item => { item.pending = true; }); saveChat(); renderCallLog();
           toast(t('callFailed'));
         }
       } finally {
-        callGenerating = false;
-        updateCallComposer();
+        if (callRequest === request) { callRequest = null; callGenerating = false; updateCallComposer(); }
       }
     }
 
@@ -982,10 +1027,11 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const node = document.createElement('dialog');
       node.className = 'cps-call-overlay cps-ui';
       node.setAttribute('aria-labelledby', 'cps-call-peer');
-      node.innerHTML = `<header class="cps-call-header"><div class="cps-call-channel"><span class="cps-eyebrow"><span class="cps-live-dot"></span>${htmlEscape(t('privateLine'))}</span><span>${uiIcon('shield')}${htmlEscape(t('encrypted'))}</span></div>${avatarMarkup(call.peer.name)}<div class="cps-call-identity"><strong id="cps-call-peer">${htmlEscape(call.peer.name)}</strong><small>${htmlEscape(call.peer.handle ? `@${cleanHandle(call.peer.handle)}` : t('signalReady'))}</small></div><button class="cps-icon-button" type="button" data-call-action="minimize" aria-label="${htmlEscape(t('minimize'))}">${uiIcon('minimize')}</button></header><main class="cps-call-log" role="log" aria-label="${htmlEscape(t('privateLine'))}" aria-live="polite" tabindex="0"></main><footer class="cps-call-composer"><div class="cps-composer-state"><span class="cps-call-status" role="status"></span>${uiIcon('signal')}</div><textarea class="cps-call-input" rows="2" maxlength="4000" enterkeyhint="send" autocomplete="off" placeholder="${htmlEscape(t('inputPlaceholder'))}" aria-label="${htmlEscape(t('inputPlaceholder'))}" aria-describedby="cps-call-hint"></textarea><div class="cps-call-actions"><button class="cps-button danger cps-end-call" type="button">${uiIcon('end')}<span>${htmlEscape(t('endCall'))}</span></button><button class="cps-button" type="button" data-call-action="queue">${uiIcon('plus')}<span>${htmlEscape(t('queueMessage'))}</span></button><button class="cps-button primary cps-call-send" type="button" aria-label="${htmlEscape(t('sendAi'))}"></button></div><p class="cps-composer-hint" id="cps-call-hint">${htmlEscape(t('queueHint'))}</p></footer>`;
+      node.innerHTML = `<header class="cps-call-header"><div class="cps-call-channel"><span class="cps-eyebrow"><span class="cps-live-dot"></span>${htmlEscape(t('privateLine'))}</span><span>${uiIcon('shield')}${htmlEscape(t('encrypted'))}</span></div>${avatarMarkup(call.peer.name)}<div class="cps-call-identity"><strong id="cps-call-peer">${htmlEscape(call.peer.name)}</strong><small>${htmlEscape(call.peer.handle ? `@${cleanHandle(call.peer.handle)}` : t('signalReady'))}</small></div><button class="cps-icon-button" type="button" data-call-action="minimize" aria-label="${htmlEscape(t('minimize'))}">${uiIcon('minimize')}</button></header><main class="cps-call-log" role="log" aria-label="${htmlEscape(t('privateLine'))}" aria-live="polite" tabindex="0"></main><footer class="cps-call-composer"><div class="cps-composer-state"><span class="cps-call-status" role="status"></span>${uiIcon('signal')}</div><textarea class="cps-call-input" rows="2" maxlength="4000" enterkeyhint="send" autocomplete="off" placeholder="${htmlEscape(t('inputPlaceholder'))}" aria-label="${htmlEscape(t('inputPlaceholder'))}" aria-describedby="cps-call-hint"></textarea><div class="cps-call-actions"><button class="cps-button danger cps-end-call" type="button">${uiIcon('end')}<span>${htmlEscape(t('endCall'))}</span></button><button class="cps-button" type="button" data-call-action="queue">${uiIcon('plus')}<span>${htmlEscape(t('queueMessage'))}</span></button><button class="cps-button danger" type="button" data-call-action="cancel-generation" hidden>${htmlEscape(t('cancelGeneration'))}</button><button class="cps-button primary cps-call-send" type="button" aria-label="${htmlEscape(t('sendAi'))}"></button></div><p class="cps-composer-hint" id="cps-call-hint">${htmlEscape(t('queueHint'))}</p></footer>`;
       node.querySelector('[data-call-action="minimize"]').addEventListener('click', minimizeCallWindow);
       node.querySelector('.cps-end-call').addEventListener('click', endCall);
-      node.querySelector('.cps-call-send').addEventListener('click', requestCallResponse);
+      node.querySelector('.cps-call-send').addEventListener('click', () => requestCallResponse());
+      node.querySelector('[data-call-action="cancel-generation"]').onclick = cancelCallGeneration;
       node.querySelector('[data-call-action="queue"]').addEventListener('click', queueCallInput);
       const input = node.querySelector('.cps-call-input');
       input.value = callDraft;
@@ -1291,7 +1337,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
     }
 
     function renderCharacters(body) {
-      const records = effectiveRecords('npcs');
+      const records = effectiveRecords('npcs', true);
       body.innerHTML = `${sectionHeading('01', 'contactsTitle', 'contactsHint', metric(records.length.toString().padStart(2, '0'), 'identities'))}${recordToolbar('characters', 'addNpc', 'searchContacts')}<div class="cps-card-grid"></div>${noResultsMarkup()}<p class="cps-footnote">${uiIcon('shield')}${htmlEscape(t('scopeHint'))}</p>`;
       const grid = body.querySelector('.cps-card-grid');
       if (!records.length) grid.innerHTML = emptyState('characters', 'noNpcs', 'emptyContactHint');
@@ -1302,7 +1348,19 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         card.dataset.recordScope = record.scope;
         card.dataset.search = [record.name, record.handle, record.role, record.affiliation].join(' ').toLocaleLowerCase();
         const facts = [['age', record.age], ['gender', record.gender]].filter(([, value]) => value);
-        card.innerHTML = `<div class="cps-card-topline">${scopeBadge(record.scope)}<span class="cps-card-id">${htmlEscape(record.handle ? `@${cleanHandle(record.handle)}` : t('identity'))}</span></div><div class="cps-contact-identity">${avatarMarkup(record.name)}<div><h3>${htmlEscape(record.name)}</h3><p>${htmlEscape(record.role || t('noRole'))}</p></div></div><div class="cps-chips">${[record.affiliation, record.status].filter(Boolean).map(value => `<span>${htmlEscape(value)}</span>`).join('')}</div>${facts.length ? `<dl class="cps-facts">${facts.map(([label, value]) => `<div><dt>${htmlEscape(t(label))}</dt><dd>${htmlEscape(value)}</dd></div>`).join('')}</dl>` : ''}${record.appearance || record.notes ? `<details class="cps-dossier"><summary>${htmlEscape(t('viewDossier'))}${uiIcon('chevron')}</summary>${record.appearance ? `<p><strong>${htmlEscape(t('appearanceField'))}</strong>${htmlEscape(record.appearance)}</p>` : ''}${record.notes ? `<p><strong>${htmlEscape(t('notes'))}</strong>${htmlEscape(record.notes)}</p>` : ''}</details>` : ''}<footer class="cps-card-actions"><button class="cps-button" type="button" data-action="assets">Cyberware</button><button class="cps-button primary" type="button" data-action="call">${uiIcon('calls')}<span>${htmlEscape(t('call'))}</span></button><button class="cps-button" type="button" data-action="edit">${uiIcon('edit')}<span>${htmlEscape(t('edit'))}</span></button><button class="cps-icon-button danger" type="button" data-action="remove" aria-label="${htmlEscape(`${t('remove')} ${record.name}`)}">${uiIcon('trash')}</button></footer>`;
+        card.innerHTML = `<div class="cps-card-topline">${scopeBadge(record.scope)}<span class="cps-card-id">${htmlEscape(record.handle ? `@${cleanHandle(record.handle)}` : t('identity'))}</span></div><div class="cps-contact-identity">${avatarMarkup(record.name)}<div><h3>${htmlEscape(record.name)}</h3><p>${htmlEscape(record.role || t('noRole'))}</p></div></div><div class="cps-chips">${[record.affiliation, record.status].filter(Boolean).map(value => `<span>${htmlEscape(value)}</span>`).join('')}</div>${facts.length ? `<dl class="cps-facts">${facts.map(([label, value]) => `<div><dt>${htmlEscape(t(label))}</dt><dd>${htmlEscape(value)}</dd></div>`).join('')}</dl>` : ''}${record.appearance || record.notes ? `<details class="cps-dossier"><summary>${htmlEscape(t('viewDossier'))}${uiIcon('chevron')}</summary>${record.appearance ? `<p><strong>${htmlEscape(t('appearanceField'))}</strong>${htmlEscape(record.appearance)}</p>` : ''}${record.notes ? `<p><strong>${htmlEscape(t('notes'))}</strong>${htmlEscape(record.notes)}</p>` : ''}</details>` : ''}<footer class="cps-card-actions"><button class="cps-button" type="button" role="switch" aria-label="${htmlEscape(t('enableNpc'))} ${htmlEscape(record.name)}" aria-checked="${record.enabled !== false}" data-action="toggle-npc">${htmlEscape(t(record.enabled === false ? 'npcDisabled' : 'npcEnabled'))}</button><button class="cps-button" type="button" data-action="assets">Cyberware</button><button class="cps-button primary" type="button" data-action="call">${uiIcon('calls')}<span>${htmlEscape(t('call'))}</span></button><button class="cps-button" type="button" data-action="edit">${uiIcon('edit')}<span>${htmlEscape(t('edit'))}</span></button><button class="cps-icon-button danger" type="button" data-action="remove" aria-label="${htmlEscape(`${t('remove')} ${record.name}`)}">${uiIcon('trash')}</button></footer>`;
+        card.dataset.enabled = String(record.enabled !== false);
+        card.querySelector('[data-action="call"]').disabled = record.enabled === false;
+        card.querySelector('[data-action="assets"]').disabled = record.enabled === false;
+        card.querySelector('[data-action="toggle-npc"]').onclick = () => {
+          const saved = bucketFor(record.scope).npcs.find(n => n.id === record.id);
+          if (!saved) return;
+          saved.enabled = record.enabled === false;
+          saveScope(record.scope);
+          if (!saved.enabled && chatBucket().call.peer?.name === record.name) endCall();
+          if (!saved.enabled && pendingIncomingCall?.name === record.name) { incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; }
+          refreshPrompt(); refreshPortraits(); renderManagerBody();
+        };
         card.querySelector('[data-action="assets"]').addEventListener('click', () => systems?.open(record.name));
         card.querySelector('[data-action="call"]').addEventListener('click', () => { closeManager(); startCall(record, false); });
         card.querySelector('[data-action="edit"]').addEventListener('click', () => openNpcEditor(record));
@@ -1565,7 +1623,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const listen = (name, handler) => { if (types[name] !== undefined) source.on(types[name], handler); };
       listen('MESSAGE_RECEIVED', onAssistantMessage);
       listen('MESSAGE_UPDATED', onAssistantMessage);
-      listen('CHAT_CHANGED', () => { generationBusy=false;systems?.onChatChanged(); removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
+      listen('CHAT_CHANGED', () => { cancelCallGeneration();generationBusy=false;systems?.onChatChanged(); removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
       listen('CHARACTER_MESSAGE_RENDERED', onAssistantMessage);
       listen('GENERATION_STARTED', () => {generationBusy=true;refreshPrompt(true);});
       listen('GENERATION_ENDED',()=>{generationBusy=false;});
@@ -1595,7 +1653,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, isGenerating:()=>generationBusy, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, isGenerating:()=>generationBusy, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

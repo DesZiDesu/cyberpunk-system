@@ -142,12 +142,12 @@ globalThis.CyberpunkSystemsFactory = api => {
     b.setAttribute('aria-label',tr('Open Braindance. Drag to reposition.','เปิด Braindance ลากเพื่อย้ายตำแหน่ง'));
     b.title=tr('Braindance · drag to move','Braindance · ลากเพื่อย้าย');
     const bounds=()=>{const v=globalThis.visualViewport;return {left:v?.offsetLeft||0,top:v?.offsetTop||0,width:v?.width||innerWidth,height:v?.height||innerHeight};};
-    const place=()=>{const v=bounds(),width=b.offsetWidth||88,height=b.offsetHeight||76;b.style.left=v.left+C.cap((s.bd.x??.85)*(v.width-width),8,Math.max(8,v.width-width-8))+'px';b.style.top=v.top+C.cap((s.bd.y??.45)*(v.height-height),8,Math.max(8,v.height-height-8))+'px';};
+    const place=()=>{const v=bounds(),width=b.offsetWidth||48,height=b.offsetHeight||48;b.style.left=v.left+C.cap((s.bd.x??.85)*(v.width-width),8,Math.max(8,v.width-width-8))+'px';b.style.top=v.top+C.cap((s.bd.y??.45)*(v.height-height),8,Math.max(8,v.height-height-8))+'px';};
     document.body.append(b);place();bdResizeCleanup?.();globalThis.addEventListener('resize',place);globalThis.visualViewport?.addEventListener('resize',place);globalThis.visualViewport?.addEventListener('scroll',place);
     bdResizeCleanup=()=>{globalThis.removeEventListener('resize',place);globalThis.visualViewport?.removeEventListener('resize',place);globalThis.visualViewport?.removeEventListener('scroll',place);};
     let drag=null,moved=false;
     b.onpointerdown=e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:parseFloat(b.style.left),top:parseFloat(b.style.top)};moved=false;b.setPointerCapture?.(e.pointerId);};
-    b.onpointermove=e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)moved=true;if(moved){const v=bounds();s.bd.x=C.cap((drag.left+dx-v.left)/Math.max(1,v.width-(b.offsetWidth||88)),0,1);s.bd.y=C.cap((drag.top+dy-v.top)/Math.max(1,v.height-(b.offsetHeight||76)),0,1);place();}};
+    b.onpointermove=e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)moved=true;if(moved){const v=bounds();s.bd.x=C.cap((drag.left+dx-v.left)/Math.max(1,v.width-(b.offsetWidth||48)),0,1);s.bd.y=C.cap((drag.top+dy-v.top)/Math.max(1,v.height-(b.offsetHeight||48)),0,1);place();}};
     b.onpointerup=e=>{if(!drag||e.pointerId!==drag.id)return;drag=null;if(moved)save();};
     b.onpointercancel=b.onlostpointercapture=()=>{if(drag){drag=null;moved=true;save();}};
     b.onclick=e=>{if(!moved||e.detail===0)braindance();moved=false;};
@@ -298,7 +298,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     const card=document.createElement('article');card.className='cps-attachment';card.innerHTML=`${v.item?itemImage(v.item):icon('data')}<div><small>${E(v.kind)}</small><strong>${E(v.title)}</strong>${note(displayText(v.description))}${buttons(v.kind==='contact'?tr('Add contact','เพิ่มผู้ติดต่อ'):tr('Open data','เปิดข้อมูล'),'open-attachment')}</div>`;
     card.querySelector('button').onclick=()=>guard(()=>{if(v.kind==='contact')addContact(v.contact);else openData(v);});node.append(card);
   }
-  function addContact(contact){if(!contact?.name)throw Error('Invalid contact');if(api.findEffectiveNpc(contact.name)||api.findEffectiveNpc(contact.handle)){api.toast('Contact already exists');return;}
+  function addContact(contact){if(!contact?.name)throw Error('Invalid contact');if(api.findEffectiveNpc(contact.name)||api.findEffectiveNpc(contact.handle)||api.npcDisabled?.(contact.name)||api.npcDisabled?.(contact.handle)){api.toast('Contact already exists');return;}
     const npc={...contact,id:C.uid(),handle:C.handle(contact.handle),createdAt:new Date().toISOString()};delete npc.rpg;api.chatBucket().npcs.push(npc);const a=actor(npc.name);a.balance=C.money(contact.rpg?.balance??0);a.inventory=(contact.rpg?.inventory||[]).map(C.item);save();notify('CONTACT ADDED',`${npc.name} · @${npc.handle}`);}
   function shareDialog(){form('Send data',[['kind','Type',['data','location','mission'].map(k=>`<option>${k}</option>`).join(''),'select'],['title','Title','','text','required maxlength="180"'],['description','Preview','','textarea','required maxlength="5000"'],['content','Full file contents','','textarea','maxlength="20000"']],v=>share(v,'user',api.context()?.name1||'User'));}
   function callToolbar(overlay){
@@ -442,14 +442,15 @@ globalThis.CyberpunkSystemsFactory = api => {
   function decode(value){const n=document.createElement('div');n.innerHTML=value;return n.textContent||'';}
   function transform(value){let out=String(value||'').replace(/\[CP_SKILL\|([^\]|]+)\|([^\]]+)\]([\s\S]*?)\[\/CP_SKILL\]/gi,(_,name,skill,desc)=>recordedSkill({actor:decode(name),name:decode(skill),description:decode(desc)}));
     out=out.replace(/\[CP_SKILL\]([\s\S]*?)\[\/CP_SKILL\]/gi,(_,json)=>{try{const v=JSON.parse(decode(json));return recordedSkill(v);}catch{return '';}});
-    out=out.replace(new RegExp(`\\[CP_(${tags})\\](?:[\\s\\S]*?)\\[\\/CP_\\1\\]`,'gi'),'');
+    out=out.replace(new RegExp(`\\[CP_(${tags})(?:\\|[^\\]]*)?\\](?:[\\s\\S]*?)\\[\\/CP_\\1\\]`,'gi'),'');
     // Streamed machine payloads (especially breach secrets) must never flash in chat.
-    return out.replace(new RegExp(`\\[CP_(?:${tags})\\][\\s\\S]*$`,'gi'),'');
+    return out.replace(new RegExp(`\\[CP_(?:${tags})(?:\\||\\])[\\s\\S]*$`,'gi'),'');
   }
   function process(raw,key=''){
     if(!api.settings().enabled)return;const s=state(),claimed=new Set(s.processed);
     const records=[...String(raw||'').matchAll(new RegExp(`\\[CP_(${tags})\\]([\\s\\S]*?)\\[\\/CP_\\1\\]`,'gi'))];
     for(const m of String(raw||'').matchAll(/\[CP_SKILL\|([^\]|]+)\|([^\]]+)\]([\s\S]*?)\[\/CP_SKILL\]/gi))records.push([m[0],'SKILL',JSON.stringify({actor:m[1],name:m[2],description:m[3]})]);
+    for(const m of String(raw||'').matchAll(/\[CP_CALL_END\|([^\]]+)\]([\s\S]*?)\[\/CP_CALL_END\]/gi))records.push([m[0],'CALL_END',JSON.stringify({actor:m[1].trim(),reason:m[2].trim()})]);
     let changed=false;
     const turnKey=`turn:${String(key).replace(/:swipe:\d+$/, '')}`;if(s.bd.status==='stopped'&&!s.bd.rendering&&!api.chatBucket().braindanceMessages?.includes(key)&&!claimed.has(turnKey)){changed=true;claimed.add(turnKey);s.turn++;for(const a of [s.player,...Object.values(s.actors)]){const was=a.cyberpsychosis;C.tick(a,Math.random,s.settings.riskScale);if(!was&&a.cyberpsychosis)notify('NEURAL INSTABILITY','Cyberpsychosis episode: recover, reduce implant load or seek help in the story.',true);}}
     for(const m of records){let data;try{data=JSON.parse(m[2]);if(!data||Array.isArray(data)||typeof data!=='object')continue;}catch{continue;}

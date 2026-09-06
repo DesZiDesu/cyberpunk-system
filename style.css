@@ -1150,3 +1150,34 @@ html[data-cps-motion=off] .cps-bd-wave i{animation:none!important}
 @media (hover:hover) { .cps-ui .cps-bd-library article:hover { border-color:#8b88bd; } #cps-bd-float:hover { border-color:#e0fff8; } }
 @media (prefers-reduced-motion:reduce) { .cps-ui .cps-bd-console,.cps-ui .cps-bd-wave i { animation:none!important; } }
 html[data-cps-motion=off] .cps-bd-console { animation:none!important; }
+
+/* Compact touch launcher and live neural monitor, including standby. */
+#cps-bd-float { width:48px; height:48px; min-width:48px; border-radius:12px 4px; gap:0; }
+#cps-bd-float svg { width:32px; height:26px; }
+#cps-bd-float span { display:none; }
+#cps-bd-float i { right:5px; top:5px; width:4px; height:4px; }
+.cps-ui .cps-bd-monitor { position:relative; overflow:hidden; isolation:isolate; }
+.cps-ui .cps-bd-monitor::after { content:''; pointer-events:none; position:absolute; inset:0; background:linear-gradient(transparent 40%,#88f1d826 50%,transparent 60%); transform:translateY(-100%); animation:cps-bd-scan 5s linear infinite; }
+.cps-ui .cps-bd-console:not([data-playback=paused]) .cps-bd-wave i { animation-play-state:running; }
+.cps-ui .cps-bd-console[data-playback=stopped] .cps-bd-wave i { animation-duration:2.8s; opacity:.65; }
+.cps-ui .cps-bd-reticle svg { animation:cps-bd-breathe 3s ease-in-out infinite; }
+.cps-ui .cps-bd-tracks span::before,.cps-ui .cps-bd-status i { animation:cps-bd-breathe 2s ease-in-out infinite; }
+.cps-ui .cps-bd-tracks span:nth-child(2)::before { animation-delay:.6s; }
+.cps-ui .cps-bd-tracks span:nth-child(3)::before { animation-delay:1.2s; }
+.cps-ui .cps-bd-console[data-playback=paused] .cps-bd-monitor::after,
+.cps-ui .cps-bd-console[data-playback=paused] .cps-bd-reticle svg,
+.cps-ui .cps-bd-console[data-playback=paused] .cps-bd-tracks span::before,
+.cps-ui .cps-bd-console[data-playback=paused] .cps-bd-status i { animation-play-state:paused; }
+@keyframes cps-bd-scan { to { transform:translateY(100%); } }
+@keyframes cps-bd-breathe { 0%,100% { opacity:.45; } 50% { opacity:1; } }
+.cps-ui .cps-message-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.cps-ui .cps-message-actions button { min-height:36px; padding:6px 10px; font-size:11px; }
+.cps-ui .cps-message-editor { width:100%; min-height:90px; box-sizing:border-box; }
+.cps-ui .cps-contact-card[data-enabled=false] { border-style:dashed; }
+.cps-ui [data-action=toggle-npc][aria-checked=true] { color:#88f1d8; border-color:#88f1d8; }
+.cps-ui [data-action=toggle-npc][aria-checked=false] { color:#f6c28d; }
+html[data-cps-motion=off] .cps-bd-console *,html[data-cps-motion=off] .cps-bd-console *::before,html[data-cps-motion=off] .cps-bd-console *::after { animation:none!important; }
+@media(prefers-reduced-motion:reduce) { .cps-ui .cps-bd-console *,.cps-ui .cps-bd-console *::before,.cps-ui .cps-bd-console *::after { animation:none!important; } }
+
+.cps-ui .cps-call-actions { flex-wrap:wrap; }
+.cps-ui [data-call-action=cancel-generation] { flex:1 0 100%; }

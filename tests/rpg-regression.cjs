@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.7.1','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.8.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -14,7 +14,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.7.1');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.8.0');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  w.CyberpunkSystem.startCall('Lucy','@@lucy');
@@ -281,7 +281,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  const dragBd=(type,x,y)=>{const e=new w.Event(type,{bubbles:true});Object.assign(e,{button:0,pointerId:41,clientX:x,clientY:y});launcher['on'+type](e);};
  dragBd('pointerdown',100,100);dragBd('pointermove',9999,9999);dragBd('pointerup',9999,9999);
  launcher.dispatchEvent(new w.MouseEvent('click',{bubbles:true,detail:1}));
- test('Dragging the larger launcher stays in bounds without opening playback',()=>{assert.equal(d.querySelector('.cps-bd-window'),null);assert.ok(parseFloat(launcher.style.left)+88<=w.innerWidth);assert.ok(parseFloat(launcher.style.top)+76<=w.innerHeight);});
+ test('Dragging the compact launcher stays in bounds without opening playback',()=>{assert.equal(d.querySelector('.cps-bd-window'),null);assert.ok(parseFloat(launcher.style.left)+48<=w.innerWidth);assert.ok(parseFloat(launcher.style.top)+48<=w.innerHeight);});
  dragBd('pointerdown',100,100);dragBd('pointercancel',100,100);
  launcher.dispatchEvent(new w.MouseEvent('click',{bubbles:true,detail:1}));
  test('Cancelled launcher gestures do not open playback',()=>assert.equal(d.querySelector('.cps-bd-window'),null));
@@ -318,6 +318,19 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Story access waits for user connection and keeps hidden data out of the intro',()=>{assert.ok(q('.cps-hacking-intro'));assert.ok(!q('.cps-hacking-intro').textContent.includes('Expert unlocked file'));assert.equal(q('progress').value,0);});
  click('.cps-hacking-intro [data-rpg=connect]');await new Promise(r=>setTimeout(r,1500));
  test('Established level-50 hacking bypasses the puzzle after connection animation',()=>{assert.equal(d.querySelector('.cps-breach'),null);assert.ok(q('.cps-data-reader').textContent.includes('Expert unlocked file'));});
+ w.CyberpunkSystem.startCall('Maevie Vance');
+ const tagExample='[CP_CALL_END|Maevie Vance]In-person transition[/CP_CALL_END]The heavy, soundproofed access door slid shut behind them.';
+ const tagMsg=await message(tagExample);
+ test('Screenshot pipe CALL_END ends its named active call and preserves surrounding narration',()=>{assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,false);assert.equal(tagMsg.t.textContent,'The heavy, soundproofed access door slid shut behind them.');assert.ok(ctx.chatMetadata.cyberpunk_system.call.messages.some(m=>m.text==='In-person transition'));});
+ w.CyberpunkSystem.startCall('Lucy');
+ events.get('received')(tagMsg.i);await wait();
+ test('Re-rendering a consumed call-end cannot close a later call',()=>assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,true));
+ await message('[CP_CALL_END|Maevie Vance]Wrong caller[/CP_CALL_END]Story continues.');
+ test('A different NPC cannot end the active call',()=>assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,true));
+ const incomplete=await message('Before [CP_CALL_END|Lucy]Secret partial');
+ test('Incomplete pipe machine records remain hidden without ending calls',()=>{assert.equal(incomplete.t.textContent,'Before ');assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,true);});
+ const jsonEnd=await message('[CP_CALL_END]{"id":"json-end-test","actor":"Lucy","reason":"Goodbye"}[/CP_CALL_END]After.');
+ test('JSON call-end remains compatible and hidden',()=>{assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,false);assert.equal(jsonEnd.t.textContent,'After.');});
  test('No unhandled DOM/module errors',()=>assert.deepEqual(errors,[]));
  console.log(`\n${count} RPG behavior checks passed. Host APIs and browser events simulated; real Safari still needs device testing.`);dom.window.close();
 })().catch(e=>{console.error(e.stack);dom.window.close();process.exitCode=1;});

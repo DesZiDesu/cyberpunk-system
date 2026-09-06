@@ -1,5 +1,17 @@
 # Cyberpunk System
 
+## v2.8.0 — NPC switches, call controls and live Braindance
+
+- **NPC List:** each saved NPC has an Enabled/Disabled switch. Disabled profiles remain editable and retain their data, but are excluded from active NPC context, calls and contact selectors. Tagged AI mentions do not recreate them. Switches follow the displayed Character/Chat scope; a Chat record overrides a same-name Character record.
+- **Calls:** Cancel generation stops the host request and discards late results; cancelled user turns remain queued for retry. Regenerate replaces the selected AI reply in its original position and keeps the old reply on failure/cancellation. Edit user text inline, or delete either participant's messages. These transcript controls do not undo or replay already-applied payments, inventory changes or attachments. Regeneration does not execute new game actions.
+- **Braindance:** the launcher is now 48 × 48 px, with bounded dragging. The standby screen has an animated waveform, scan sweep and pulsing indicators; playback pause freezes monitor motion. Reduced-motion preferences and the extension's Animation speed → Off still stop animations.
+- **Call-end parsing:** both JSON and `[CP_CALL_END|NPC name]reason[/CP_CALL_END]` are supported. Completed and partial machine records stay out of narration. Only the named active caller can disconnect; processed events cannot end later calls.
+
+Update the extension and reload SillyTavern; the version should read **2.8.0**. Existing portraits and other saved data are retained.
+
+Validation: **232 automated checks** (55 UI, 16 portrait, 146 RPG, 15 map), JavaScript syntax and CSS parsing passed. Browser preview was blocked by the environment's local-page policy; native iOS Safari rendering, motion and photo-picker behavior still require on-device testing. Cancellation uses SillyTavern's `stopGeneration()` with a local late-response guard; no actual AI provider was called during tests.
+
+
 ## v2.7.0 — Payment approvals, Braindance OS and targeted quickhacks
 
 - **Payments:** NPCs issue `CP_PAYMENT` requests. No money moves until **Accept & pay**; **Decline** grants/spends nothing. Acceptance debits the player, credits the stored NPC and grants purchased items together. Insufficient funds leave the invoice pending. `kind:property` records residences/assets under **Balance**, without an inventory item; `kind:service` pays for a service. Pending requests remain accessible through **Balance → Payment requests**. Repeated events cannot reissue or settle an invoice twice.
@@ -70,7 +82,7 @@
 - Main-chat state records now support earned maximum HP/RAM/stamina/capacity changes as well as current resources. Equipment records support add/remove/equip/unequip/use by stored item ID. Using an item consumes resources once and creates its skill header. Invalid status patches are atomic. Private-call quick actions always use the current call participant, independent of the last NPC asset page opened.
 - State continues updating with the UI closed. Repeated host render events do not replay actions, regenerate resources, rebuild the Cyberware DOM or reset scroll. Live updates retain unsaved preferences and focused inputs. Ordinary story turns regenerate once through the existing response; no extra model request is added.
 
-**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.4.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
+**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.8.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
 
 **Validation:** 210 checks pass: 44 UI, 12 portrait/raster/vision integration, 139 RPG behavior and 15 detailed-map checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the catalog and map scope.
 
