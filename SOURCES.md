@@ -1,6 +1,6 @@
-# Cyberware v2.1 sources and scope
+# Cyberware v2.3 sources and scope
 
-Reviewed for this update on 2026-09-05. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols and the schematic map are original code.
+Reviewed through 2026-09-06. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols and the schematic map are original code.
 
 ## Official setting and gameplay references
 
@@ -9,7 +9,7 @@ Reviewed for this update on 2026-09-05. This is an unofficial SillyTavern role-p
 - [CD PROJEKT RED — Bullet-Time Ninja](https://www.cyberpunk.net/en/news/50020/bullet-time-ninja-build-breakdown): Sandevistan/weapon build context.
 - [CD PROJEKT RED — Night City visitor guide](https://www.nightcity.love/en/): district/subdistrict identities, public transit and local context. This is in-world promotional writing; its safety claims are not used as objective danger ratings.
 - [Cyberpunk 2077 / Phantom Liberty](https://www.cyberpunk.net/): Relic skill-tree framing. The local Relic and Blackwall controls are scenario tools; they do not recreate the DLC story or force its spoilers.
-- [Official Piggyback interactive Night City map](https://maps.piggyback.com/cyberpunk-2077/maps/night-city): useful external reference. Its tiles, markers, paid data and geographic coordinates are **not** copied. The extension map is a district schematic with narrative interior/floor fields, not street-level navigation.
+- [Official Piggyback interactive Night City map](https://maps.piggyback.com/cyberpunk-2077/maps/night-city): useful external reference. Its tiles, markers, paid data and geographic coordinates are **not** copied. The extension map is an original illustrative atlas with narrative interior/floor fields, not street-level navigation. District centers are approximate; blocks/routes are decorative. The UI links to the official map separately.
 
 ## Breach Protocol cross-checks
 
@@ -23,7 +23,7 @@ The local puzzle starts in the top row, alternates column/row, forbids reuse of 
 Factual `Items.*` identifiers and category assignments were extracted from the PUBLICNET and BLACKWALL store lists in [neideltern/agis-all-game-items-store](https://github.com/neideltern/agis-all-game-items-store), snapshot [`103a6250ca119ad575125de86d3118703370db8b`](https://github.com/neideltern/agis-all-game-items-store/tree/103a6250ca119ad575125de86d3118703370db8b). Only identifier facts/category metadata were retained; mod store code, pricing, localization, branded art and creative descriptions were not copied.
 
 - **3,420 distinct technical IDs**, deduplicated across tiers/lists. Their labels are mechanically separated ID tokens, **not verified localized display names**.
-- **50 named equipment/item-family entries** for convenient role-play browsing. Some are broad families (e.g. Cyberdeck or Sandevistan), not specific item models. This subset has local editable defaults.
+- **58 named equipment/item-family entries** for convenient role-play browsing. Some are broad families (e.g. Cyberdeck or Sandevistan), not specific item models. This subset has local editable defaults.
 - This is **not a verified exhaustive catalog of every game/DLC item**, quest object, variant, statistic or appearance. No claim of patch-complete coverage is made.
 - The UI makes the technical index opt-in, searches names/IDs/categories and renders at most 60 matches at once. Narrow the search to find additional matches.
 - Every category has an original transparent 1:1 SVG fallback. Valid embedded PNG/JPEG/WebP data supplied in item records can replace it. The bundle does not pretend a category icon is a verified photograph of a particular weapon.
@@ -44,3 +44,12 @@ Theme colors remain configurable. The mobile matrix uses explicit touch-sized ro
 ## v2.2.0 interaction references
 
 Reviewed 2026-09-06: [NameThatUI — drawers/sheets](https://namethatui.com/web/dialog-drawer-sheet), [easing](https://namethatui.com/web/easing), and [21st — background components](https://21st.dev/community/components/s/background). Used as pattern references for an original dependency-free implementation: contextual bottom sheet, eased page reveals, sparse particle/grid/light layers. No third-party component source copied.
+
+## v2.3.0 implant and atlas references
+
+- [CD PROJEKT RED — Cyberware in Update 2.0](https://www.cyberpunk.net/en/news/49129/whats-coming-in-2-0-cyberware): body-system grouping and implant capacity context.
+- [VULKK — Update 2.0 cyberware catalog](https://vulkk.com/2023/09/30/full-cyberware-catalog-for-cyberpunk-2077-update-2-0-and-phantom-liberty/): cross-check for the ten body groups and base socket counts, including the optional second hand socket (Ambidextrous).
+- [CD PROJEKT RED — Patch 2.11](https://www.cyberpunk.net/en/news/49831/patch-2-11): License to Chrome additional skeleton socket. The extension uses explicit earned/manual unlock flags; it does not implement attribute/perk prerequisites.
+- [Piggyback official map](https://maps.piggyback.com/cyberpunk-2077/maps/night-city): provided as an external link. No official map image, paid tile or marker database is bundled. The local atlas is original illustrative geometry and must not be used as exact in-game street navigation.
+
+Base sockets: frontal cortex 3, face 1, operating system 1, arms 1, hands 1, skeleton 2, nervous system 3, circulatory system 3, integumentary system 3 and legs 1 (19 total). The two optional sockets bring the total to 21. Slot restrictions preserve existing installations on migration; capacity costs, combat effects and cooldowns remain editable local role-play tuning. New anatomy paths and named square equipment glyphs are original SVG, not traced game art.

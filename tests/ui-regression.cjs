@@ -33,6 +33,7 @@ const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
  for (const file of ['rpg-core.js','rpg-catalog.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()'); await wait();
  assert.ok(w.CyberpunkSystem);
+ test('Gear image frames cannot stretch with a tall equipment description',()=>{const values={};postcss.parse(css).walkRules(rule=>{if(rule.selector==='.cps-gear-card .cps-gear-visual')rule.walkDecls(decl=>values[decl.prop]=decl.value);});assert.equal(values['aspect-ratio'],'1 / 1');assert.equal(values['min-height'],'0');assert.equal(values['align-self'],'start');assert.equal(values.height,'auto');});
  test('Fullscreen workspaces block host text without relying on backdrop blur',()=>{
    const root=postcss.parse(css), declarations=selector=>{const values={};root.walkRules(rule=>{if(rule.selector===selector)rule.walkDecls(decl=>values[decl.prop]=decl.value);});return values;};
    for(const selector of ['dialog.cps-breach','dialog.cps-breach::backdrop','dialog.cps-call-overlay','dialog.cps-call-overlay::backdrop']) assert.equal(declarations(selector).background,'#04080c',selector);

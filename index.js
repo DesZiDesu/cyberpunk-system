@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.2.0';
+const CYBERPUNK_SYSTEM_VERSION = '2.3.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 

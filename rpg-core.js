@@ -7,13 +7,29 @@
   const handle = v => text(v, 180).replace(/^[@＠\s]+/u, '');
   const money = v => { const n = Number(v); if (!Number.isSafeInteger(n) || n < 0 || n > 1e12) throw Error('Invalid amount'); return n; };
   const uid = () => `rpg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
-  const actor = () => ({ balance: 0, hp: 100, maxHp: 100, stamina: 100, maxStamina: 100, ram: 8, maxRam: 8, capacity: 100, stress: 0, cyberpsychosis: false, inventory: [], skills: [], relic: { unlocked: false, points: 0, abilities: [] }, blackwall: { unlocked: false, exposure: 0 }, ledger: [] });
-  const item = value => ({ id: text(value.id || uid(), 160), name: text(value.name || value.id || 'Unknown', 180), category: ['cyberware','weapons','consumable','quickhack','clothing','mod','component','data','item'].includes(value.category) ? value.category : 'item', quantity: Math.round(cap(value.quantity ?? 1, 1, 9999)), equipped: value.equipped === true, slot: text(value.slot, 80), capacity: cap(value.capacity ?? (value.category === 'cyberware' ? 10 : 0), 0, 300), effect: text(value.effect), power: cap(value.power ?? 20, 0, 1000), charges: Math.round(cap(value.charges ?? 1, 0, 99)), cooldown: Math.round(cap(value.cooldown ?? 2, 0, 30)), cooldownUntil: 0, catalogId: text(value.catalogId, 180), image: typeof value.image === 'string' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.image) && value.image.length < 500000 ? value.image : '' });
+  const implantGroups = Object.freeze([
+    {id:'frontal-cortex',en:'Frontal cortex',th:'สมองส่วนหน้า',slots:3,x:120,y:38},
+    {id:'face',en:'Face / optics',th:'ใบหน้า / ดวงตา',slots:1,x:120,y:56},
+    {id:'operating-system',en:'Operating system',th:'ระบบปฏิบัติการ',slots:1,x:120,y:94},
+    {id:'arms',en:'Arms',th:'แขน',slots:1,x:72,y:150},
+    {id:'hands',en:'Hands',th:'มือ',slots:1,x:53,y:228},
+    {id:'skeleton',en:'Skeleton',th:'โครงกระดูก',slots:2,x:120,y:200},
+    {id:'nervous-system',en:'Nervous system',th:'ระบบประสาท',slots:3,x:120,y:156},
+    {id:'circulatory-system',en:'Circulatory system',th:'ระบบไหลเวียน',slots:3,x:137,y:119},
+    {id:'integumentary-system',en:'Integumentary system',th:'ผิวหนัง',slots:3,x:98,y:133},
+    {id:'legs',en:'Legs',th:'ขา',slots:1,x:103,y:309}
+  ].map(Object.freeze));
+  const slotAliases={'gorilla-arms':'arms','mantis-blades':'arms',monowire:'arms','projectile-launch-system':'arms','reinforced-tendons':'legs','fortified-ankles':'legs','ex-disk':'frontal-cortex','memory-boost':'frontal-cortex',kerenzikov:'nervous-system',neofiber:'nervous-system','bionic-joints':'skeleton','titanium-bones':'skeleton','smart-link':'hands','ballistic-coprocessor':'hands',ocular:'face','ocular-system':'face',eyes:'face',optics:'face','kiroshi-optics':'face',os:'operating-system',cyberdeck:'operating-system',sandevistan:'operating-system',berserk:'operating-system',arm:'arms',leg:'legs',hand:'hands',circulatory:'circulatory-system',biomonitor:'circulatory-system','blood-pump':'circulatory-system','second-heart':'circulatory-system',integumentary:'integumentary-system',skin:'integumentary-system','subdermal-armor':'integumentary-system','optical-camo':'integumentary-system',nervous:'nervous-system',cortex:'frontal-cortex'};
+  const implantSlot=value=>{const key=text(value,80).toLowerCase().replace(/[ _]+/g,'-');return slotAliases[key]||key;};
+  const slotLimit=(a,slot)=>(implantGroups.find(g=>g.id===implantSlot(slot))?.slots||1)+(['skeleton','hands'].includes(implantSlot(slot))&&a.implantUnlocks?.[implantSlot(slot)]===true?1:0);
+  const actor = () => ({ balance: 0, hp: 100, maxHp: 100, stamina: 100, maxStamina: 100, ram: 8, maxRam: 8, capacity: 100, stress: 0, cyberpsychosis: false, implantUnlocks: {skeleton:false,hands:false}, inventory: [], skills: [], relic: { unlocked: false, points: 0, abilities: [] }, blackwall: { unlocked: false, exposure: 0 }, ledger: [] });
+  const item = value => ({ id: text(value.id || uid(), 160), name: text(value.name || value.id || 'Unknown', 180), category: ['cyberware','weapons','consumable','quickhack','clothing','mod','component','data','item'].includes(value.category) ? value.category : 'item', quantity: Math.round(cap(value.quantity ?? 1, 1, 9999)), equipped: value.equipped === true, slot: value.category==='cyberware'?implantSlot(value.slot||slotAliases[text(value.name,180).toLowerCase().replace(/[ _]+/g,'-')]||''):text(value.slot,80), capacity: cap(value.capacity ?? (value.category === 'cyberware' ? 10 : 0), 0, 300), effect: text(value.effect), power: cap(value.power ?? 20, 0, 1000), charges: Math.round(cap(value.charges ?? 1, 0, 99)), cooldown: Math.round(cap(value.cooldown ?? 2, 0, 30)), cooldownUntil: 0, catalogId: text(value.catalogId, 180), image: typeof value.image === 'string' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.image) && value.image.length < 500000 ? value.image : '' });
   function hydrate(a) {
     if (!a || typeof a !== 'object') a = actor();
     const defaults = actor(); for (const [k,v] of Object.entries(defaults)) if (a[k] === undefined) a[k] = v;
     for (const k of ['inventory','skills','ledger']) if (!Array.isArray(a[k])) a[k] = [];
-    for (const k of ['relic','blackwall']) { if (!a[k] || typeof a[k] !== 'object' || Array.isArray(a[k])) a[k] = defaults[k]; for (const [field,value] of Object.entries(defaults[k])) if (a[k][field] === undefined) a[k][field] = value; }
+    for (const k of ['relic','blackwall','implantUnlocks']) { if (!a[k] || typeof a[k] !== 'object' || Array.isArray(a[k])) a[k] = defaults[k]; for (const [field,value] of Object.entries(defaults[k])) if (a[k][field] === undefined) a[k][field] = value; }
+    for(const it of a.inventory)if(it.category==='cyberware')it.slot=implantSlot(it.slot||slotAliases[text(it.name,180).toLowerCase().replace(/[ _]+/g,'-')]||'');
     if (!Array.isArray(a.relic.abilities)) a.relic.abilities = [];
     for (const k of ['hp','maxHp','stamina','maxStamina','ram','maxRam','capacity','stress']) a[k] = cap(a[k], k.startsWith('max') || k === 'capacity' ? 1 : 0, k === 'stress' ? 100 : 1000);
     a.balance = Number.isSafeInteger(a.balance) && a.balance >= 0 ? Math.min(a.balance, 1e12) : 0;
@@ -29,6 +45,16 @@
     }
     for (const [key, maximum] of [['hp','maxHp'],['ram','maxRam'],['stamina','maxStamina']]) next[key] = cap(next[key] ?? a[key], 0, next[maximum] ?? a[maximum]);
     if (next.stress !== undefined) next.stress = cap(next.stress, 0, 100);
+    if(data.implantUnlocks!==undefined){
+      if(!data.implantUnlocks||typeof data.implantUnlocks!=='object'||Array.isArray(data.implantUnlocks))throw Error('Invalid implant unlocks');
+      const unlocks={...a.implantUnlocks};
+      for(const [slot,value] of Object.entries(data.implantUnlocks)){
+        if(!['hands','skeleton'].includes(slot)||typeof value!=='boolean')throw Error('Invalid implant unlock');
+        if(!value&&a.inventory.filter(it=>it.equipped&&it.category==='cyberware'&&implantSlot(it.slot)===slot).length>slotLimit({...a,implantUnlocks:{}},slot))throw Error('Unequip the extra implant before locking its socket');
+        unlocks[slot]=value;
+      }
+      next.implantUnlocks=unlocks;
+    }
     Object.assign(a, next); return a;
   }
   function transfer(from, to, amount, reason, transactionId = uid()) {
@@ -48,7 +74,12 @@
     const it=a.inventory.find(x=>x.id===id); if (!it) throw Error('Item missing');
     if (!['cyberware','weapons','clothing'].includes(it.category)) throw Error('Cannot equip');
     if (it.equipped) { it.equipped=false; return it; }
-    if (it.category==='cyberware' && it.slot) a.inventory.filter(x=>x.category==='cyberware'&&x.slot===it.slot).forEach(x=>{x.equipped=false;});
+    if (it.category==='cyberware' && it.slot) {
+      const slot=implantSlot(it.slot),linked=a.inventory.filter(x=>x.category==='cyberware'&&x.equipped&&implantSlot(x.slot)===slot),limit=slotLimit(a,slot);
+      if(limit===1)linked.forEach(x=>{x.equipped=false;});
+      else if(linked.length>=limit)throw Error('Implant sockets full: '+slot+' ('+limit+'). Unequip one first.');
+      it.slot=slot;
+    }
     if (it.category==='weapons' && a.inventory.filter(x=>x.category==='weapons'&&x.equipped).length>=3) throw Error('Three weapon slots are full');
     it.equipped=true; return it;
   }
@@ -100,5 +131,5 @@
     return true;
   }
   function finish(p,now=Date.now()){if(!['running','ready'].includes(p.status))return;p.status=p.daemons[0].done&&remaining(p,now)>0?'success':'failed';pause(p,now);p.minimized=false;}
-  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,actor,item,hydrate,patchActor,transfer,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
+  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,hydrate,patchActor,transfer,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
 })();
