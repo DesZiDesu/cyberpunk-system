@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.6.0';
+const CYBERPUNK_SYSTEM_VERSION = '2.7.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -474,7 +474,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       const activeCall = call.active && call.peer ? `ACTIVE PRIVATE CALL: ${call.peer.name}${call.peer.handle ? ` (@${cleanHandle(call.peer.handle)})` : ''}. Any audible words from this participant must use CP_SIGNAL, never CP_DIALOGUE, until the call ends. If the transcript contains a USER message marked new/awaiting response, answer it in this normal reply with CP_SIGNAL. Otherwise do not invent a redundant call response unless the scene naturally requires the caller to speak.\nRecent private-call transcript:\n${callTranscript || '(connected; no speech yet)'}` : 'No private call is active.';
       return `[Cyberpunk System presentation and scene-state protocol — do not explain these rules]
 Use tags only when their semantic condition is true. Keep ordinary narration outside every tag.
-1. HEADER identifies the NPC who is about to speak. Use once immediately before that NPC's visible spoken turn: [CP_HEADER|Name|role|signal status][/CP_HEADER]. Do not put prose in Header.
+1. HEADER identifies the NPC who is about to speak. Use once when a speaker starts or changes. Narration and that same NPC's monologue do not reset the speaker: continue with dialogue only until another character speaks or interrupts. Never repeat a header between that NPC's lines. Format: [CP_HEADER|Name|role|signal status][/CP_HEADER]. Do not put prose in Header.
 2. DIALOGUE contains only audible spoken NPC words: [CP_DIALOGUE|Name]words[/CP_DIALOGUE]. Never wrap narration, actions, descriptions, or the user's words.
 3. MONOLOGUE contains only an NPC's truly private thoughts that the user cannot hear: [CP_MONOLOGUE|Name]thought[/CP_MONOLOGUE]. Do not use it for narration.
 4. CALL REQUEST is only for an NPC initiating a remote private call: [CP_CALL_REQUEST|Name|network handle]short reason[/CP_CALL_REQUEST]. It creates a separate incoming-call window, so do not repeat it as main-chat dialogue.
@@ -546,6 +546,11 @@ ${systems?.prompt() || ''}`.trim();
       // Claim individual complete records, not the whole changing response. Persist
       // with chat metadata so redraws, edits and reopening a chat cannot replay them.
       const bucket = chatBucket();
+      bucket.braindanceMessages??=[];
+      if((bucket.rpg?.bd&&bucket.rpg.bd.status!=='stopped')||bucket.rpg?.bd?.rendering||bucket.braindanceMessages.includes(messageKey)){
+        if(!bucket.braindanceMessages.includes(messageKey))bucket.braindanceMessages.push(messageKey);
+        systems?.process(raw,messageKey);saveChat();return;
+      }
       if (!Array.isArray(bucket.processedRecords)) bucket.processedRecords = [];
       const records = new Set(bucket.processedRecords);
       const fresh = (tag, match) => {
@@ -620,6 +625,18 @@ ${systems?.prompt() || ''}`.trim();
     }
 
     function connectChatBlocks(element) {
+      let speaker='';
+      element.querySelectorAll('.cps-chat-header,.cps-chat-dialogue,.cps-chat-monologue').forEach(block=>{
+        const next=block.dataset.speaker;
+        if(block.classList.contains('cps-chat-header')){
+          if(next&&next===speaker){block.remove();return;}
+          block.tabIndex=0;block.setAttribute('role','button');block.setAttribute('aria-label','Quickhack '+next);
+          block.onclick=()=>systems?.quickhack?.(next);
+          block.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();block.click();}};
+        }
+        if(next)speaker=next;
+      });
+
       // Markdown often leaves BRs or empty paragraphs between block tags.
       const spacer = node => node.nodeType === Node.TEXT_NODE ? !node.textContent.trim() :
         node.nodeType === Node.ELEMENT_NODE && (node.tagName === 'BR' ||
@@ -646,14 +663,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
@@ -938,7 +955,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (!sameCall()) return;
         const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
         const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
-        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|TRADE|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)\]/i.test(result)) throw new Error('Empty private response');
+        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|PAYMENT|BD_UPDATE|TRADE|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)\]/i.test(result)) throw new Error('Empty private response');
         if (reply) appendCallMessage('assistant', peer.name, reply);
         systems?.process(result, `call:${pending.map(item => item.id).join(',')}`);
       } catch (error) {
@@ -1360,6 +1377,8 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 [CP_ITEM]{"id":"e2","actor":"user","operation":"equip","itemId":"stored-id"}[/CP_ITEM]
 [CP_SKILL]{"id":"e3","actor":"user","name":"Short Circuit","cost":2,"resource":"ram"}[/CP_SKILL]
 [CP_BREACH]{"id":"e4","target":"Access point","data":"Locked data"}[/CP_BREACH]
+[CP_PAYMENT]{"id":"invoice1","merchant":"NPC name","title":"Apartment lease","amount":500,"kind":"property","property":"Kabuki apartment"}[/CP_PAYMENT]
+[CP_BD_UPDATE]{"id":"checkpoint1","itemId":"active recording id","summary":"Current playback scene"}[/CP_BD_UPDATE]
 [CP_TRADE]{"id":"trade1","operation":"buy","merchant":"Shop","amount":100,"reason":"Completed purchase","items":[{"name":"Pistol","category":"weapons","quantity":1}]}[/CP_TRADE]
 [CP_TRANSFER]{"id":"e5","from":"NPC name","to":"user","amount":100}[/CP_TRANSFER]
 [CP_SHARE]{"id":"e6","kind":"data","title":"Briefing","description":"Details"}[/CP_SHARE]
@@ -1529,6 +1548,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       } catch (error) { console.warn('[Cyberpunk System] Settings template unavailable', error); }
     }
 
+    let generationBusy=false;
     function bindEvents() {
       const ctx = context();
       const source = ctx?.eventSource;
@@ -1537,9 +1557,11 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const listen = (name, handler) => { if (types[name] !== undefined) source.on(types[name], handler); };
       listen('MESSAGE_RECEIVED', onAssistantMessage);
       listen('MESSAGE_UPDATED', onAssistantMessage);
-      listen('CHAT_CHANGED', () => { systems?.onChatChanged(); removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
+      listen('CHAT_CHANGED', () => { generationBusy=false;systems?.onChatChanged(); removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
       listen('CHARACTER_MESSAGE_RENDERED', onAssistantMessage);
-      listen('GENERATION_STARTED', () => refreshPrompt(true));
+      listen('GENERATION_STARTED', () => {generationBusy=true;refreshPrompt(true);});
+      listen('GENERATION_ENDED',()=>{generationBusy=false;});
+      listen('GENERATION_STOPPED',()=>{generationBusy=false;});
       listen('MESSAGE_SENT', messageId => { const msg = rawMessageById(messageId); if (msg?.is_user) systems?.userText(msg.mes, `main:${context().chat.indexOf(msg)}`); refreshPrompt(true); });
     }
 
@@ -1565,7 +1587,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, isGenerating:()=>generationBusy, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

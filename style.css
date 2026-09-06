@@ -1067,3 +1067,33 @@ dialog[data-cps-breach-suspended] .cps-environment * {animation-play-state:pause
 @media(prefers-reduced-motion:reduce){#cps-immersion .cps-signal-island,.cps-island-pulse{animation:none!important}}
 html[data-cps-motion=off] #cps-immersion .cps-signal-island,
 html[data-cps-motion=off] .cps-island-pulse{animation:none!important}
+
+/* Neural OS: approval, sensory playback, target deck and access handshake. */
+.cps-ui .cps-payment{padding:20px;margin:12px 0;border:1px solid var(--cps-line);border-top:2px solid var(--cps-accent);background:linear-gradient(130deg,#e9ef2510,#10171f);}
+.cps-ui .cps-price{font-size:clamp(28px,6vw,46px);color:var(--cps-accent);display:block;}
+.cps-ui .cps-payment h3{font-size:22px;overflow-wrap:anywhere;}
+.cps-ui .cps-deck{padding:16px;border:1px solid var(--cps-line);margin-bottom:24px;}
+.cps-ui .cps-deck-grid,.cps-ui .cps-quickhack-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.cps-ui .cps-deck-grid label,.cps-ui .cps-quickhack-cards article{min-width:0;padding:14px;border:1px solid #3b5963;background:linear-gradient(135deg,#50e7db12,#0c1119);}
+.cps-ui .cps-deck-grid select{width:100%;min-width:0;margin:12px 0;}
+.cps-ui .cps-quickhack-cards article h3{font-size:20px;color:var(--cps-accent);}
+.cps-ui .cps-hack-target{border-bottom:2px solid var(--cps-accent);margin-bottom:20px;}
+.cps-ui .cps-hack-connect progress{display:block;width:100%;height:12px;margin:24px 0;accent-color:var(--cps-accent);}
+.cps-ui .cps-code-stream{height:180px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#050d12;color:#60ede1;padding:12px;font:11px/1.5 monospace;}
+.cps-ui .cps-bd-console{background:radial-gradient(ellipse at top,#34406566,transparent 65%),#090f19;padding:clamp(12px,3vw,28px);border:1px solid #596881;}
+.cps-ui .cps-bd-console>header{display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:1px solid #536483;}
+.cps-ui .cps-bd-wave{display:flex;align-items:center;gap:4px;height:100px;margin:20px 0;overflow:hidden;}
+.cps-ui .cps-bd-wave i{flex:1;height:var(--bd-height);background:linear-gradient(#b6a4ff,#5ceada);opacity:.8;animation:cps-bd-wave 1.4s var(--bd-delay) ease-in-out infinite alternate;}
+.cps-ui .cps-bd-library{display:grid;gap:16px;}
+.cps-ui .cps-bd-library article{padding:20px;border:1px solid #52617d;background:#101c2b;}
+.cps-ui .cps-bd-library h3{color:#bbceff;font-size:24px;}
+.cps-ui .cps-bd-toggle{display:flex;gap:12px;align-items:center;padding:16px;border:1px solid var(--cps-accent);margin-bottom:12px;}
+#cps-bd-float{position:fixed;z-index:2147483500;touch-action:none;width:52px;height:52px;min-width:52px;padding:0;border:1px solid #acbdff;border-radius:12px;background:#0c1426;color:#b5d5ff;box-shadow:0 0 20px #6586ec55;font:bold 15px monospace;cursor:grab;}
+.cps-chat-header[role=button]{cursor:pointer;}
+.cps-chat-header[role=button]:focus-visible{outline:2px solid var(--cps-accent);outline-offset:3px;}
+.cps-ui.cps-hacking-intro{max-width:100%;}
+@keyframes cps-bd-wave{to{transform:scaleY(.35);opacity:.4}}
+@media(max-width:500px){.cps-ui .cps-deck-grid,.cps-ui .cps-quickhack-cards{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.cps-ui .cps-bd-wave i{animation:none!important}}
+html[data-cps-motion=off] .cps-bd-wave i{animation:none!important}
+.cps-ui .cps-bd-console:not([data-playback=playing]) .cps-bd-wave i{animation-play-state:paused}

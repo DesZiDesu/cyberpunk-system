@@ -1,5 +1,16 @@
 # Cyberpunk System
 
+## v2.7.0 — Payment approvals, Braindance OS and targeted quickhacks
+
+- **Payments:** NPCs issue `CP_PAYMENT` requests. No money moves until **Accept & pay**; **Decline** grants/spends nothing. Acceptance debits the player, credits the stored NPC and grants purchased items together. Insufficient funds leave the invoice pending. `kind:property` records residences/assets under **Balance**, without an inventory item; `kind:service` pays for a service. Pending requests remain accessible through **Balance → Payment requests**. Repeated events cannot reissue or settle an invoice twice.
+- **Braindance:** Enable the draggable launcher in **Cyberware → Settings → Braindance floating control**. Owned `braindance` items appear in the OS with name, info, level, rating, genres, type and creator. Their `scenario` sets the playback scene in main chat. Start/Resume requests one normal host response when idle and the composer is empty; with an unfinished draft or unavailable host generation, send the next message to continue. No background generation loop or parallel helper request. Pause freezes the recording; Stop exits to the saved original scene. Hiding the launcher does not stop playback.
+- Playback checkpoints persist in this chat. Recording events cannot change physical money, inventory, HP, location or NPC records, even if those messages are rendered after exit. Narration quality and checkpoint content still depend on the model following the injected protocol.
+- **Story hacking:** An access request opens a connection window. Tap Connect for a short progress animation and bounded synthetic diagnostic stream, then play the normal Breach puzzle. Closing the connection window leaves the request available in **Skills / Hacking**; Cancel discards it. An established RPG skill whose name contains hack/netrun/breach and is level 50+ bypasses the puzzle after connecting. This threshold is an extension RP rule. Training still opens the puzzle directly. Hidden data is never included in the diagnostic stream.
+- **Header targeting:** Tap an NPC Header to open Quickhack. Set up exactly eight slots under **Skills / Hacking**, using owned quickhack items. Cards show name, effect, level, RAM cost and cooldown. Upload spends resources immediately, records the selected target and leaves effect resolution to the next main-chat response. Empty, unavailable and cooling-down cards cannot upload.
+- Same-speaker Header repetitions within a message are removed across narration/dialogue/monologue; another speaker resets the identity display. The prompt instructs the model to preserve the same flow.
+- All experience dialogs use the extension modal stack and responsive layouts. Character/chat data remains local to the selected chat; versioned assets and the settings drawer are synchronized.
+
+
 ## v2.6.0 — Story trading and signal island
 
 - Completed main-chat purchases use one atomic trade: debit the agreed total price, add items and optionally equip them when that action was established. Sales remove the specified owned quantities and credit the agreed total. Invalid equipment or insufficient funds reject the entire transaction. Tracked merchant wallets participate; other shop payments use the external story economy. Merchant stock is described by the story, not a stock simulation. Stable event IDs prevent replay. Do not emit an additional transfer/loot record for the same trade.
@@ -61,7 +72,7 @@
 
 **Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.4.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
 
-**Validation:** 190 checks pass: 44 UI, 12 portrait/raster/vision integration, 119 RPG behavior and 15 detailed-map checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the catalog and map scope.
+**Validation:** 210 checks pass: 44 UI, 12 portrait/raster/vision integration, 139 RPG behavior and 15 detailed-map checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the catalog and map scope.
 
 ## v2.0.0 — Cyberware, Breach Protocol and connected world systems
 
