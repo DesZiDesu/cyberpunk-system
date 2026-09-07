@@ -1,5 +1,9 @@
 # Cyberpunk System
 
+## v3.0.3 — Back navigation between workspaces
+
+Standard system dialog headers now have a 44px Back control. Nested details and Mailbox return to their still-open parent; direct Wand entries return to the Cyberpunk menu. Cyberware section changes retain a backward history, including the mobile section selector. Replacing a Cyberware workspace retains its preceding actor/section route. Back uses each dialog's close cleanup and does not discard saved mail drafts; the existing × button remains a close action. Validation: 287 simulated checks including section history, nested mailbox return, draft retention and direct-entry return. Native Safari navigation still needs device verification.
+
 ## v3.0.2 — Mailbox follows the saved theme
 
 Mailbox now inherits the configured accent, alert, surface and text colors instead of a fixed red/cyan/yellow palette. Derived panel, border and muted colors follow the same theme. This covers folders, documents, offers, receipts, compose fields, swipe controls, unread badges and the mail-generation status bar. Theme changes apply through CSS variables without clearing mail or resetting preferences. Validation: 284 simulated regression checks, including a guard against fixed mailbox palette colors; native Safari rendering remains unverified.

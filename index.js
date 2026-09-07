@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.0.2';
+const CYBERPUNK_SYSTEM_VERSION = '3.0.3';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -306,6 +306,23 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
 
     // Bind only while an overlay is open; visualViewport follows the iOS keyboard.
     function showUiDialog(node) {
+      // Return through the existing close action so each workspace releases its own resources.
+      if (!node.matches('.cps-overlay')) {
+        const header=node.querySelector('.cps-rpg-top, .cps-panel-header');
+        if(header&&!header.querySelector('[data-ui-back]')) {
+          const parent=[...document.querySelectorAll('dialog.cps-ui[open]')].filter(d=>d!==node).at(-1),bucket=chatBucket();
+          const back=document.createElement('button');back.type='button';back.className='cps-button cps-ui-back';back.dataset.uiBack='';back.textContent=settings().language==='th'?'← ย้อนกลับ':'← Back';
+          back.onclick=()=>{
+            if(!node.isConnected||bucket!==chatBucket())return;
+            if(node.cpsSectionBack){node.cpsSectionBack();return;}
+            const route=node.cpsBack;
+            const close=node.querySelector('[data-rpg="close"], [data-action="close-manager"]');
+            if(close)close.click();else removeUiDialog(node);
+            if(route)route();else if(parent?.isConnected&&parent.open)parent.querySelector('[data-ui-back],button')?.focus();else openManager();
+          };
+          header.append(back);
+        }
+      }
       const viewport = globalThis.visualViewport;
       let frame = 0;
       const measure = () => {
