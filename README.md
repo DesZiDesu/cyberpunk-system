@@ -1,5 +1,11 @@
 # Cyberpunk System
 
+## v3.0.5 — Edit, delete and regenerate individual mail messages
+
+Every retained original and reply has Edit text and Delete message controls. Edit updates subject/body only; Delete requires confirmation and leaves the other thread messages intact. NPC-authored messages also have Regenerate, which replaces that selected message in place only after a valid response succeeds. User-written messages remain manually editable, not AI-regenerated. Cancellation, failure, a concurrent edit, deletion or switching chats cannot overwrite the old text with a late result.
+
+These are correspondence controls, not transaction undo: attached transfers, offer terms, acceptance decisions, quest rewards and replay protection are preserved. A regenerated response cannot create another offer or deliver more rewards. Validation: 295 simulated regression checks, including original/user edits, targeted regeneration, cancellation, concurrent edits and deletion of the original while retaining replies. Native Safari remains unverified.
+
 ## v3.0.4 — Read mail as a continuous conversation
 
 Opening a document displays all retained messages in its thread, with user and NPC replies appended below the original. Each message retains its own reply, forward and offer actions. Replies carrying replyTo inherit the original thread. Forwarding still starts a separate conversation and does not copy offer rights. Existing mail is not deleted or merged destructively.
