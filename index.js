@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.0.5';
+const CYBERPUNK_SYSTEM_VERSION = '3.0.6';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -311,7 +311,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
         const header=node.querySelector('.cps-rpg-top, .cps-panel-header');
         if(header&&!header.querySelector('[data-ui-back]')) {
           const parent=[...document.querySelectorAll('dialog.cps-ui[open]')].filter(d=>d!==node).at(-1),bucket=chatBucket();
-          const back=document.createElement('button');back.type='button';back.className='cps-button cps-ui-back';back.dataset.uiBack='';back.textContent=settings().language==='th'?'← ย้อนกลับ':'← Back';
+          const back=document.createElement('button');back.type='button';back.className='cps-button cps-ui-back';back.dataset.uiBack='';back.textContent=settings().language==='th'?'ย้อนกลับ':'Back';
           back.onclick=()=>{
             if(!node.isConnected||bucket!==chatBucket())return;
             if(node.cpsSectionBack){node.cpsSectionBack();return;}
@@ -320,7 +320,11 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
             if(close)close.click();else removeUiDialog(node);
             if(route)route();else if(parent?.isConnected&&parent.open)parent.querySelector('[data-ui-back],button')?.focus();else openManager();
           };
-          header.append(back);
+          const close=header.querySelector('[data-rpg="close"], [data-action="close-manager"]');
+          if (node.matches('.cps-mail-window') && close) {
+            const actions=document.createElement('div');actions.className='cps-mail-window-actions';
+            header.append(actions);actions.append(back,close);
+          } else header.append(back);
         }
       }
       const viewport = globalThis.visualViewport;
@@ -1009,7 +1013,7 @@ ${systems?.prompt() || ''}`.trim();
     }
 
     async function requestCallResponse(replace = null) {
-      if (callGenerating || npcGenerating || generationBusy || systems?.mailBusy?.()) { toast(t('generating')); return; }
+      if (callGenerating || npcGenerating || hostGenerationBusy() || systems?.mailBusy?.()) { toast(t('generating')); return; }
       const call = chatBucket().call;
       if (!call.active || !call.peer) return;
       const input = callOverlay?.querySelector('.cps-call-input');
@@ -1667,6 +1671,17 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
     }
 
     let generationBusy=false;
+    let hostGenerationProbe=null;
+    function hostGenerationBusy() {
+      // Live host state also recovers STARTED events with no matching END
+      // (offline/command exits). Never infer idleness from a hidden Send button.
+      try {
+        const ctx=context();
+        const value=typeof ctx?.isGenerating==='function' ? ctx.isGenerating() : hostGenerationProbe?.();
+        if (typeof value==='boolean') return value;
+      } catch { /* Older hosts retain the event-based fallback. */ }
+      return generationBusy;
+    }
     function bindEvents() {
       const ctx = context();
       const source = ctx?.eventSource;
@@ -1677,7 +1692,11 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       listen('MESSAGE_UPDATED', onAssistantMessage);
       listen('CHAT_CHANGED', () => { cancelCallGeneration();generationBusy=false;systems?.onChatChanged(); removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
       listen('CHARACTER_MESSAGE_RENDERED', onAssistantMessage);
-      listen('GENERATION_STARTED', () => {generationBusy=true;refreshPrompt(true);});
+      listen('GENERATION_STARTED', (_type, _options, dryRun) => {
+        // Prompt previews/token counting emit STARTED without generating text.
+        if (dryRun === true) return;
+        generationBusy=true;refreshPrompt(true);
+      });
       listen('GENERATION_ENDED',()=>{generationBusy=false;});
       listen('GENERATION_STOPPED',()=>{generationBusy=false;});
       listen('MESSAGE_SENT', messageId => { const msg = rawMessageById(messageId); if (msg?.is_user) systems?.userText(msg.mes, `main:${context().chat.indexOf(msg)}`); refreshPrompt(true); });
@@ -1703,10 +1722,15 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
     async function initialize() {
       settings(); applyTheme();
       try {
+        // SillyTavern's exported probe includes both single and group generation.
+        const host=await import(new URL('../../../../script.js', import.meta.url).href);
+        if (typeof host.isGenerating==='function') hostGenerationProbe=host.isGenerating;
+      } catch { /* Context probe or lifecycle events support alternate hosts. */ }
+      try {
         for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, isGenerating:()=>generationBusy||callGenerating||npcGenerating, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

@@ -1,5 +1,11 @@
 # Cyberpunk System
 
+## v3.0.6 — Compact Mailbox navigation and generation lock recovery
+
+Mailbox Back is now a text-only 44px touch target beside Close, removing the extra header row while retaining existing navigation and draft cleanup. Request NPC reply ignores SillyTavern prompt-preview dry runs and consults the host's live single/group generation state to recover unmatched start events (such as offline or command exits). Older hosts retain lifecycle-event locking. Private call, NPC creator and mail request locks remain independent; quiet mail generation still shows its cancellable status in the thread and main chat, without impersonating the main-chat Send button.
+
+Validation: 300 simulated regression checks, including dry-run recovery, live-generation rejection, legacy event fallback, compact header structure, and pending-mail cancellation. Native iPhone Safari still requires device verification.
+
 ## v3.0.5 — Edit, delete and regenerate individual mail messages
 
 Every retained original and reply has Edit text and Delete message controls. Edit updates subject/body only; Delete requires confirmation and leaves the other thread messages intact. NPC-authored messages also have Regenerate, which replaces that selected message in place only after a valid response succeeds. User-written messages remain manually editable, not AI-regenerated. Cancellation, failure, a concurrent edit, deletion or switching chats cannot overwrite the old text with a late result.

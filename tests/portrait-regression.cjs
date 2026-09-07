@@ -28,7 +28,7 @@ const pointer=(type,id,x,y)=>{const event=new w.Event(type,{bubbles:true,cancela
 let passed=0;const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
  for (const file of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-mail.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
- await w.eval('(async()=>{'+source+'\n})()');w.CyberpunkSystem.open();click('[data-record-add]');
+ await w.eval('(async()=>{'+source+'\n})()');await wait(()=>w.CyberpunkSystem);w.CyberpunkSystem.open();click('[data-record-add]');
  test('NPC editor replaces the manager with one native modal',()=>{assert.equal(d.querySelectorAll('dialog[open]').length,1);assert.equal(d.querySelector('.cps-overlay'),null);});
  q('[data-portrait-file]').dispatchEvent(new w.Event('cancel',{bubbles:true}));
  test('Cancelling the native picker leaves the editor usable',()=>{assert.equal(q('[type="submit"]').disabled,false);assert.equal(q('[data-portrait-file]').disabled,false);assert.ok(q('.cps-modal').open);});
