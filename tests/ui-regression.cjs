@@ -30,7 +30,7 @@ const input=(selector,value)=>{const el=q(selector);el.value=value;el.dispatchEv
 let passed=0;
 const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
- for (const file of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+ for (const file of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-mail.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()'); await wait();
  assert.ok(w.CyberpunkSystem);
  test('Gear image frames cannot stretch with a tall equipment description',()=>{const values={};postcss.parse(css).walkRules(rule=>{if(rule.selector==='.cps-gear-card .cps-gear-visual')rule.walkDecls(decl=>values[decl.prop]=decl.value);});assert.equal(values['aspect-ratio'],'1 / 1');assert.equal(values['min-height'],'0');assert.equal(values['align-self'],'start');assert.equal(values.height,'auto');});
@@ -61,7 +61,7 @@ const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
  test('Clear filters restores every card',()=>assert.equal(d.querySelectorAll('[data-record-card]:not([hidden])').length,3));
  click('[data-tab="hacking"]');
  test('Hacking progress uses stored values and accessible progress semantics',()=>{assert.equal(q('[role="progressbar"]').getAttribute('aria-valuenow'),'75');});
- q('[data-tab="hacking"]').dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+ click('[data-tab="config"]');q('[data-tab="config"]').dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));
  test('Tabs support arrows and a single tab stop',()=>{assert.equal(q('[aria-selected="true"]').dataset.tab,'calls');assert.equal(d.querySelectorAll('[role="tab"][tabindex="0"]').length,1);assert.equal(q('[role="tabpanel"]').getAttribute('aria-labelledby'),'cps-tab-calls');});
  click('[data-tab="config"]');
  click('[data-palette="netrunner"]');

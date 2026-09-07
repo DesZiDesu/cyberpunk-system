@@ -1,5 +1,27 @@
 # Cyberpunk System
 
+## v3.0.0 — Document mail, offers and fixer gigs
+
+Open **Cyberpunk System → Mail**, **Wand → Mailbox**, or **Cyberware → Mailbox**. This is fictional, chat-local correspondence with NPCs; it does not send external email.
+
+- **Write and receive:** choose an enabled NPC, write a subject and message, then Send. NPC mail arrives from the next story response through `CP_MAIL`. **Request NPC reply** makes one AI request immediately; **Cancel generation** discards late results. Mail does not start a call. Model output must follow the protocol to create a document.
+- **Threads:** Reply retains the conversation; **Forward / ส่งต่อ** copies the document into a new draft for another recipient. Forwarding does not copy offer acceptance rights or transfer rewards. Drafts survive closing and reopening the mailbox.
+- **Offers:** gifts, dealer trades and fixer gigs have explicit **Accept / Refuse** buttons. Opening or reading an offer does not settle it. Any price is charged on acceptance; currency, XP and items under **Receive on acceptance** are delivered then. **Receive after completing the gig** is paid only after all accepted objectives are complete and the mission is marked Completed in the Journal. The story can update progress through `CP_QUEST`, or you can mark objectives and change status in the Journal. Accepted reward terms and objective identities cannot be rewritten by later updates.
+- **Outgoing transfers:** expand **Attach a currency / item transfer** in the composer. Attached player currency and owned items move to the NPC immediately on Send; insufficient funds or quantity leave both accounts unchanged. Forwarded documents start with no attachments. Incoming offer rewards use fictional external sender/contract funding; a tracked NPC wallet is credited when you pay its offer, but incoming contract rewards do not debit that wallet.
+- **Organize:** Inbox, Unread, Sent, Archive and Pinned folders; search; unread count; pinned documents sort first. On PC, press **Edit** for selection and delete/read/archive/pin controls. On mobile, swipe **rightward** to reveal Read/Delete and **leftward** to reveal Archive/Pin. Swipes reveal controls; they do not execute the action automatically. Unread mail can be deleted. **Clear all read** deletes read incoming documents, including archived/pinned ones, while preserving unread and sent documents. Deleting mail retains accepted gigs and settlement history so rewards cannot repeat.
+- **Hacking tab:** the older progress tracker shown as “Netrunner deck” is now **Hacking proficiency**, with a direct **Quickhack Deck** button. Proficiency records track story progress; owned programs are loaded and used in Quickhack Deck.
+- **Presentation:** an original red/cyan document terminal with a split inbox/reader on desktop, full-width reading on mobile, envelope metadata, contract reward panels, transfer receipts, subtle scan motion and reduced-motion support. Design research and attribution are in [SOURCES.md](SOURCES.md).
+
+Update the extension and reload SillyTavern; confirm **3.0.0**. Existing chat, inventory and NPC data are retained. Validation: **281 checks** (58 UI, 16 portrait, 158 RPG, 15 map, 34 mailbox), JavaScript syntax and CSS parsing. Tests simulate the host, AI and touch events; native iPhone Safari and live model behavior still require device testing.
+
+### Mail protocol example
+
+```text
+[CP_MAIL]{"id":"fixer-shard-001","from":"Lucy","to":"user","subject":"A quiet job in Kabuki","body":"Recover the encrypted shard and bring it back intact.","offer":{"kind":"gig","title":"Recover the shard","onAccept":{"amount":100},"onComplete":{"amount":500,"xp":25,"items":[{"name":"Ping","category":"quickhack"}]},"objectives":["Recover the shard","Deliver it to Lucy"]}}[/CP_MAIL]
+```
+
+Use a stable unique mail ID. After acceptance, this example creates quest ID `mail-gig:fixer-shard-001`; objective IDs are `"0"` and `"1"` in the accepted order. Reply mail uses the original `threadId` and the document's `replyTo` ID. Hidden mail records are removed from visible narration without leaving their paragraph/break stacks. The prompt provides the schema automatically.
+
 ## v2.9.0 — Compact dialogue and connected Quickhack Deck
 
 - **Chat spacing:** remove empty paragraphs and break stacks created by hidden machine records. Standalone dialogue and connected speaker frames use a compact 6 px margin. Narration, media and unrelated prose/code formatting are retained.

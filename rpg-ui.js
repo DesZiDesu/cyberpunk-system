@@ -6,9 +6,10 @@ globalThis.CyberpunkSystemsFactory = api => {
   const tr=(en,th)=>api.settings?.()?.language==='th'?th:en;
   let panel=null, breach=null, timer=null, actorName='user', tab='status', popup=null, mapCleanup=null;
   const noticeTimers=new Map();
-  const tags='PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
+  const tags='MAIL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
   const buttons=(label,action,extra='')=>`<button type="button" class="cps-button" data-rpg="${E(action)}" ${extra}>${E(label)}</button>`;
   const note=v=>`<p class="cps-rpg-note">${E(v)}</p>`;
+  const mail=globalThis.CyberpunkMailFactory({...api,state,actor,dialog,event,notify,prompt,openGig:()=>open('user','quests')});
   function state(){
     const b=api.chatBucket();
     if(!b.rpg||typeof b.rpg!=='object')b.rpg={};const s=b.rpg;
@@ -39,11 +40,13 @@ globalThis.CyberpunkSystemsFactory = api => {
   }
   function questBody(q){return `${q.issuer?note('CLIENT / '+q.issuer):''}<div class="cps-quest-objectives">${(q.objectives||[]).map((o,i)=>`<div><span>${o.done?'✓':'◇'}</span><p>${E(o.text)}</p><b>${o.done?'COMPLETE':'PENDING'}</b>${!q.paid?buttons(o.done?tr('Reopen','ยังไม่สำเร็จ'):tr('Mark complete','สำเร็จแล้ว'),`objective:${encodeURIComponent(q.id)}:${i}`):''}</div>`).join('')}</div><div class="cps-quest-rewards"><small>CONTRACT REWARDS</small><strong>€$${q.rewards?.amount||0} · ${q.rewards?.xp||0} XP</strong>${note((q.rewards?.items||[]).map(it=>it.name+' ×'+(it.quantity||1)).join(' · '))}<span>${E(q.paid?tr('RECEIVED','รับแล้ว'):tr('ON COMPLETION','เมื่อสำเร็จ'))}</span></div>`;}
   function updateQuest(data){
-    const s=state(),old=s.quests.find(q=>q.id===data.questId||q.title===data.title);
+    const s=state(),old=s.quests.find(q=>data.questId?q.id===data.questId:q.title===data.title);
+    if(String(data.questId||'').startsWith('mail-gig:')&&!old?.mailId)throw Error('Accept the mail offer before updating its gig');
     if(!C.text(data.title||old?.title))throw Error('Quest title missing');
     const q={...old,id:old?.id||C.text(data.questId||C.uid(),160),title:C.text(data.title||old?.title,180),description:C.text(data.description??old?.description,4000),objective:C.text(data.objective??old?.objective,1000),issuer:C.text(data.issuer??old?.issuer,180),status:['active','completed','failed'].includes(data.status)?data.status:old?.status||'active'};
     if(data.objectives!==undefined){if(!Array.isArray(data.objectives)||data.objectives.length>30)throw Error('Invalid mission objectives');q.objectives=data.objectives.map((o,i)=>({id:C.text(o.id||i,100),text:C.text(o.text,1000),done:o.done===true}));}
     if(data.location!==undefined)q.location=data.location===null?null:globalThis.CyberpunkMap.normalizeLocation(data.location);
+    if(old?.mailId) { const o=s.mailbox?.offers?.[old.mailId]; if(!o||!['accepted','completed','failed'].includes(o.status))throw Error('Accept this mail gig first'); if(data.objectives!==undefined){if(q.objectives.length!==old.objectives.length||q.objectives.some((v,i)=>v.id!==old.objectives[i].id||v.text!==old.objectives[i].text))throw Error('Accepted gig objectives cannot be removed or rewritten');} data={...data,rewards:undefined}; }
     if(data.rewards!==undefined&&!old?.paid){
       const validation=C.actor();C.award(validation,data.rewards,'validate');
       q.rewards={amount:C.money(data.rewards.amount??0),xp:Number(data.rewards.xp??0),items:(data.rewards.items||[]).map((it,i)=>C.item({...it,id:q.id+':reward:'+i,equipped:false}))};
@@ -55,6 +58,7 @@ globalThis.CyberpunkSystemsFactory = api => {
       if(result&&(result.amount||result.xp||result.items.length))notify('CONTRACT SETTLED',q.title+' · €$'+result.amount+' · '+result.xp+' XP');
     }
     if(old)Object.assign(old,q);else s.quests.push(q);
+    mail.onQuest(old||q);
     event('quest',q.title+': '+q.status);notify('MISSION UPDATE',q.title+' · '+q.status);
   }
   const save=()=>{api.saveChat();api.refreshPrompt();};
@@ -211,7 +215,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     return `<svg class="cps-item-image" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="${special||paths[category]||paths.item}"/></svg>`;
   }
   function itemImage(it){return it.image&&/^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(it.image)&&it.image.length<500000?`<img class="cps-item-image" src="${E(it.image)}" alt="">`:icon(it.category,it.name);}
-  const sections=[['status','Status','สถานะ','consumable'],['cyberware','Cyberware','ไซเบอร์แวร์','cyberware'],['weapons','Weapons','อาวุธ','weapons'],['balance','Balance','บัญชี','component'],['inventory','Inventory','คลังอุปกรณ์','item'],['quickhacks','Quickhack Deck','เด็ค Quickhack','quickhack'],['skills','Skills / Hacking','ทักษะ / แฮ็ก','quickhack'],['quests','Missions / Quests','ภารกิจ','data'],['map','Night City','แผนที่','mod'],['relic','Relic / Blackwall','Relic / Blackwall','cyberware'],['settings','Settings','ตั้งค่า','mod']];
+  const sections=[['status','Status','สถานะ','consumable'],['cyberware','Cyberware','ไซเบอร์แวร์','cyberware'],['weapons','Weapons','อาวุธ','weapons'],['balance','Balance','บัญชี','component'],['inventory','Inventory','คลังอุปกรณ์','item'],['mail','Mailbox','กล่องจดหมาย','data'],['quickhacks','Quickhack Deck','เด็ค Quickhack','quickhack'],['skills','Skills / Hacking','ทักษะ / แฮ็ก','quickhack'],['quests','Missions / Quests','ภารกิจ','data'],['map','Night City','แผนที่','mod'],['relic','Relic / Blackwall','Relic / Blackwall','cyberware'],['settings','Settings','ตั้งค่า','mod']];
   const sectionTitle=key=>{const s=sections.find(x=>x[0]===key);return s?tr(s[1],s[2]):key;};
   function meter(label,value,maximum,kind='') {
     const max=Math.max(1,Number(maximum)||1),v=Math.max(0,Number(value)||0),percent=C.cap(v/max*100,0,100);
@@ -235,7 +239,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   function itemMarkup(it,s){const canEquip=['cyberware','weapons','clothing','quickhack'].includes(it.category);const cooling=Number(it.cooldownUntil)>s.turn;const canUse=!cooling&&(it.category==='consumable'||it.equipped);return `<article class="cps-rpg-item cps-gear-card ${it.equipped?'linked':''}"><div class="cps-gear-topline"><span>${E(it.category.toUpperCase())}</span><b>${it.equipped?'● LINKED':tr('STORED','จัดเก็บ')}</b></div><div class="cps-gear-visual"><span class="cps-gear-blueprint-label">${E(tr('EQUIPMENT SCAN','สแกนอุปกรณ์'))}</span>${itemImage(it)}<span class="cps-gear-quantity">×${it.quantity}</span></div><div class="cps-gear-copy"><h3>${E(it.name)}</h3>${note(it.effect)}<div class="cps-gear-specs">${it.category==='cyberware'?`<span>${E(tr('Capacity','ภาระติดตั้ง'))}<b>${it.capacity}</b></span><span>${E(tr('Slot','ตำแหน่ง'))}<b>${E(it.slot||'—')}</b></span>`:`<span>${E(tr('Cooldown','คูลดาวน์'))}<b>${it.cooldown} ${E(tr('turns','เทิร์น'))}</b></span>`}</div><div class="cps-rpg-actions">${canEquip?buttons(it.category==='quickhack'?(it.equipped?tr('Unload from deck','นำออกจากเด็ค'):tr('Load into deck','ใส่ในเด็ค')):(it.equipped?tr('Unequip','ถอดออก'):tr('Equip','ติดตั้ง')),`equip:${it.id}`):''}${it.category==='quickhack'?buttons(tr('Open deck','เปิดเด็ค'),'tab:quickhacks'):buttons(cooling?tr('Recharging','กำลังฟื้น'):tr('Activate','ใช้งาน'),`use:${it.id}`,canUse?'':'disabled')}</div><details class="cps-gear-more"><summary>${E(tr('Details & manage','รายละเอียดและจัดการ'))}</summary><div class="cps-rpg-actions">${buttons(tr('Edit','แก้ไข'),`edit-item:${it.id}`)}${buttons(tr('Share','ส่งข้อมูล'),`share-item:${it.id}`)}${buttons(tr('Remove one','นำออกหนึ่งชิ้น'),`remove-item:${it.id}`)}</div></details></div></article>`;}
   function skillMarkup(sk,s){const remaining=Math.max(0,sk.readyTurn-s.turn);return `<article class="cps-rpg-skill cps-ability-card"><div class="cps-ability-heading">${icon('quickhack')}<div><small>QUICK ACCESS / LV.${sk.level}</small><h3>${E(sk.name)}</h3></div><span class="cps-state-pill ${remaining?'waiting':''}">${remaining?`${remaining} ${tr('turns','เทิร์น')}`:tr('READY','พร้อม')}</span></div>${note(sk.description)}${meter('MASTERY',sk.xp,100,'mastery')}<div class="cps-ability-footer"><span><b>${sk.cost}</b> ${E(sk.resource.toUpperCase())}<small>${sk.cooldown} ${E(tr('turn cooldown','เทิร์นคูลดาวน์'))}</small></span>${buttons(tr('Activate','ใช้งาน'),`skill:${sk.id}`,remaining?'disabled':'')}</div></article>`;}
   function relicMarkup(a){return `${heading('RESTRICTED NEURAL PARTITIONS','Relic / Blackwall')}<div class="cps-partition-grid"><section class="cps-neural-partition relic"><div class="cps-partition-header">${icon('cyberware')}<div><small>RELIC INTERFACE</small><h3>${a.relic.unlocked?'LINK ESTABLISHED':'LOCKED'}</h3></div></div>${meter('RELIC POINTS',a.relic.points,Math.max(10,a.relic.points))}<div class="cps-relic-tree">${['Jailbreak','Emergency Cloaking','Vulnerability Analytics'].map((name,i)=>buttons(`${String(i+1).padStart(2,'0')} / ${name}${a.relic.abilities.includes(name)?' ✓':' · 1 RP'}`,`relic:${name}`,`${!a.relic.unlocked||a.relic.abilities.includes(name)?'disabled':''}`)).join('')}</div><details class="cps-rpg-advanced"><summary>${E(tr('Scenario unlocks','ปลดล็อกตามสถานการณ์'))}</summary>${buttons(a.relic.unlocked?tr('Relic linked','Relic เชื่อมต่อแล้ว'):tr('Unlock Relic','ปลดล็อก Relic'),'unlock-relic')}${buttons(tr('Award 1 point','เพิ่ม 1 แต้ม'),'relic-point')}</details></section><section class="cps-neural-partition blackwall"><div class="cps-partition-header">${icon('quickhack')}<div><small>BLACKWALL / RESTRICTED</small><h3>${a.blackwall.unlocked?'ACCESS AUTHORIZED':'LOCKED'}</h3></div></div>${meter('BLACKWALL EXPOSURE',a.blackwall.exposure,100)}${note(tr('4 RAM per interface. Exposure increases by 20; high exposure causes neural feedback.','ใช้ 4 RAM ต่อการเชื่อมต่อ เพิ่มการสัมผัส 20 ระดับสูงทำให้เกิดผลสะท้อนทางประสาท'))}<div class="cps-rpg-actions">${buttons(tr('Interface','เชื่อมต่อ'),'blackwall',!a.blackwall.unlocked||a.ram<4?'disabled':'')}${buttons(tr('Disconnect / recover','ตัดการเชื่อมต่อ / ฟื้นฟู'),'disconnect')}</div><details class="cps-rpg-advanced"><summary>${E(tr('Scenario unlocks','ปลดล็อกตามสถานการณ์'))}</summary>${buttons(a.blackwall.unlocked?'Blackwall linked':'Unlock Blackwall','unlock-blackwall')}</details></section></div>`;}
-  function open(name='user',nextTab='status'){guard(()=>actor(name));if(name!=='user'&&!api.findEffectiveNpc(C.handle(name)))return;actorName=name;tab=nextTab;closePanel();panel=dialog(name==='user'?'Cyberware':`${name} / Cyberware`,'','cps-rpg-main');panel.querySelector('[data-rpg="close"]').onclick=closePanel;panel.addEventListener('cancel',closePanel);render();}
+  function open(name='user',nextTab='status'){if(nextTab==='mail'){mail.open();return;}guard(()=>actor(name));if(name!=='user'&&!api.findEffectiveNpc(C.handle(name)))return;actorName=name;tab=nextTab;closePanel();panel=dialog(name==='user'?'Cyberware':`${name} / Cyberware`,'','cps-rpg-main');panel.querySelector('[data-rpg="close"]').onclick=closePanel;panel.addEventListener('cancel',closePanel);render();}
   function render(){
     if(!panel?.isConnected)return;const a=actor(actorName),s=state();const body=panel.querySelector('.cps-rpg-content');const oldArea=body.querySelector('.cps-rpg-body');const sameTab=panel.dataset.currentTab===tab;const scroll=sameTab?oldArea?.scrollTop||0:0;
     const drafts=sameTab?[...body.querySelectorAll('[data-rpg-settings] input')].map(el=>({name:el.name,value:el.value,checked:el.checked})):[];const focused=body.contains(document.activeElement)?document.activeElement.name:'';
@@ -253,7 +257,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     body.querySelector('[data-bd-switch]')?.addEventListener('change',e=>{s.bd.enabled=e.target.checked;save();bdButton();});
     body.querySelectorAll('[data-deck-slot]').forEach(select=>select.onchange=()=>guard(()=>{C.setQuickhackSlot(a,Number(select.dataset.deckSlot),select.value||null);save();render();}));
     body.querySelectorAll('[data-rpg]').forEach(b=>b.onclick=()=>guard(()=>action(b.dataset.rpg)));
-    body.querySelector('[data-section-picker]').onchange=e=>{tab=e.target.value;render();};
+    body.querySelector('[data-section-picker]').onchange=e=>{if(e.target.value==='mail'){e.target.value=tab;mail.open();return;}tab=e.target.value;render();};
     body.querySelector('[data-rpg-settings]')?.addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget;s.settings={notifications:f.elements.notifications.checked,noticeSeconds:C.cap(f.elements.noticeSeconds.value,2,60),riskScale:C.cap(f.elements.riskScale.value,0,3)};save();api.toast(tr('Saved','บันทึกแล้ว'));});
     for(const draft of drafts){const el=[...body.querySelectorAll('[name]')].find(x=>x.name===draft.name);if(el){el.value=draft.value;el.checked=draft.checked;}}
     if(focused)[...body.querySelectorAll('[name]')].find(x=>x.name===focused)?.focus({preventScroll:true});
@@ -390,7 +394,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     breach.querySelector('[data-rpg=finish]').disabled=finished||!p.daemons[0].done;breach.querySelector('[data-rpg=minimize]').disabled=finished;breach.querySelector('[data-rpg=cancel]').textContent=finished?tr('Close','ปิด'):tr('Cancel','ยกเลิก');
   }
   function action(command){const [kind,...rest]=command.split(':'),value=rest.join(':'),a=actor(actorName),s=state();
-    if(kind==='tab'){tab=value;render();return;}
+    if(kind==='tab'){if(value==='mail'){mail.open();return;}tab=value;render();return;}
     const actions={'add-quickhack':()=>form(tr('Add a quickhack you already collected','เพิ่ม Quickhack ที่เก็บมาแล้ว'),[['name',tr('Quickhack name','ชื่อ Quickhack'),'','text','required maxlength="180"'],['level','Level',1,'number','min="1" max="60"'],['ramCost','RAM cost',2,'number','min="0" max="100"'],['cooldown',tr('Cooldown turns','เทิร์นคูลดาวน์'),2,'number','min="0" max="30"'],['effect',tr('Effect','ผล'),'','textarea']],v=>{if(a.inventory.some(it=>it.category==='quickhack'&&it.name.toLowerCase()===v.name.trim().toLowerCase()))throw Error('This quickhack is already recorded. Load it from the deck.');const it=C.item({...v,category:'quickhack'});a.inventory.push(it);event('manual loot recovery',`${actorName}: ${it.name}`);}),payments,braindance,'hack-request':hackingWindow,open:()=>open(),catalog,setup,transfer:()=>transferDialog(actorName==='user'?api.chatBucket().call.peer?.name:actorName),share:shareDialog,location:locationDialog,practice:()=>beginBreach({target:'Training access point',data:'Training completed. No story secrets unlocked.'}),resume:openBreach,'custom-item':()=>editItem(),
       recover:()=>{s.turn++;a.stress=C.cap(a.stress-20,0,100);a.ram=a.maxRam;a.stamina=a.maxStamina;if(a.stress<30&&C.load(a)<=a.capacity)a.cyberpsychosis=false;event('recovery',`${actorName} rests one turn`);},
       'send-location':()=>share({kind:'location',title:'Location pin',description:Object.entries(s.map.location).map(([k,v])=>`${k}: ${v}`).join('\n')},'user',api.context()?.name1||'User'),
@@ -459,6 +463,7 @@ globalThis.CyberpunkSystemsFactory = api => {
       try{
         if(type==='BD_UPDATE'){if(s.bd.status==='playing'&&data.itemId===s.bd.itemId){s.bd.summary=C.text(data.summary,6000);save();}continue;}
         if(s.bd.status!=='stopped'||s.bd.rendering||api.chatBucket().braindanceMessages?.includes(key))continue;
+        if(type==='MAIL'){mail.receive(data);continue;}
         if(type==='PAYMENT')requestPayment(data,receipt);
         if(type==='SKILL'){const a=actor(data.actor||'user');C.useSkill(a,data,s.turn);rememberSkill(data,skillReading(data.actor||'user',data.name,data));event('skill',`${data.actor||'user'}: ${data.name}`);}
         if(type==='STATE'){C.patchActor(actor(data.actor||'user'),data);event('status',`${displayName(data.actor||'user')}: ${C.text(data.reason||'Story status updated',500)}`);}
@@ -509,7 +514,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   }
   function prompt(){if(!api.settings().enabled)return '';const s=state();const a=s.player;const summary=x=>({progression:x.progression,balance:x.balance,hp:x.hp,maxHp:x.maxHp,stamina:x.stamina,maxStamina:x.maxStamina,ram:x.ram,maxRam:x.maxRam,capacity:x.capacity,implantUnlocks:x.implantUnlocks,location:x.location,stress:x.stress,cyberpsychosis:x.cyberpsychosis,inventory:[...x.inventory.filter(it=>it.category==='quickhack'),...x.inventory.filter(it=>it.category!=='quickhack')].slice(0,60).map(it=>({id:it.id,name:it.name,quantity:it.quantity,equipped:it.equipped,category:it.category,slot:it.slot,capacity:it.capacity,level:it.level,ramCost:it.ramCost,cooldown:it.cooldown,effect:it.effect})),skills:x.skills.slice(0,15),relic:x.relic,blackwall:x.blackwall});
     const active=s.puzzle&&['ready','running'].includes(s.puzzle.status);
-    return `\n[Cyberware role-play state and event protocol]
+    return mail.prompt()+`\n[Cyberware role-play state and event protocol]
 This is fictional simulation only. Values are extension rules, not exact game balance. State is private narrator context; NPCs do not automatically know the player's balance, equipment, thoughts, location, hidden missions or other NPCs' information. No unearned powers or forced plot. Never simulate puzzle success: the user connects and plays it; only the extension may bypass it for an existing hacking/netrunning skill level of at least 50.
 Evaluate status, equipment, skills, missions and location changes after every normal main-chat reply. Emit all relevant updates in that same response; no extra API request is needed. Emit complete JSON records only for events that actually happen. Each record needs an id unique to that event; reuse that id if restating the same event. Do not print examples unless that event occurs. JSON strings must escape newlines and quotes. Never include closing tag text inside a JSON string.
 - Show every actual ability use by USER or NPC with [CP_SKILL]{"id":"event-id","actor":"user or exact NPC name","name":"skill","description":"observable effect","resource":"ram or stamina","cost":2,"cooldown":1}[/CP_SKILL]. Do not invent user actions. Existing skill costs/cooldowns are authoritative. No repeated skill record for one action.
@@ -545,19 +550,19 @@ Pending breach: ${active?JSON.stringify({target:s.puzzle.target,status:s.puzzle.
 Recent authoritative outcomes (do not replay records for these): ${JSON.stringify(s.events.slice(-12))}`;
   }
   function ensureWand(){
-    bdButton(); const host=document.getElementById('extensionsMenu');
-    for(const [id,label,section] of [['cyberpunk-cyberware-wand','Cyberware','status'],['cyberpunk-quickhack-wand',tr('Quickhack Deck','เด็ค Quickhack'),'quickhacks']]) {
+    mail.badge();bdButton(); const host=document.getElementById('extensionsMenu');
+    for(const [id,label,section] of [['cyberpunk-cyberware-wand','Cyberware','status'],['cyberpunk-quickhack-wand',tr('Quickhack Deck','เด็ค Quickhack'),'quickhacks'],['cyberpunk-mail-wand',tr('Mailbox','กล่องจดหมาย'),'mail']]) {
       const old=document.getElementById(id);
       if(!api.settings().showWand){old?.remove();continue;}
       if(!host||old)continue;
       const b=document.createElement('div');b.id=id;b.className='list-group-item flex-container flexGap5 interactable';b.tabIndex=0;b.setAttribute('role','button');
-      b.innerHTML='<i class="fa-solid fa-microchip fa-fw"></i><span>'+E(label)+'</span>';
+      b.innerHTML='<i class="fa-solid fa-microchip fa-fw"></i><span>'+E(label)+'</span>'+(section==='mail'?'<b data-mail-unread hidden></b>':'');
       b.onclick=e=>{e.preventDefault();e.stopPropagation();api.closeHostWand();open('user',section);};
       b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();b.click();}};host.append(b);
     }
   }
 
-  function onChatChanged(){if(bdGenerating)api.context()?.stopGeneration?.();closeExperience();bdResizeCleanup?.();bdResizeCleanup=null;document.getElementById('cps-bd-float')?.remove();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);closePanel();stopBreach();api.removeUiDialog(popup);popup=null;noticeTimers.forEach(clearTimeout);noticeTimers.clear();document.getElementById('cps-immersion')?.remove();minimized();bdButton();}
-  return Object.freeze({open,process,prompt,transform,decorate,ensureWand,callToolbar,attachment,userText,onChatChanged,beginBreach,state:()=>JSON.parse(JSON.stringify(state())),transfer,share,addContact,icon,quickhack});
+  function onChatChanged(){mail.onChatChanged();if(bdGenerating)api.context()?.stopGeneration?.();closeExperience();bdResizeCleanup?.();bdResizeCleanup=null;document.getElementById('cps-bd-float')?.remove();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);closePanel();stopBreach();api.removeUiDialog(popup);popup=null;noticeTimers.forEach(clearTimeout);noticeTimers.clear();document.getElementById('cps-immersion')?.remove();minimized();bdButton();}
+  return Object.freeze({open,openMail:mail.open,mailBusy:mail.busy,mail,process,prompt,transform,decorate,ensureWand,callToolbar,attachment,userText,onChatChanged,beginBreach,state:()=>JSON.parse(JSON.stringify(state())),transfer,share,addContact,icon,quickhack});
 };
 })();

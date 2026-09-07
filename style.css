@@ -1188,3 +1188,94 @@ html[data-cps-motion=off] .cps-bd-console *,html[data-cps-motion=off] .cps-bd-co
 .mes_text .cps-neighbor-prose { margin-block:6px; }
 .mes_text .cps-chat-copy > :first-child { margin-top:0; }
 .mes_text .cps-chat-copy > :last-child { margin-bottom:0; }
+
+/* Document mail: original components informed by CP2077's journal / terminal UI. */
+dialog.cps-mail-window { width:min(1220px,calc(100vw - 24px)); max-width:none; height:min(900px,calc(100dvh - 24px)); max-height:calc(100dvh - 24px); padding:0; background:#070e14; border:1px solid #ef6570; border-top:3px solid #ef6570; color:#e4eef2; overflow:hidden; }
+.cps-mail-window .cps-rpg-top { background:#12181f; border-bottom:1px solid #713844; padding:14px 22px; }
+.cps-mail-window .cps-rpg-content { min-height:0; flex:1; padding:0; overflow:hidden; }
+.cps-mail-host { height:100%; display:flex; flex-direction:column; min-height:0; }
+.cps-mail-masthead { flex-shrink:0; display:flex; justify-content:space-between; align-items:center; padding:20px 24px 14px; background:linear-gradient(110deg,#22171e,#0b151d); position:relative; overflow:hidden; }
+.cps-mail-masthead::after { content:''; position:absolute; inset:auto 0 0; height:1px; background:linear-gradient(90deg,transparent,#ef6570,transparent); animation:cps-mail-scan 6s ease-in-out infinite; pointer-events:none; }
+.cps-mail-masthead small,.cps-mail-compose>small { font:10px/1.5 monospace; letter-spacing:2px; color:#ef8893; }
+.cps-mail-masthead h2 { margin:8px 0 0; font:700 clamp(22px,3vw,34px)/1.2 var(--cps-font-en); letter-spacing:1px; color:#f7edef; }
+.cps-mail-counter { display:grid; justify-items:end; color:#7ee6de; padding-left:18px; border-left:1px solid #31515d; }
+.cps-mail-counter strong { font:36px/1 monospace; }
+.cps-mail-counter span { font:9px/1.5 monospace; letter-spacing:2px; }
+.cps-mail-folders { display:flex; gap:2px; padding:0 20px; background:#10171f; border-block:1px solid #33404a; overflow-x:auto; flex-shrink:0; }
+.cps-mail-window .cps-mail-folders button { min-height:44px; background:transparent; border:0; border-bottom:3px solid transparent; border-radius:0; white-space:nowrap; padding:10px 18px; color:#abb8c6; }
+.cps-mail-window .cps-mail-folders [aria-pressed=true] { color:#fff0bd; border-bottom-color:#f7d365; background:#30251b; }
+.cps-mail-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px 20px; border-bottom:1px solid #33404a; flex-shrink:0; }
+.cps-mail-toolbar label { flex:1 1 180px; }
+.cps-mail-toolbar input { width:100%; min-height:42px; background:#080f17; color:#ecf2f4; border:1px solid #485565; padding:9px 12px; }
+.cps-mail-window .cps-button { min-height:42px; background:#16202a; border:1px solid #5c6975; color:#cbe3eb; border-radius:0; }
+.cps-mail-window .cps-button:focus-visible,.cps-mail-row-open:focus-visible { outline:2px solid #f7d365; outline-offset:-3px; }
+.cps-mail-window [data-mail=compose],.cps-mail-compose .primary { color:#081015; background:#7de5dd; border-color:#7de5dd; clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,0 100%); }
+.cps-mail-workspace { flex:1; display:grid; grid-template-columns:minmax(250px,36%) minmax(0,1fr); min-height:0; }
+.cps-mail-list { min-width:0; overflow-y:auto; overscroll-behavior:contain; border-right:1px solid #3f515d; background:#080f16; }
+.cps-mail-row { position:relative; overflow:hidden; border-bottom:1px solid #2c3945; touch-action:pan-y; }
+.cps-mail-row-front { display:flex; align-items:center; gap:10px; padding-left:8px; position:relative; background:#101922; transition:transform 180ms ease; }
+.cps-mail-row.unread .cps-mail-row-front { border-left:3px solid #7de5dd; background:#13252f; }
+.cps-mail-row.selected .cps-mail-row-front { background:#2b1b25; border-left:3px solid #ef6570; }
+.cps-mail-row-open { display:flex; flex-direction:column; align-items:stretch; gap:8px; width:100%; min-width:0; padding:16px 14px; border:0; background:transparent; color:#dce9ee; text-align:left; cursor:pointer; }
+.cps-mail-row-meta { display:flex; justify-content:space-between; gap:10px; font:10px/1.4 monospace; color:#aab9c9; }
+.cps-mail-row-meta b { color:#ef8994; overflow-wrap:anywhere; }
+.cps-mail-row-open>strong { font-size:15px; line-height:1.3; overflow-wrap:anywhere; }
+.cps-mail-preview { color:#90a3b2; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cps-mail-row-status { font:9px/1.3 monospace; letter-spacing:1px; color:#80c9c6; }
+.cps-mail-swipe-actions { position:absolute; inset:0; display:flex; align-items:stretch; justify-content:flex-start; gap:4px; padding:6px; background:#213039; }
+.cps-mail-row[data-swipe=left] .cps-mail-swipe-actions { justify-content:flex-end; }
+.cps-mail-swipe-actions button { width:72px; padding:4px; white-space:normal; }
+.cps-mail-row[data-swipe=right] .cps-mail-row-front { transform:translateX(160px); }
+.cps-mail-row[data-swipe=left] .cps-mail-row-front { transform:translateX(-160px); }
+.cps-mail-window [data-mail=delete],.cps-mail-window [data-mail=decline] { color:#ff959f; border-color:#b15a66; }
+.cps-mail-edit-actions { display:flex; flex-wrap:wrap; gap:4px; padding:6px; background:#10141d; }
+.cps-mail-row [type=checkbox] { width:22px; height:22px; flex:0 0 22px; accent-color:#7de5dd; }
+.cps-mail-reader { padding:20px 26px; min-width:0; overflow:auto; overscroll-behavior:contain; background:repeating-linear-gradient(0deg,transparent 0 31px,#6ab9c503 31px 32px),#0b131b; }
+.cps-mail-reader>[data-mail=back] { display:none; }
+.cps-mail-document { max-width:760px; margin:auto; }
+.cps-mail-doc-top { display:flex; justify-content:space-between; gap:10px; font:9px/1.5 monospace; color:#7de5dd; letter-spacing:1px; border-bottom:1px solid #345564; padding:5px 0 12px; }
+.cps-mail-document h2 { font-size:clamp(22px,3vw,32px); line-height:1.25; color:#ff818e; margin:22px 0; overflow-wrap:anywhere; }
+.cps-mail-envelope { display:grid; gap:9px; font:11px/1.5 monospace; border-block:1px solid #3a4652; padding:14px 0; }
+.cps-mail-envelope>div { display:grid; grid-template-columns:48px minmax(0,1fr); gap:12px; }
+.cps-mail-envelope dt { color:#8193a5; }.cps-mail-envelope dd { margin:0; color:#dae5ed; overflow-wrap:anywhere; }
+.cps-mail-body { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.8; font-size:15px; padding:22px 0; }
+.cps-mail-offer { padding:18px; border:1px solid #9b8953; border-left:4px solid #e8c261; background:linear-gradient(120deg,#322a1a,#151c24); margin:20px 0; }
+.cps-mail-offer>header { display:flex; justify-content:space-between; gap:10px; color:#e8c261; font:10px/1.5 monospace; }
+.cps-mail-offer h3 { margin:16px 0; font-size:20px; color:#f3e3b9; }
+.cps-mail-offer dl { display:grid; gap:6px; }.cps-mail-offer dt { color:#a4b3c0; font-size:11px; }.cps-mail-offer dd { margin:0 0 10px; color:#e3eef0; overflow-wrap:anywhere; }
+.cps-mail-offer ol { padding-left:20px; line-height:1.7; font-size:13px; }
+.cps-mail-offer-actions,.cps-mail-doc-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+.cps-mail-window [data-mail=accept] { color:#081112; background:#e8c261; border-color:#e8c261; }
+.cps-mail-note,.cps-mail-gesture-hint { display:block; color:#8b9eae; font:11px/1.6 var(--cps-font-en); padding-top:12px; }
+.cps-mail-gesture-hint { padding:12px; }
+.cps-mail-empty { padding:32px 22px; text-align:center; color:#8498a8; }
+.cps-mail-empty>span { color:#80505c; font:64px/1 monospace; }
+.cps-mail-empty h3 { color:#bbcad7; font-size:17px; }.cps-mail-empty p { font-size:13px; line-height:1.7; }
+.cps-mail-transfer { padding:14px; background:#132b2c; border:1px solid #4a8d87; }.cps-mail-transfer small { color:#8ce6d9; }
+.cps-mail-compose { max-width:850px; width:100%; margin:0 auto; padding:24px; overflow:auto; }
+.cps-mail-compose h2 { color:#ef7d8c; margin:10px 0 24px; }
+.cps-mail-compose form { display:grid; gap:18px; }.cps-mail-compose label { display:grid; gap:7px; color:#aebfcc; font-size:12px; }
+.cps-mail-compose :is(input,textarea,select) { width:100%; min-width:0; background:#0a1119; color:#e4eef4; border:1px solid #556374; padding:12px; font:16px/1.5 var(--cps-font-en); }
+.cps-mail-compose textarea { resize:vertical; }.cps-mail-compose details { border:1px solid #536271; padding:14px; }.cps-mail-compose summary { cursor:pointer; color:#7de5dd; }.cps-mail-compose details p { color:#b9c4cf; font-size:12px; line-height:1.6; }
+.cps-mail-transfer-fields { display:grid; grid-template-columns:1fr 2fr 1fr; gap:12px; }
+.cps-mail-compose [role=alert],.cps-mail-offer [role=alert] { color:#ff8d98; }
+[data-mail-unread] { display:inline-block; min-width:20px; padding:2px 5px; background:#e56977; color:#0b1018; border-radius:2px; font:12px monospace; }
+@keyframes cps-mail-scan { 0%,100% { transform:translateX(-30%);opacity:.3; } 50% {transform:translateX(30%);opacity:1;} }
+@media(min-width:701px) { .cps-mail-gesture-hint { display:none; } }
+@media(max-width:700px) {
+ dialog.cps-mail-window { width:100vw; height:100dvh; max-height:100dvh; margin:0; border-inline:0; }
+ .cps-mail-window .cps-rpg-content { padding-bottom:env(safe-area-inset-bottom); }
+ .cps-mail-masthead { padding:16px; }.cps-mail-masthead h2 { font-size:22px; }.cps-mail-counter strong { font-size:28px; }
+ .cps-mail-folders { padding:0 8px; }.cps-mail-window .cps-mail-folders button { padding-inline:12px; }
+ .cps-mail-toolbar { padding:10px; gap:6px; }.cps-mail-toolbar label { flex-basis:100%; }
+ .cps-mail-toolbar .cps-button { font-size:11px; padding-inline:10px; min-height:44px; }
+ .cps-mail-workspace { display:block; overflow:auto; }.cps-mail-list { border:0; }.cps-mail-reader { display:none; padding:16px; }
+ .cps-mail-window[data-mail-detail=true] .cps-mail-list { display:none; }.cps-mail-window[data-mail-detail=true] .cps-mail-reader { display:block; }
+ .cps-mail-reader>[data-mail=back] { display:inline-flex; margin-bottom:16px; }
+ .cps-mail-compose { padding:16px; }.cps-mail-transfer-fields { grid-template-columns:1fr; }.cps-mail-body { font-size:15px; }
+}
+/* Fifth manager entry remains usable on compact screens. */
+.cps-tabs { grid-template-columns:repeat(5,minmax(0,1fr)); }
+@media(prefers-reduced-motion:reduce) { .cps-mail-masthead::after { animation:none!important; }.cps-mail-row-front { transition:none!important; } }
+
+[data-mail-unread][hidden] { display:none!important; }

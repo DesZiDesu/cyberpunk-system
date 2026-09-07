@@ -74,3 +74,10 @@ XP thresholds, attribute bonuses, external story-income records and contract rew
 - [NetWatch game-database transcription, community guide](https://steamcommunity.com/sharedfiles/filedetails/?id=3594999196): supports the Blackwall barrier, NetWatch oversight, rogue AI and post-Krash threat summaries. This is community-hosted game text, not an official CDPR publication. The extension uses brief original paraphrases.
 - [CDPR Hack-&-Slash Netrunner breakdown](https://www.cyberpunk.net/en/news/50026/hack-slash-netrunner-build-breakdown): cyberdecks, RAM, queues and the Cyberware Malfunction/Short Circuit and Contagion/Overheat interactions.
 - Knowledge/privacy restrictions and transaction accounting are original role-play rules, not claims of official mechanics.
+
+## v3.0 document mailbox design research (2026-09-07)
+
+- [Vladimír Vilimovský — Cyberpunk 2077 User Interface, Part 2](https://www.behance.net/gallery/133185623/Cyberpunk-2077User-Interface-%28Part-2%29): the CDPR senior UI artist's portfolio, including fullscreen journal and character UI. Used for visual study of information hierarchy, restrained red framing, dark panels and technical labels. The portfolio also includes concepts; it is not treated as proof that every pictured design shipped in the game.
+- [CD PROJEKT RED — Phantom Liberty](https://www.cyberpunk.net/us/en/phantom-liberty): official visual setting reference.
+
+The mailbox uses original HTML/CSS and envelope icon geometry. No portfolio screenshots or game UI assets are bundled. Its threaded correspondence, accept/refuse contracts, transfer semantics, swipe controls and mailbox storage are extension features, not a claim to recreate the game's exact mail mechanics.
