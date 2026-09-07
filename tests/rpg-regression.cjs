@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.0.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.0.1','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-mail.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -14,7 +14,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.0.0');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.0.1');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  w.CyberpunkSystem.startCall('Lucy','@@lucy');
@@ -249,7 +249,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  click('#cps-immersion .cps-immersion-card');
  test('Island opens a paginated archive on its newest entry',()=>{assert.ok(q('.cps-notice-dossier').textContent.includes('TRANSFER COMPLETE'));assert.equal(q('.cps-notice-pagination [data-rpg=previous]').disabled,true);assert.ok(q('.cps-notice-pagination output').textContent.startsWith('1 /'));});
  const latest=q('.cps-notice-dossier').textContent;click('.cps-notice-pagination [data-rpg=next]');
- test('Pagination shows the previous notification and can return to the latest',()=>{assert.notEqual(q('.cps-notice-dossier').textContent,latest);click('.cps-notice-pagination [data-rpg=previous]');assert.equal(q('.cps-notice-dossier').textContent,latest);});
+ test('New notification excludes archived entries',()=>{assert.equal(q('.cps-notice-pagination output').textContent,'1 / 1');assert.equal(q('.cps-notice-dossier').textContent,latest);click('.cps-notice-pagination [data-rpg=previous]');assert.equal(q('.cps-notice-dossier').textContent,latest);});
  test('Invalid purchase auto-equip rolls back money and inventory',()=>{const a=C.actor();a.balance=100;assert.throws(()=>C.trade(a,null,{operation:'buy',amount:20,reason:'Bought',items:[{name:'Food',category:'consumable',equipped:true}]},'bad-equip'));assert.equal(a.balance,100);assert.equal(a.inventory.length,0);});
  test('Sale rejection preserves both tracked wallets and inventory',()=>{const a=C.actor(),b=C.actor();a.inventory.push(C.item({id:'sale',name:'Pistol',quantity:1}));assert.throws(()=>C.trade(a,b,{operation:'sell',amount:20,reason:'Sold',items:[{itemId:'sale'}]},'no-cash'));assert.equal(a.inventory.length,1);assert.equal(a.balance,0);assert.equal(b.balance,0);});
 
@@ -304,6 +304,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  click('.cps-bd-window [data-rpg=close]');
  await message(record('ITEM',{id:'qh-own',item:{id:'qh-ping',name:'Target Ping',category:'quickhack',level:3,ramCost:2,cooldown:3,effect:'Reveal the target network link'}}));
  w.CyberpunkSystem.openCyberware();click('[data-rpg="tab:skills"]');
+ test('Skills page has no duplicate deck slots',()=>assert.equal(d.querySelectorAll('[data-deck-slot]').length,0));click('[data-rpg="tab:quickhacks"]');
  test('Quickhack deck has exactly eight loadout slots',()=>assert.equal(d.querySelectorAll('[data-deck-slot]').length,8));
  const deckSelect=q('[data-deck-slot="0"]');deckSelect.value='qh-ping';deckSelect.dispatchEvent(new w.Event('change'));
  const flow=await message('[CP_HEADER|Vendor|Shopkeeper|Ready][/CP_HEADER][CP_DIALOGUE|Vendor]Hello[/CP_DIALOGUE] Narrative. [CP_HEADER|Vendor|Shopkeeper|Ready][/CP_HEADER][CP_MONOLOGUE|Vendor]Thinking[/CP_MONOLOGUE][CP_DIALOGUE|Vendor]Again[/CP_DIALOGUE][CP_HEADER|Lucy|Netrunner|Ready][/CP_HEADER][CP_DIALOGUE|Lucy]Interrupting[/CP_DIALOGUE][CP_HEADER|Vendor|Shopkeeper|Ready][/CP_HEADER][CP_DIALOGUE|Vendor]Reply[/CP_DIALOGUE]');

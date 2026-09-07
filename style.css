@@ -1279,3 +1279,5 @@ dialog.cps-mail-window { width:min(1220px,calc(100vw - 24px)); max-width:none; h
 @media(prefers-reduced-motion:reduce) { .cps-mail-masthead::after { animation:none!important; }.cps-mail-row-front { transition:none!important; } }
 
 [data-mail-unread][hidden] { display:none!important; }
+#cps-mail-generation { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; background:#102128; color:#a0eee7; border:1px solid #528e90; font-size:13px; }
+#cps-mail-generation button { min-height:44px; padding:8px 14px; background:#202c36; color:#fff; border:1px solid #839fa5; }

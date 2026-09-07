@@ -1,5 +1,12 @@
 # Cyberpunk System
 
+## v3.0.1 — Notification scope and mail generation visibility
+
+- Opening a new notification shows only that notification, not the entire saved archive. Older notifications remain available through Cyberware → Activity & notifications → Browse notifications.
+- Skills / Hack now contains abilities and Breach Protocol, with a shortcut to Quickhack Deck. The eight loadout slots appear only in the dedicated deck workspace.
+- Request NPC reply remains a separate, quiet mail request, not a main-chat story response. A main-chat status bar now names the NPC while mail is generating and provides Cancel. It disappears on completion, failure, cancellation or chat change; the reply arrives in Mailbox.
+- Version 3.0.1: 283 simulated regression checks plus syntax/CSS checks. Native Safari and live model responses still require device verification.
+
 ## v3.0.0 — Document mail, offers and fixer gigs
 
 Open **Cyberpunk System → Mail**, **Wand → Mailbox**, or **Cyberware → Mailbox**. This is fictional, chat-local correspondence with NPCs; it does not send external email.
