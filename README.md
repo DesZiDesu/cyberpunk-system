@@ -1,5 +1,9 @@
 # Cyberpunk System
 
+## v3.0.2 — Mailbox follows the saved theme
+
+Mailbox now inherits the configured accent, alert, surface and text colors instead of a fixed red/cyan/yellow palette. Derived panel, border and muted colors follow the same theme. This covers folders, documents, offers, receipts, compose fields, swipe controls, unread badges and the mail-generation status bar. Theme changes apply through CSS variables without clearing mail or resetting preferences. Validation: 284 simulated regression checks, including a guard against fixed mailbox palette colors; native Safari rendering remains unverified.
+
 ## v3.0.1 — Notification scope and mail generation visibility
 
 - Opening a new notification shows only that notification, not the entire saved archive. Older notifications remain available through Cyberware → Activity & notifications → Browse notifications.
