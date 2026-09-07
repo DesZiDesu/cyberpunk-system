@@ -1,5 +1,11 @@
 # Cyberpunk System
 
+## v3.0.4 — Read mail as a continuous conversation
+
+Opening a document displays all retained messages in its thread, with user and NPC replies appended below the original. Each message retains its own reply, forward and offer actions. Replies carrying replyTo inherit the original thread. Forwarding still starts a separate conversation and does not copy offer rights. Existing mail is not deleted or merged destructively.
+
+Request NPC reply starts the existing quiet AI mail request immediately, shows a generating status and Cancel generation button inside the thread, and scrolls to the latest activity. The main-chat status remains available too. Cancelling stops the host request where supported and always ignores late results. Validation: 290 simulated checks including user/NPC thread rendering, reply targeting and in-thread cancellation. Native Safari remains unverified.
+
 ## v3.0.3 — Back navigation between workspaces
 
 Standard system dialog headers now have a 44px Back control. Nested details and Mailbox return to their still-open parent; direct Wand entries return to the Cyberpunk menu. Cyberware section changes retain a backward history, including the mobile section selector. Replacing a Cyberware workspace retains its preceding actor/section route. Back uses each dialog's close cleanup and does not discard saved mail drafts; the existing × button remains a close action. Validation: 287 simulated checks including section history, nested mailbox return, draft retention and direct-entry return. Native Safari navigation still needs device verification.
