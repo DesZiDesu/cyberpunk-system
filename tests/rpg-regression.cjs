@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.8.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v2.9.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -14,7 +14,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.8.0');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v2.9.0');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  w.CyberpunkSystem.startCall('Lucy','@@lucy');
@@ -42,7 +42,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  click('.cps-call-minimized');await wait();click('.cps-call-tools-toggle');
  w.CyberpunkSystem.endCall();
  test('Ending a call also removes its drawer',()=>assert.equal(d.querySelector('.cps-call-drawer'),null));
- test('Second Wand entry opens the player workspace',()=>{click('#cyberpunk-cyberware-wand');assert.ok(q('.cps-rpg-main'));assert.equal(d.querySelectorAll('.cps-rpg-tabs button').length,10);});
+ test('Second Wand entry opens the player workspace',()=>{click('#cyberpunk-cyberware-wand');assert.ok(q('.cps-rpg-main'));assert.equal(d.querySelectorAll('.cps-rpg-tabs button').length,11);});
  state().player.balance=1000;state().actors['npc:lucy'].balance=200;
  await message('/cp transfer @lucy 250',true);
  test('Main-chat command atomically transfers funds',()=>{assert.equal(state().player.balance,750);assert.equal(state().actors['npc:lucy'].balance,450);const receipt=state().shares.find(m=>m.kind==='receipt');assert.equal(receipt.receipt.sender,'Mael');assert.equal(receipt.receipt.status,'Completed');assert.ok(receipt.description.startsWith('Mael → Lucy'));});
@@ -331,6 +331,29 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Incomplete pipe machine records remain hidden without ending calls',()=>{assert.equal(incomplete.t.textContent,'Before ');assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,true);});
  const jsonEnd=await message('[CP_CALL_END]{"id":"json-end-test","actor":"Lucy","reason":"Goodbye"}[/CP_CALL_END]After.');
  test('JSON call-end remains compatible and hidden',()=>{assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,false);assert.equal(jsonEnd.t.textContent,'After.');});
+ const acquired=record('LOOT',{id:'quickhack-loot-fix',actor:'user',source:'Defeated netrunner',items:[{id:'recovered-qh',name:'Recovered shock',category:'Quick Hack',level:4,ramCost:3,cooldown:2,effect:'Electrical damage'}]});
+ await message(acquired);
+ test('Main-chat quickhack loot keeps its category, level, RAM cost and cooldown',()=>{const it=state().player.inventory.find(it=>it.id==='recovered-qh');assert.equal(it.category,'quickhack');assert.equal(it.level,4);assert.equal(it.ramCost,3);assert.equal(it.cooldown,2);});
+ await message(acquired);
+ test('Repeated loot records cannot duplicate the acquired quickhack',()=>assert.equal(state().player.inventory.filter(it=>it.id==='recovered-qh').length,1));
+ w.CyberpunkSystem.openCyberware();click('[data-rpg="tab:quickhacks"]');
+ test('Quickhack Deck has a dedicated section, instructions and eight slots',()=>{assert.equal(d.querySelectorAll('[data-deck-slot]').length,8);assert.ok(q('.cps-deck').textContent.includes('Tap an NPC header'));assert.ok(q('[data-rpg=add-quickhack]'));});
+ const ramBeforeLoading=state().player.ram;click('[data-rpg="equip:recovered-qh"]');
+ test('Inventory Load into deck installs an owned quickhack and spends no RAM',()=>{assert.ok(state().player.quickhackSlots.includes('recovered-qh'));assert.equal(state().player.inventory.find(it=>it.id==='recovered-qh').equipped,true);assert.equal(state().player.ram,ramBeforeLoading);});
+ await message(record('ITEM',{id:'qh-unload-story',operation:'unequip',itemId:'recovered-qh'}));
+ test('Main-chat unequip clears the quickhack deck slot',()=>{assert.ok(!state().player.quickhackSlots.includes('recovered-qh'));assert.equal(state().player.inventory.find(it=>it.id==='recovered-qh').equipped,false);});
+ await message(record('ITEM',{id:'qh-load-story',operation:'equip',itemId:'recovered-qh'}));
+ test('Main-chat equip loads a quickhack without needing another UI action',()=>assert.equal(state().player.quickhackSlots.filter(id=>id==='recovered-qh').length,1));
+ await message(record('ITEM',{id:'qh-remove-story',operation:'remove',itemId:'recovered-qh',quantity:1}));
+ test('Removing the last owned copy clears its deck slot',()=>assert.ok(!state().player.quickhackSlots.includes('recovered-qh')));
+ test('Existing generic named quickhacks migrate without changing their identity or quantity',()=>{const a=C.actor();a.inventory.push({id:'old-ping',name:'Ping',category:'item',quantity:2});C.hydrate(a);assert.equal(a.inventory[0].category,'quickhack');assert.equal(a.inventory[0].id,'old-ping');assert.equal(a.inventory[0].quantity,2);assert.equal(C.item({name:'Quickhack crafting components',category:'component'}).category,'component');assert.equal(C.item({name:'Ordinary data shard',category:'data'}).category,'data');});
+ test('A full deck rejects new loads without replacing existing programs or losing loot',()=>{const a=C.actor();for(let i=0;i<9;i++)a.inventory.push(C.item({id:'deck-'+i,name:'Program '+i,category:'quickhack'}));for(let i=0;i<8;i++)C.equip(a,'deck-'+i);const before=JSON.stringify(a.quickhackSlots);assert.throws(()=>C.equip(a,'deck-8'),/full/);assert.equal(JSON.stringify(a.quickhackSlots),before);assert.equal(a.inventory.length,9);assert.throws(()=>C.setQuickhackSlot(a,1,'deck-0'),/already loaded/);assert.throws(()=>C.setQuickhackSlot(a,1,'unowned'),/owned/);});
+ test('Quickhack use requires loading, then spends its stored RAM cost once',()=>{const a=C.actor();a.inventory.push(C.item({id:'cost-test',category:'quickhack',name:'Test',ramCost:3}));assert.throws(()=>C.use(a,'cost-test',0),/Load/);C.equip(a,'cost-test');C.use(a,'cost-test',0);assert.equal(a.ram,5);assert.throws(()=>C.use(a,'cost-test',0),/Recharging/);assert.equal(a.ram,5);});
+ click('#cyberpunk-quickhack-wand');
+ test('Wand menu opens Quickhack Deck directly',()=>{assert.equal(q('.cps-rpg-main').dataset.currentTab,'quickhacks');assert.ok(q('.cps-deck'));});
+ click('[data-rpg=add-quickhack]');
+ const recovery=q('.cps-rpg-form');recovery.querySelector('[name=name]').value='Recovered custom hack';recovery.querySelector('[name=ramCost]').value='4';recovery.querySelector('[name=effect]').value='Interrupt target optics';recovery.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+ test('Missing-loot recovery saves an owned quickhack with editable RAM cost and effect',()=>{const it=state().player.inventory.find(it=>it.name==='Recovered custom hack');assert.equal(it.category,'quickhack');assert.equal(it.ramCost,4);assert.equal(it.effect,'Interrupt target optics');assert.ok([...d.querySelectorAll('[data-deck-slot="0"] option')].some(o=>o.value===it.id));});
  test('No unhandled DOM/module errors',()=>assert.deepEqual(errors,[]));
  console.log(`\n${count} RPG behavior checks passed. Host APIs and browser events simulated; real Safari still needs device testing.`);dom.window.close();
 })().catch(e=>{console.error(e.stack);dom.window.close();process.exitCode=1;});

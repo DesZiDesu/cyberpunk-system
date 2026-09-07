@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '2.8.0';
+const CYBERPUNK_SYSTEM_VERSION = '2.9.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -612,9 +612,9 @@ ${systems?.prompt() || ''}`.trim();
       output = output.replace(/\[CP_DIALOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_DIALOGUE\]/gi, (_, name, content) => speechHtml('dialogue', name, content));
       output = output.replace(/\[CP_MONOLOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_MONOLOGUE\]/gi, (_, name, content) => speechHtml('monologue', name, content));
       for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
-        output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '');
+        output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '<!--cps-hidden-record-->');
       }
-      return systems?.transform(output) ?? output;
+      return systems?.transform(output, true) ?? output;
     }
 
     function transformPlainProtocolText(source) {
@@ -623,12 +623,39 @@ ${systems?.prompt() || ''}`.trim();
       output = output.replace(/\[CP_DIALOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_DIALOGUE\]/gi, (_, name, content) => speechHtml('dialogue', name, content));
       output = output.replace(/\[CP_MONOLOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_MONOLOGUE\]/gi, (_, name, content) => speechHtml('monologue', name, content));
       for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
-        output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '');
+        output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '<!--cps-hidden-record-->');
       }
-      return (systems?.transform(output) ?? output).replace(/\r?\n/g, '<br>');
+      return (systems?.transform(output, true) ?? output).replace(/\r?\n/g, '<br>');
+    }
+
+    function compactProtocolSpacing(element) {
+      const blank = node => node.nodeType === Node.TEXT_NODE ? !node.textContent.replace(/\u00a0/g, ' ').trim() :
+        node.nodeType === Node.ELEMENT_NODE && (node.tagName === 'BR' || (node.tagName === 'P' && [...node.childNodes].every(blank)));
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_COMMENT);
+      const markers = []; while (walker.nextNode()) if (walker.currentNode.data === 'cps-hidden-record') markers.push(walker.currentNode);
+      for (const marker of markers) {
+        if (!element.contains(marker)) continue;
+        // Only unwrap empty wrappers produced by an extension record, never media or prose.
+        while (marker.parentElement !== element && ['P','DIV','SPAN'].includes(marker.parentElement?.tagName) && [...marker.parentElement.childNodes].every(n => n === marker || blank(n))) marker.parentElement.replaceWith(marker);
+        let before = marker.previousSibling, after = marker.nextSibling;
+        while (before && blank(before)) { const prev = before.previousSibling; before.remove(); before = prev; }
+        while (after && blank(after)) { const next = after.nextSibling; after.remove(); after = next; }
+        // Keep prose on either side separated after removing the hidden record.
+        const inline = n => n && (n.nodeType === Node.TEXT_NODE || ['EM','STRONG','A','SPAN','I','B','CODE'].includes(n.tagName));
+        marker.replaceWith(inline(before) && inline(after) ? document.createTextNode(' ') : document.createTextNode(''));
+      }
+      element.querySelectorAll('.cps-chat-block,.cps-chat-thread').forEach(block => {
+        if (block.closest('pre,code')) return;
+        for (const direction of ['previousSibling','nextSibling']) {
+          let node = block[direction];
+          while (node && blank(node)) { const next = node[direction]; node.remove(); node = next; }
+          if (node?.tagName === 'P') node.classList.add('cps-neighbor-prose');
+        }
+      });
     }
 
     function connectChatBlocks(element) {
+      compactProtocolSpacing(element);
       let speaker='';
       element.querySelectorAll('.cps-chat-header,.cps-chat-dialogue,.cps-chat-monologue').forEach(block=>{
         const next=block.dataset.speaker;
@@ -660,6 +687,7 @@ ${systems?.prompt() || ''}`.trim();
         const thread = document.createElement('div'); thread.className = 'cps-chat-thread';
         header.before(thread); thread.append(...blocks);
       });
+      compactProtocolSpacing(element);
     }
 
     function renderMessageElement(element, force = false) {

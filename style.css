@@ -1181,3 +1181,10 @@ html[data-cps-motion=off] .cps-bd-console *,html[data-cps-motion=off] .cps-bd-co
 
 .cps-ui .cps-call-actions { flex-wrap:wrap; }
 .cps-ui [data-call-action=cancel-generation] { flex:1 0 100%; }
+
+/* Extension blocks supply their own small separation; hidden records add none. */
+.mes_text .cps-chat-block,.mes_text .cps-chat-thread { margin-block:6px; }
+.mes_text .cps-chat-thread > .cps-chat-block { margin:0!important; }
+.mes_text .cps-neighbor-prose { margin-block:6px; }
+.mes_text .cps-chat-copy > :first-child { margin-top:0; }
+.mes_text .cps-chat-copy > :last-child { margin-bottom:0; }

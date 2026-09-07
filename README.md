@@ -1,5 +1,16 @@
 # Cyberpunk System
 
+## v2.9.0 — Compact dialogue and connected Quickhack Deck
+
+- **Chat spacing:** remove empty paragraphs and break stacks created by hidden machine records. Standalone dialogue and connected speaker frames use a compact 6 px margin. Narration, media and unrelated prose/code formatting are retained.
+- **Find the deck:** open **Wand → Quickhack Deck**, or **Cyberware → Quickhack Deck** (on mobile, use the Section dropdown). The deck explains acquisition, loading and targeting and shows owned programs with eight loadout slots.
+- **Loot and loading:** quickhack category aliases and exact known catalog names stored as generic items/data are recognized without recreating items. Collected programs retain their level, RAM cost and cooldown. Inventory cards have **Load into deck / Unload from deck**; main-chat equip/unequip records use the same slots. Removing the last copy clears its slot. A full deck rejects another load without replacing programs or losing the item. Loading does not spend RAM.
+- **Use:** tap an enabled NPC's header in the main chat, select a loaded quickhack, and press **Upload**. Upload spends the displayed RAM and applies cooldown once; the next story reply resolves its effect. Acquire → load → target → upload are distinct steps.
+- **Missing older loot:** the AI must emit a loot record to save acquisition; prose alone cannot reliably establish an inventory change. The prompt now gives an explicit quickhack loot example and equip instructions. If previously collected loot was never saved, use **Add missing quickhack** in the deck and enter its established name/effect/cost. This adds one owned program; it does not replay old chat rewards or invent loot from narrative text.
+
+Update and reload SillyTavern; the version should read **2.9.0**. Validation: **247 checks** (58 UI, 16 portrait, 158 RPG, 15 map), JavaScript syntax and CSS parsing. Tests simulate the host and AI records; live model compliance and native iPhone Safari layout still require on-device verification.
+
+
 ## v2.8.0 — NPC switches, call controls and live Braindance
 
 - **NPC List:** each saved NPC has an Enabled/Disabled switch. Disabled profiles remain editable and retain their data, but are excluded from active NPC context, calls and contact selectors. Tagged AI mentions do not recreate them. Switches follow the displayed Character/Chat scope; a Chat record overrides a same-name Character record.
@@ -82,7 +93,7 @@ Validation: **232 automated checks** (55 UI, 16 portrait, 146 RPG, 15 map), Java
 - Main-chat state records now support earned maximum HP/RAM/stamina/capacity changes as well as current resources. Equipment records support add/remove/equip/unequip/use by stored item ID. Using an item consumes resources once and creates its skill header. Invalid status patches are atomic. Private-call quick actions always use the current call participant, independent of the last NPC asset page opened.
 - State continues updating with the UI closed. Repeated host render events do not replay actions, regenerate resources, rebuild the Cyberware DOM or reset scroll. Live updates retain unsaved preferences and focused inputs. Ordinary story turns regenerate once through the existing response; no extra model request is added.
 
-**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.8.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
+**Update:** update the extension and reload SillyTavern. Both the extension drawer and interface headers should show **v2.9.0**. Saved colors, portraits, NPCs, inventory, accounts and chat state are retained.
 
 **Validation:** 210 checks pass: 44 UI, 12 portrait/raster/vision integration, 139 RPG behavior and 15 detailed-map checks, plus syntax/CSS checks. Layout is adapted for 320–430 px mobile widths and desktop; no claim of device-tested iOS Safari is made. Live AI updates still depend on the model following the injected structured protocol. See [SOURCES.md](SOURCES.md) for official visual/gameplay references and the catalog and map scope.
 

@@ -23,14 +23,38 @@
   const implantSlot=value=>{const key=text(value,80).toLowerCase().replace(/[ _]+/g,'-');return slotAliases[key]||key;};
   const slotLimit=(a,slot)=>(implantGroups.find(g=>g.id===implantSlot(slot))?.slots||1)+(['skeleton','hands'].includes(implantSlot(slot))&&a.implantUnlocks?.[implantSlot(slot)]===true?1:0);
   const actor = () => ({ progression: {level:1,xp:0,points:0,attributes:{body:3,reflexes:3,technical:3,intelligence:3,cool:3}}, awards: [], balance: 0, hp: 100, maxHp: 100, stamina: 100, maxStamina: 100, ram: 8, maxRam: 8, capacity: 100, stress: 0, cyberpsychosis: false, implantUnlocks: {skeleton:false,hands:false}, inventory: [], quickhackSlots: Array(8).fill(null), skills: [], relic: { unlocked: false, points: 0, abilities: [] }, blackwall: { unlocked: false, exposure: 0 }, ledger: [] });
-  const item = value => ({ id: text(value.id || uid(), 160), name: text(value.name || value.id || 'Unknown', 180), braindance: value.braindance&&typeof value.braindance==='object'?Object.fromEntries(['info','level','rating','genres','type','creator','scenario'].map(k=>[k,text(value.braindance[k],k==='scenario'?12000:2000)])):null, level: Math.round(cap(value.level??1,1,60)), ramCost: Math.round(cap(value.ramCost??2,0,100)), category: ['braindance','cyberware','weapons','consumable','quickhack','clothing','mod','component','data','item'].includes(value.category) ? value.category : 'item', quantity: Math.round(cap(value.quantity ?? 1, 1, 9999)), equipped: value.equipped === true, slot: value.category==='cyberware'?implantSlot(value.slot||slotAliases[text(value.name,180).toLowerCase().replace(/[ _]+/g,'-')]||''):text(value.slot,80), capacity: cap(value.capacity ?? (value.category === 'cyberware' ? 10 : 0), 0, 300), effect: text(value.effect), power: cap(value.power ?? 20, 0, 1000), charges: Math.round(cap(value.charges ?? 1, 0, 99)), cooldown: Math.round(cap(value.cooldown ?? 2, 0, 30)), cooldownUntil: 0, catalogId: text(value.catalogId, 180), image: typeof value.image === 'string' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.image) && value.image.length < 500000 ? value.image : '' });
+  function itemCategory(value) {
+    const category=text(value.category,80).toLowerCase().replace(/[ _-]+/g,'');
+    if (['quickhack','quickhacks','quickhackprogram','quickhacksoftware'].includes(category)) return 'quickhack';
+    if (!category || ['item','data','software','program'].includes(category)) {
+      const name=text(value.name,180).toLowerCase();
+      const catalog=globalThis.CyberpunkCatalog?.curated||[];
+      if (catalog.some(it=>it.category==='quickhack' && (it.name.toLowerCase()===name || it.id===value.catalogId))) return 'quickhack';
+      if (/\bquick[ -]?hack\b/i.test(name) && !/component|crafting|recipe|blueprint|schematic/i.test(name)) return 'quickhack';
+    }
+    return ['braindance','cyberware','weapons','consumable','clothing','mod','component','data','item'].includes(category)?category:'item';
+  }
+  function syncDeck(a) {
+    const seen=new Set();
+    a.quickhackSlots=Array.from({length:8},(_,i)=>{const id=a.quickhackSlots?.[i];if(typeof id!=='string'||seen.has(id)||!a.inventory.some(it=>it.id===id&&it.category==='quickhack'&&it.quantity>0))return null;seen.add(id);return id;});
+    a.inventory.forEach(it=>{if(it.category==='quickhack')it.equipped=seen.has(it.id);});
+  }
+  function setQuickhackSlot(a, slot, id) {
+    if(!Number.isInteger(slot)||slot<0||slot>=8)throw Error('Invalid quickhack slot');
+    if(id&&!a.inventory.some(it=>it.id===id&&it.category==='quickhack'&&it.quantity>0))throw Error('Only owned quickhacks can be loaded');
+    syncDeck(a);
+    if(id&&a.quickhackSlots.some((value,i)=>value===id&&i!==slot))throw Error('Quickhack already loaded');
+    a.quickhackSlots[slot]=id||null;syncDeck(a);
+  }
+  const item = value => ({ id: text(value.id || uid(), 160), name: text(value.name || value.id || 'Unknown', 180), braindance: value.braindance&&typeof value.braindance==='object'?Object.fromEntries(['info','level','rating','genres','type','creator','scenario'].map(k=>[k,text(value.braindance[k],k==='scenario'?12000:2000)])):null, level: Math.round(cap(value.level??1,1,60)), ramCost: Math.round(cap(value.ramCost??2,0,100)), category: itemCategory(value), quantity: Math.round(cap(value.quantity ?? 1, 1, 9999)), equipped: value.equipped === true, slot: value.category==='cyberware'?implantSlot(value.slot||slotAliases[text(value.name,180).toLowerCase().replace(/[ _]+/g,'-')]||''):text(value.slot,80), capacity: cap(value.capacity ?? (value.category === 'cyberware' ? 10 : 0), 0, 300), effect: text(value.effect), power: cap(value.power ?? 20, 0, 1000), charges: Math.round(cap(value.charges ?? 1, 0, 99)), cooldown: Math.round(cap(value.cooldown ?? 2, 0, 30)), cooldownUntil: 0, catalogId: text(value.catalogId, 180), image: typeof value.image === 'string' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.image) && value.image.length < 500000 ? value.image : '' });
   function hydrate(a) {
     if (!a || typeof a !== 'object') a = actor();
     const defaults = actor(); for (const [k,v] of Object.entries(defaults)) if (a[k] === undefined) a[k] = v;
     for (const k of ['inventory','skills','ledger','awards']) if (!Array.isArray(a[k])) a[k] = [];
     for (const k of ['relic','blackwall','implantUnlocks','progression']) { if (!a[k] || typeof a[k] !== 'object' || Array.isArray(a[k])) a[k] = defaults[k]; for (const [field,value] of Object.entries(defaults[k])) if (a[k][field] === undefined) a[k][field] = value; }
     for(const it of a.inventory)if(it.category==='cyberware')it.slot=implantSlot(it.slot||slotAliases[text(it.name,180).toLowerCase().replace(/[ _]+/g,'-')]||'');
-    a.quickhackSlots=Array.from({length:8},(_,i)=>typeof a.quickhackSlots?.[i]==='string'?a.quickhackSlots[i]:null);
+    a.inventory.forEach(it=>{it.category=itemCategory(it);});
+    syncDeck(a);
     if (!Array.isArray(a.relic.abilities)) a.relic.abilities = [];
     for (const k of ['hp','maxHp','stamina','maxStamina','ram','maxRam','capacity','stress']) a[k] = cap(a[k], k.startsWith('max') || k === 'capacity' ? 1 : 0, k === 'stress' ? 100 : 1000);
     a.progression.attributes={...defaults.progression.attributes,...a.progression.attributes};
@@ -143,6 +167,7 @@
   function risk(a, scale = 1) { const ratio=load(a)/Math.max(1,a.capacity); return cap((Math.max(0,ratio-.6)*20 + Math.max(0,ratio-1)*50 + cap(a.stress,0,100)*.15) * scale, 0, 95); }
   function equip(a, id) {
     const it=a.inventory.find(x=>x.id===id); if (!it) throw Error('Item missing');
+    if (it.category==='quickhack') { syncDeck(a); const loaded=a.quickhackSlots.indexOf(id); const slot=loaded>=0?loaded:a.quickhackSlots.indexOf(null); if(slot<0)throw Error('All eight quickhack slots are full. Unload one first.'); setQuickhackSlot(a,slot,loaded>=0?null:id); return it; }
     if (!['cyberware','weapons','clothing'].includes(it.category)) throw Error('Cannot equip');
     if (it.equipped) { it.equipped=false; return it; }
     if (it.category==='cyberware' && it.slot) {
@@ -158,7 +183,7 @@
     const it=a.inventory.find(x=>x.id===id);if(!it)throw Error('Item missing');
     if (Number(it.cooldownUntil)>turn) throw Error('Recharging');
     if (it.category==='consumable') { if(it.quantity<1)throw Error('Empty stack');it.quantity--;a.hp=cap(a.hp+it.power,0,a.maxHp);a.stress=cap(a.stress-10,0,100);if(!it.quantity)a.inventory=a.inventory.filter(x=>x!==it); }
-    else if(it.category==='quickhack') {const cost=Math.max(0,Math.round(it.ramCost??it.power/10));if(a.ram<cost)throw Error('Insufficient RAM');a.ram-=cost;}
+    else if(it.category==='quickhack') {if(it.quantity<1||!a.quickhackSlots?.includes(id))throw Error('Load this quickhack into the deck first');const cost=Math.max(0,Math.round(it.ramCost??it.power/10));if(a.ram<cost)throw Error('Insufficient RAM');a.ram-=cost;}
     else if (!it.equipped) throw Error('Equip first');
     it.cooldownUntil=turn+Math.max(1,it.cooldown); return it;
   }
@@ -202,5 +227,5 @@
     return true;
   }
   function finish(p,now=Date.now()){if(!['running','ready'].includes(p.status))return;p.status=p.daemons[0].done&&remaining(p,now)>0?'success':'failed';pause(p,now);p.minimized=false;}
-  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
+  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,itemCategory,syncDeck,setQuickhackSlot,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
 })();
