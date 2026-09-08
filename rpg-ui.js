@@ -83,7 +83,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   }
   function dialog(title,body,cls=''){
     const d=document.createElement('dialog');d.className=`cps-ui cps-rpg-dialog ${cls}`;d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.5.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.5.1')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
   }
   function detail(title,content){api.removeUiDialog(popup);popup=dialog(title,`<div class="cps-rpg-detail">${E(content)}</div>`);}
@@ -547,7 +547,7 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='suppo
         if(type==='BD_UPDATE'){if(s.bd.status==='playing'&&data.itemId===s.bd.itemId){s.bd.summary=C.text(data.summary,6000);save();}continue;}
         if(s.bd.status!=='stopped'||s.bd.rendering||api.chatBucket().braindanceMessages?.includes(key)){ignored=true;continue;}
         if(type==='SHOP'){shops.receive(data,key);continue;}
-        if(type==='DEVICE'){devices.receive(data,key);continue;}
+        if(type==='DEVICE'){devices.receive(data,key,{retry:!!options.retry});continue;}
         if(type==='AI'){receiveAI(data,receipt);continue;}
         if(type==='PROPERTY'||type==='VEHICLE'){assetOperation(type==='PROPERTY'?'property':'vehicles',data,receipt);continue;}
         if(type==='MAIL'){mail.receive(data);continue;}

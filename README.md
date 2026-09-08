@@ -1,5 +1,11 @@
 # Cyberpunk System
 
+## v3.5.1 — Device command-record hotfix
+
+Fixes the misleading `Observe requires device name and supported type` rejection when the AI emits valid device metadata with `operation:"shutdown"` (or another supported Upload program). Mixed records now register a new secured device or retain the existing device and show a **pending request** in Device Control. They never execute a program, charge RAM, revive a disconnected device or grant Breach access automatically. Complete Breach if needed and press Upload; successful execution clears the request and remains protected against replay. The narrator prompt now distinguishes observation operations from UI commands explicitly.
+
+After updating and reloading to **3.5.1**, use **System / Recovery → Review & retry** for the failed current-message record; its `shutdown` value no longer needs to be changed manually. If the record belongs to an older message, request a fresh observation of the device in the current scene instead. Historical retries now explain this restriction rather than silently claiming recovery. Shops and the existing Device Hacking controls remain intact. Native Safari is still not emulated by the automated tests.
+
 ## v3.5.0 — Persistent local shops, buying and selling
 
 Built on the **v3.4.0 Device Hacking release**. Inline device controls, separate Device Hacks slots, shared-network Breach and saved device data are retained. Shops and devices can appear in the same main-chat reply and use the same final scene location. No relationship or reputation system/pricing is added.

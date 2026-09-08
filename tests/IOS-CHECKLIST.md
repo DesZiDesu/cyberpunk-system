@@ -1,10 +1,11 @@
-# v3.5.0 shops and Device Hacking release checklist
+# v3.5.1 shops and Device Hacking release checklist
 
 Status: automated host/DOM tests passed; these device checks are **not yet executed**. The local browser preview was blocked in the authoring environment. Use a copy of a chat and export a backup before destructive/restore tests. Never use a paid model merely to run the automated suite.
 
 ## iPhone Safari
 
-- [ ] Update and reload; confirm 3.5.0 in the settings drawer and newly opened windows.
+- [ ] Update and reload; confirm 3.5.1 in the settings drawer and newly opened windows.
+- [ ] Retry a current-message camera record with `operation:"shutdown"`: registration succeeds, Device Control shows the pending request, and no RAM or effect changes until a permitted Upload. An older-message retry must request a fresh observation rather than claim success.
 - [ ] Open `tests/preview.html` → Shop scene / return. Buy and Sell, categories, search, quantity fields, receipt review and Edit shop remain readable at 320–430 CSS px widths and with the keyboard open.
 - [ ] Stay in shop for multiple messages: the original button remains usable. Leave counter: the old card becomes muted; an already open confirmation cannot charge. Return: a fresh card replaces the old one and depleted stock stays depleted.
 - [ ] Buy the last item, double-tap Confirm, sell an owned stack and buy back its resale copy. Check stock, money, ammunition/level metadata and a single receipt. Equipped gear and loaded Quickhacks cannot be sold.

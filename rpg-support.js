@@ -20,6 +20,7 @@ globalThis.CyberpunkSupportFactory=api=>{
       if(!Array.isArray(b.slots)||b.slots.length!==b.slotCount||b.slots.some(id=>id!==null&&!ids.includes(id))||new Set(b.slots.filter(Boolean)).size!==b.slots.filter(Boolean).length)throw Error('Invalid device slots');
       if(!Array.isArray(b.devices)||b.devices.length>300||new Set(b.devices.map(d=>d?.id)).size!==b.devices.length)throw Error('Invalid device registry');
       for(const d of b.devices){if(!object(d)||typeof d.id!=='string'||!d.id||typeof d.name!=='string'||!['camera','door','drone','turret','terminal','device'].includes(d.type)||!['online','offline','destroyed'].includes(d.status)||!['open','secured'].includes(d.access)||typeof d.location!=='string'||!Number.isSafeInteger(d.visit)||typeof d.reachable!=='boolean'||typeof d.revision!=='string'||typeof d.networkId!=='string'||!Array.isArray(d.actions)||d.actions.some(id=>!ids.includes(id))||!Array.isArray(d.effects)||d.effects.some(e=>!object(e)||!ids.includes(e.id)||!Number.isSafeInteger(e.until)||e.until<0))throw Error('Invalid saved device');}
+      for(const d of b.devices)if(d.requestedProgram!==undefined&&!ids.includes(d.requestedProgram))throw Error('Invalid requested device program');
       for(const k of ['receipts','grants'])if(!Array.isArray(b[k])||b[k].some(v=>typeof v!=='string'))throw Error('Invalid device '+k);
       if(!object(b.cooldowns)||Object.entries(b.cooldowns).some(([id,turn])=>!ids.includes(id)||!Number.isSafeInteger(turn)||turn<0))throw Error('Invalid device cooldowns');
     }
