@@ -23,7 +23,7 @@ const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supp
  state().settings.notifications=false;player().balance=1000;
  const first=await reply('Mara welcomes you. '+record('SHOP',opening('entry-1'))+location()+record('DEVICE',{id:'seen-camera',deviceId:'market-camera',name:'Market camera',type:'camera',access:'open'})+'[CP_DEVICE|market-camera]Market camera[/CP_DEVICE]');
  await test('Shop and device records register at final location despite record order',()=>{assert.equal(shop().stock.length,3);assert.equal(shops.accessible(shop(),visit()),true);assert.ok(systems.devices.store().devices[0].location.includes('mara counter'));});
- await test('One inline storefront and the clickable device coexist without raw protocol',()=>{assert.equal(first.el.querySelectorAll('.cps-shop-card').length,1);assert.equal(first.el.querySelectorAll('.cps-device-inline').length,1);assert.ok(!first.el.textContent.includes('CP_SHOP'));assert.ok(first.el.textContent.includes('Mara welcomes you.'));});
+ await test('One inline storefront and the clickable device coexist without raw protocol',()=>{assert.equal(first.el.querySelectorAll('.cps-shop-card').length,1);assert.equal(first.el.querySelectorAll('.cps-nearby-device').length,1);assert.ok(!first.el.textContent.includes('CP_SHOP'));assert.ok(first.el.textContent.includes('Mara welcomes you.'));});
  const oldCard=first.el.querySelector('.cps-shop-card');
  await reply('Mara explains the selection.');await reply('You compare prices.');
  await test('Ordinary turns preserve the original live button and finite stock',()=>{assert.equal(oldCard.querySelector('button').disabled,false);assert.equal(d.querySelectorAll('.cps-shop-card').length,1);assert.equal(shop().stock[0].quantity,3);});

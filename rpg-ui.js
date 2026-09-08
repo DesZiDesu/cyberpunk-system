@@ -15,7 +15,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   const shops=globalThis.CyberpunkShopsFactory({...api,state,dialog,icon,event,share,retryRecord,busy:()=>support.busy()||mail.busy()||aiBusy});
   const scene=globalThis.CyberpunkSceneFactory?.({...api,state});
   let deckMode='quickhacks';
-  const devices=globalThis.CyberpunkDevicesFactory({...api,state,dialog,render,event,beginBreach,busy:()=>support.busy()||aiBusy||mail.busy(),openDeck:()=>{deckMode='devices';open('user','quickhacks');}});
+  const devices=globalThis.CyberpunkDevicesFactory({...api,state,dialog,render,event,beginBreach:hackingRequest,busy:()=>support.busy()||aiBusy||mail.busy(),openDeck:()=>{deckMode='devices';open('user','quickhacks');}});
   function state(){
     const b=api.chatBucket();
     if(!b.rpg||typeof b.rpg!=='object')b.rpg={};const s=b.rpg;
@@ -83,7 +83,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   }
   function dialog(title,body,cls=''){
     const d=document.createElement('dialog');d.className=`cps-ui cps-rpg-dialog ${cls}`;d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.5.2')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.6.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
   }
   function detail(title,content){api.removeUiDialog(popup);popup=dialog(title,`<div class="cps-rpg-detail">${E(content)}</div>`);}
@@ -240,9 +240,14 @@ globalThis.CyberpunkSystemsFactory = api => {
     experience.querySelector('[data-rpg=bd-stop]')?.addEventListener('click',()=>{if(owner!==safeOwner())return;bd.status='stopped';bd.returnPending=true;if(bdGenerating)api.context()?.stopGeneration?.();event('braindance ended','Return to original scene: '+bd.origin);braindance();});
     experience.querySelectorAll('[data-bd-item]').forEach(b=>b.onclick=()=>{if(owner!==safeOwner()||bd.status!=='stopped')return;const it=list.find(x=>x.id===b.dataset.bdItem);if(!it?.braindance?.scenario)return;Object.assign(bd,{status:'playing',itemId:it.id,title:it.name,scenario:it.braindance.scenario,summary:'',origin:JSON.stringify(s.map.location)+'\n'+C.text(api.context()?.chat?.filter(m=>!m.is_user).at(-1)?.mes,3000)});event('braindance started',it.name+'; continue its recorded scenario in main chat');braindance();void continueBd();});
   }
+  function connectionProfile(value){
+    const v=value&&typeof value==='object'?value:{},n=Number(v.seconds);
+    const supplied=['number','string'].includes(typeof v.seconds)&&Number.isFinite(n)&&n>0;
+    return {seconds:supplied?Math.min(60,Math.max(3,Math.round(n))):12,reason:C.text(v.reason,240),source:supplied&&v.source!=='default'?'AI':'default'};
+  }
   function hackingRequest(data){
     const s=state();if(s.puzzle&&['ready','running'].includes(s.puzzle.status)){notify('BREACH PENDING','Finish the current breach first.');return;}if(s.hackingRequest&&s.hackingRequest.status==='pending')return;
-    s.hackingRequest={...C.puzzle(data),status:'pending'};save();hackingWindow();
+    s.hackingRequest={...C.puzzle(data),connection:connectionProfile(data.connection),...(data.deviceLink?{deviceLink:{...data.deviceLink}}:{}),status:'pending'};save();hackingWindow();return true;
   }
   function hackingWindow(){
     const s=state(),request=s.hackingRequest;if(!request||request.status!=='pending')return;
@@ -255,26 +260,26 @@ globalThis.CyberpunkSystemsFactory = api => {
     const entries=['LINK // CARRIER DETECTED','LINK // NEURAL SYNC REQUEST','LINK // HANDSHAKE ACKNOWLEDGED','LINK // CHANNEL STABLE',
       'ICE  // PROBE ROUTE 01','ICE  // MAP ENCRYPTION LAYERS','ICE  // ACCESS REMAINS LOCKED','ICE  // SECURITY MAP READY',
       'BUFF // RESERVE LOCAL BUFFER','BUFF // STAGE CODE MATRIX','BUFF // VERIFY INPUT CHANNEL','LINK // AWAIT USER AUTHORIZATION'];
-    const seconds=[8,12,20].includes(s.settings.breachLinkSeconds)?s.settings.breachLinkSeconds:12;
+    const profile=connectionProfile(request.connection),seconds=profile.seconds;
     experience=dialog('BREACH / NEURAL LINK',`<section class="cps-link-console" data-link-state="idle">
       <div class="cps-link-body"><header class="cps-link-target"><div><small>ENCRYPTED ACCESS POINT</small><h3>${E(request.target)}</h3></div><span class="cps-link-lock">${E(tr('DATA LOCKED','ข้อมูลถูกล็อก'))}</span></header>
-      <div class="cps-link-stage"><div class="cps-link-layers" aria-hidden="true"><i></i><i></i><i></i><div class="cps-link-chip">ICE</div><span>1C · BD · E9</span></div>
+      <div class="cps-link-stage"><div class="cps-link-layers" aria-hidden="true"><svg class="cps-ice-map" viewBox="0 0 200 200" fill="none"><g stroke="currentColor"><circle class="cps-ice-orbit" cx="100" cy="100" r="88" stroke-dasharray="32 5 3 5"/><circle cx="100" cy="100" r="73" opacity=".3"/><circle class="cps-ice-progress" cx="100" cy="100" r="73" pathLength="100" stroke-width="3"/><path opacity=".5" d="M0 100h38m124 0h38M100 0v38m0 124v38M28 28l20 20m104 104 20 20M28 172l20-20m104-104 20-20"/><path class="cps-ice-core" d="m100 42 50 29v58l-50 29-50-29V71Z"/><path opacity=".35" d="m100 52 41 24v48l-41 24-41-24V76Z"/></g></svg><div class="cps-link-chip">ICE<small>ACCESS LOCKED</small></div><span>NEURAL ROUTE / 01</span></div>
       <div class="cps-link-readout"><small>NEURAL SYNCHRONIZATION</small><div class="cps-link-count" role="progressbar" aria-label="${E(tr('Connection preparation','การเตรียมเชื่อมต่อ'))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><b data-link-percent>00</b><span>%</span></div><p data-link-status role="status">${E(tr('Ready to establish a link','พร้อมเริ่มเชื่อมต่อ'))}</p></div></div>
       <ol class="cps-link-phases" aria-label="${E(tr('Connection stages','ขั้นตอนเชื่อมต่อ'))}">${phases.map((p,i)=>`<li data-link-phase="${i}"><b>0${i+1}</b><span>${E(p[0])}</span><small data-phase-state>${E(tr('WAIT','รอ'))}</small></li>`).join('')}</ol>
       <section class="cps-link-terminal"><header><span>DECRYPTION STREAM</span><small data-link-stream-status>STANDBY</small></header><div class="cps-link-stream" tabindex="0" role="region" aria-label="${E(tr('Connection log','บันทึกการเชื่อมต่อ'))}" aria-live="off"><p class="cps-link-placeholder">${E(tr('Connect to trace the access route.','เชื่อมต่อเพื่อเริ่มตรวจเส้นทางเข้าถึง'))}<span>_</span></p></div></section></div>
-      <footer class="cps-link-footer"><label class="cps-link-pace">${E(tr('Sequence duration','ระยะเวลาเชื่อมต่อ'))}<select data-link-pace>${[8,12,20].map(n=>`<option value="${n}" ${n===seconds?'selected':''}>${n} ${E(tr('seconds','วินาที'))}</option>`).join('')}</select></label><p class="cps-link-hint" data-link-hint>${E(tr('The log stays open until you continue.','บันทึกจะค้างไว้จนกว่าคุณกดไปต่อ'))}</p><div class="cps-link-actions">${buttons(tr('Cancel','ยกเลิก'),'cancel-hack')}${buttons(tr('Establish link','เริ่มเชื่อมต่อ'),'connect')}${buttons(tr('Enter Breach','เข้าสู่ Breach'),'enter-breach','hidden disabled')}</div><p role="alert" data-link-error></p></footer>
+      <footer class="cps-link-footer"><div class="cps-link-pace"><span>${E(tr('Connection estimate','เวลาประเมินเชื่อมต่อ'))}</span><strong data-link-estimate>${seconds}s</strong><small>${E(profile.source==='AI'?tr('AI assessment','AI ประเมิน'):tr('Default · no AI estimate','ค่าเริ่มต้น · AI ไม่ได้ระบุเวลา'))}</small></div><p class="cps-link-assessment">${E(profile.reason||tr('Awaiting the established security route.','เตรียมเส้นทางตามข้อมูลความปลอดภัยที่มี'))}</p><p class="cps-link-hint" data-link-hint>${E(tr('The log stays open until you continue.','บันทึกจะค้างไว้จนกว่าคุณกดไปต่อ'))}</p><div class="cps-link-actions">${buttons(tr('Cancel','ยกเลิก'),'cancel-hack')}${buttons(tr('Establish link','เริ่มเชื่อมต่อ'),'connect')}${buttons(tr('Enter Breach','เข้าสู่ Breach'),'enter-breach','hidden disabled')}</div><p role="alert" data-link-error></p></footer>
       </section>`,'cps-hacking-intro');
-    const current=experience,console=current.querySelector('.cps-link-console'),stream=current.querySelector('.cps-link-stream'),status=current.querySelector('[data-link-status]'),pace=current.querySelector('[data-link-pace]'),connect=current.querySelector('[data-rpg=connect]'),enter=current.querySelector('[data-rpg=enter-breach]');
+    const current=experience,console=current.querySelector('.cps-link-console'),stream=current.querySelector('.cps-link-stream'),status=current.querySelector('[data-link-status]'),connect=current.querySelector('[data-rpg=connect]'),enter=current.querySelector('[data-rpg=enter-breach]');
     let clock=null,elapsed=0,last=0,phase=-1,running=false,paused=false,duration=seconds*1000;
     const rows=[];
     const valid=()=>owner===safeOwner()&&experience===current&&current.isConnected&&s.hackingRequest===request&&request.status==='pending';
     const stop=()=>{if(clock!==null)clearInterval(clock);clock=null;running=false;};
     introCleanup=stop;const previousCleanup=current.cpsCleanup;current.cpsCleanup=()=>{stop();previousCleanup?.();};current.addEventListener('close',stop,{once:true});
-    const expert=()=>s.player.skills.some(sk=>/hack|netrun|breach/i.test(sk.name)&&Number(sk.level)>=50);
+    const expert=()=>!request.deviceLink&&s.player.skills.some(sk=>/hack|netrun|breach/i.test(sk.name)&&Number(sk.level)>=50);
     const motion=()=>document.documentElement.dataset.cpsMotion!=='off'&&!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     function draw(){
       const progress=Math.min(100,Math.floor(elapsed/duration*100)),next=Math.min(2,Math.floor(elapsed/duration*3)),done=elapsed>=duration;
-      current.querySelector('[data-link-percent]').textContent=String(progress).padStart(2,'0');current.querySelector('[role=progressbar]').setAttribute('aria-valuenow',String(progress));
+      console.style.setProperty('--link-progress',String(progress));current.querySelector('[data-link-percent]').textContent=String(progress).padStart(2,'0');current.querySelector('[role=progressbar]').setAttribute('aria-valuenow',String(progress));
       if(next!==phase||done||paused){phase=next;paused=false;status.textContent=done?tr('Link ready — continue when you are ready','เชื่อมต่อพร้อมแล้ว — กดไปต่อเมื่อพร้อม'):phases[phase][1];}
       current.querySelectorAll('[data-link-phase]').forEach((el,i)=>{const state=done||i<phase?'done':i===phase?'active':'waiting';el.dataset.state=state;el.querySelector('[data-phase-state]').textContent=state==='done'?tr('READY','พร้อม'):state==='active'?tr('SCAN','สแกน'):tr('WAIT','รอ');if(state==='active')el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
       const rowTime=duration/entries.length,follow=stream.scrollHeight-stream.scrollTop-stream.clientHeight<32;
@@ -292,19 +297,20 @@ globalThis.CyberpunkSystemsFactory = api => {
       if(document.hidden){paused=true;console.dataset.linkState='paused';status.textContent=tr('Sequence paused while away','พักลำดับเชื่อมต่อขณะออกจากหน้านี้');return;}
       console.dataset.linkState='running';elapsed=Math.min(duration,elapsed+delta);draw();
     }
-    pace.onchange=()=>{if(!valid()||running||request.linkReady)return;const value=Number(pace.value);if(![8,12,20].includes(value))return;s.settings.breachLinkSeconds=value;duration=value*1000;save();};
-    connect.onclick=()=>{if(!valid()||running||request.linkReady)return;running=true;connect.disabled=true;pace.disabled=true;console.dataset.linkState='running';current.querySelector('[data-link-stream-status]').textContent='RECEIVING';last=performance.now();draw();clock=setInterval(tick,80);};
+
+    connect.onclick=()=>{if(!valid()||running||request.linkReady)return;running=true;connect.disabled=true;console.dataset.linkState='running';current.querySelector('[data-link-stream-status]').textContent='RECEIVING';last=performance.now();draw();clock=setInterval(tick,80);};
     current.querySelector('[data-rpg=cancel-hack]').onclick=()=>{if(!valid())return;stop();request.status='cancelled';event('hack cancelled',request.target);closeExperience();};
     enter.onclick=()=>{
       if(!valid()||!request.linkReady||running)return;
+      if(request.deviceLink&&!devices.connectionValid(request.deviceLink)){current.querySelector('[data-link-error]').textContent=tr('Connection changed. Cancel and inspect the current device again.','การเชื่อมต่อเปลี่ยนไป กรุณายกเลิกและตรวจอุปกรณ์อีกครั้ง');return;}
       if(api.isGenerating?.()||support.busy()||aiBusy||mail.busy()){current.querySelector('[data-link-error]').textContent=tr('Wait for the current reply to finish.','รอคำตอบปัจจุบันให้เสร็จก่อน');return;}
       if(!api.settings().enabled||!api.settings().hackingEnabled||s.bd.status!=='stopped'||s.bd.rendering){current.querySelector('[data-link-error]').textContent=tr('Enable hacking and exit Braindance first.','เปิดระบบแฮ็กและออกจาก Braindance ก่อน');return;}
       if(s.puzzle&&['ready','running'].includes(s.puzzle.status)){current.querySelector('[data-link-error]').textContent=tr('Finish or cancel the current breach first.','จบหรือยกเลิกการเจาะระบบเดิมก่อน');return;}
       const learned=expert();enter.disabled=true;request.status='opened';closeExperience();save();
       if(learned){event('breach result',request.target+': success via learned LV.50+ hacking expertise. '+request.data);openData({kind:'data',title:'ACCESS GRANTED / '+request.target,content:request.data});}
-      else beginBreach({id:request.id,target:request.target,seconds:request.seconds,buffer:request.buffer,difficulty:request.grid.length-3,data:request.data});
+      else beginBreach({id:request.id,target:request.target,seconds:request.seconds,buffer:request.buffer,difficulty:request.grid.length-3,data:request.data,deviceLink:request.deviceLink});
     };
-    if(request.linkReady){elapsed=duration;pace.disabled=true;draw();}
+    if(request.linkReady){elapsed=duration;draw();}
   }
   function notify(title,body,danger=false){
     const s=state(),n={id:C.uid(),title:C.text(title,180),body:C.text(body,3000),danger,at:Date.now()};s.notifications.push(n);s.notifications=s.notifications.slice(-60);save();
@@ -656,7 +662,7 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='suppo
 This is fictional simulation only. Values are extension rules, not exact game balance. State is private narrator context; NPCs do not automatically know the player's balance, equipment, thoughts, location, hidden missions or other NPCs' information. No unearned powers or forced plot. Never simulate puzzle success: the user connects and plays it; only the extension may bypass it for an existing hacking/netrunning skill level of at least 50.
 Evaluate status, equipment, skills, missions and location changes after every normal main-chat reply. Emit all relevant updates in that same response; no extra API request is needed. Emit complete JSON records only for events that actually happen. Each record needs an id unique to that event; reuse that id if restating the same event. Do not print examples unless that event occurs. JSON strings must escape newlines and quotes. Never include closing tag text inside a JSON string.
 - Show every actual ability use by USER or NPC with [CP_SKILL]{"id":"event-id","actor":"user or exact NPC name","name":"skill","description":"observable effect","resource":"ram or stamina","cost":2,"cooldown":1}[/CP_SKILL]. Do not invent user actions. Existing skill costs/cooldowns are authoritative. No repeated skill record for one action.
-- When a scene requires decrypting an access point or shard: [CP_BREACH]{"id":"event-id","target":"terminal name","difficulty":2,"seconds":45,"buffer":8,"data":"data unlocked ONLY on success"}[/CP_BREACH]. Stop before revealing its secrets. Not an enemy quickhack.
+- When a scene requires decrypting an access point or shard: [CP_BREACH]{"id":"event-id","target":"terminal name","difficulty":2,"seconds":45,"buffer":8,"data":"data unlocked ONLY on success"}[/CP_BREACH]. Include connection:{"seconds":12,"reason":"Established network conditions"} in CP_BREACH. Decide connection.seconds (3–60 seconds) in this main reply BEFORE the player opens the UI, using established security, network conditions and player capability; easy links are faster, difficult links slower. Give a short player-safe reason without exposing secrets. This is connection preparation, separate from puzzle seconds. Missing estimates use a visible 12-second default; no extra AI request is made. Stop before revealing its secrets. Not an enemy quickhack.
 - State updates: [CP_STATE]{"id":"event-id","actor":"user or exact NPC","hp":80,"stress":10}[/CP_STATE]. Use absolute numeric values OR delta:{hp:-15,stamina:-10,ram:-2,stress:5} for resources changed by that event, never both for the same resource. Always emit damage/healing after an actual hit or treatment; HP does not regenerate automatically. Do not charge skill/item resource costs twice. Accepts changed hp/maxHp, ram/maxRam, stamina/maxStamina, capacity and stress; omit unchanged fields. implantUnlocks:{"skeleton":true,"hands":true} is allowed only for established License to Chrome / Ambidextrous unlocks. Maxima/capacity increases require actual training, installed upgrades or an established story reward. Do not change balance here.
 - Character growth: [CP_PROGRESS]{"id":"unique-event","actor":"user","xp":25,"reason":"completed training or meaningful successful action"}[/CP_PROGRESS]. Award only earned XP, never passive dialogue, not again for mission rewards. Level/attribute points are computed by the extension; player spends points in Status.
 - Collected QUICKHACK software must be recorded as category:"quickhack", never generic item/data or CP_SKILL. Example: [CP_LOOT]{"id":"unique-quickhack-loot","actor":"user","source":"Recovered from defeated netrunner","items":[{"name":"Short Circuit","category":"quickhack","quantity":1,"level":2,"ramCost":3,"cooldown":2,"effect":"Electrical damage to the selected target"}]}[/CP_LOOT]. Emit the record in the SAME reply confirming collection. Merely narrating ownership does not update inventory. Do not grant loot from a wish, hypothetical, offer or unsuccessful attempt. For a user-confirmed earlier acquisition missing from the saved inventory, record it once; do not duplicate already-owned items. When actually loaded/equipped, emit CP_ITEM operation equip using the saved itemId (eight slots, no automatic replacement when full). Unequip unloads it. Never claim successful acquisition/loading without the corresponding record.

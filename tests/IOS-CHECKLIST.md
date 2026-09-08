@@ -1,3 +1,18 @@
+# v3.6.0 native acceptance checks — pending
+
+- [ ] Update/reload and confirm 3.6.0. Preserve the current chat and Device Hacking configuration.
+- [ ] AI estimates 3 seconds for an easy link and 20 seconds for a harder one. Confirm the estimate/reason before Connect, different durations, and unchanged puzzle timer.
+- [ ] Older device without an estimate shows “Default · no AI estimate”, 12s. Fresh CP_DEVICE observation updates the estimate.
+- [ ] ICE geometry and log fit portrait/landscape at 320–430 CSS pixels; footer remains reachable with enlarged UI/text.
+- [ ] Background/foreground the app: preparation pauses and resumes without rushing. Motion off/Reduce Motion stop decorative rotation.
+- [ ] Device link: cancel, disconnect/reconnect, leave/return and reset security before Continue. Old link must not grant access.
+- [ ] Switch accent/surface/text theme colors; inspect console, nearby list and shop entrance, including disabled shop state and keyboard focus.
+- [ ] 13 nearby devices: swipe-scroll vertically, page using arrows, open a later row, continue main chat and leave room. Only one current list, no underlined device buttons.
+- [ ] 500 NPCs with portraits: page/search/filter, toggle a disabled NPC, edit a later record, close/reopen. Observe memory/reload behavior on the target iPhone; automated DOM tests are not a native memory benchmark.
+- [ ] Upload normal JPEG/PNG/WebP and 48MP photo. The latter must show a resize error without crashing; cancel and retry a smaller image. Existing portrait remains intact.
+
+Historical checklists below document previous versions; their selectable-duration/inline-device UI has been superseded.
+
 # v3.5.2 shops and Device Hacking release checklist
 
 Status: automated host/DOM tests passed; these device checks are **not yet executed**. The local browser preview was blocked in the authoring environment. Use a copy of a chat and export a backup before destructive/restore tests. Never use a paid model merely to run the automated suite.

@@ -2,6 +2,11 @@
 
 Reviewed through 2026-09-06. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols are original code. The v2.4 map uses attributed NC Zoning Board geometry and remotely loaded map tiles, described below.
 
+## v3.6.0 visual and performance references (2026-09-08)
+
+- [Adam Blumert — Cyberpunk 2077 UI/UX & ADS Showreel](https://vimeo.com/641291345): primary motion-designer portfolio, including loading screens and quest UI animation. Informed the original staged console, circuit geometry, quiet motion and terminal hierarchy. No game assets or component code were copied.
+- [MDN — HTMLImageElement.decoding](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/decoding): asynchronous decoding is a browser hint, not a memory cap. Contact pagination bounds mounted portraits instead of relying solely on lazy/async attributes. The 12-card page size, 24-megapixel upload limit and 3–60-second connection envelope are extension design decisions, not game specifications or guarantees of Safari memory safety.
+
 ## v3.5.0 shops: references and scope (2026-09-08)
 
 - [CD PROJEKT RED — Update 2.0](https://www.cyberpunk.net/en/news/49060/update-2-0): vendor specialization and the removal of crafting/Quickhack components from vendor stock inform the shop prompt. No automatic component-vendor list is generated.

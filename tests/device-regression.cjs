@@ -14,6 +14,7 @@ async function check(name,fn){await fn();count++;console.log('PASS '+name);}
 let requests=0;
 async function msg(raw){const i=ctx.chat.push({mes:raw,is_user:false})-1;const el=d.createElement('div');el.className='mes';el.setAttribute('mesid',i);const text=d.createElement('div');text.className='mes_text';text.textContent=raw;el.append(text);q('#chat').append(el);events.get('received')(i);await wait();return text;}
 function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(i,row,col,axis,used)=>{if(i===seq.length)return used;for(let j=0;j<p.grid.length;j++){const r=axis==='row'?row:j,c=axis==='row'?j:col;if(p.grid[r][c]!==seq[i]||used.some(x=>x[0]===r&&x[1]===c))continue;const v=solve(i+1,r,c,axis==='row'?'column':'row',[...used,[r,c]]);if(v)return v;}return null;};return solve(0,0,0,'row',[]);}
+function prepareLink(){const clock=require('./connection-clock.cjs')(w);click('[data-rpg=connect]');clock.advance(60000);click('[data-rpg=enter-breach]');clock.restore();}
 function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p))click('.cps-breach [data-cell="'+r+','+c+'"]');if(p.status!=='success')click('.cps-breach [data-rpg=finish]');}
 (async()=>{
  await w.eval('(async()=>{'+fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'))+'\n})()');await wait();
@@ -23,14 +24,14 @@ function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p)
  const jsonRecord=(id,type='camera',extra={})=>record('DEVICE',{id:'seen-'+id,deviceId:id,name:'Camera '+id,type,access:'secured',networkId:'lobby',securityRevision:'1',...extra});
  const raw='เหนือประตูมี [CP_DEVICE|a]กล้อง A[/CP_DEVICE] และ [CP_DEVICE|b]กล้อง B[/CP_DEVICE].'+jsonRecord('a','camera',{data:'Guard at the elevator',name:'กล้อง A'})+jsonRecord('b','camera',{name:'กล้อง B'})+record('LOCATION',{id:'lobby-location',district:'watson',building:'Megabuilding',floor:'1',area:'Lobby'});
  const el=await msg(raw);
- await check('Inline device names remain in the sentence and hidden data stays hidden',()=>{assert.equal(el.querySelectorAll('.cps-device-inline').length,2);assert.ok(el.textContent.includes('เหนือประตูมี'));assert.ok(!el.textContent.includes('Guard at the elevator'));assert.ok(!el.textContent.includes('[CP_DEVICE]'));assert.equal(w.CyberpunkSystem.getNpcs().some(n=>n.name==='กล้อง A'),false);});
+ await check('Inline device names remain in the sentence and hidden data stays hidden',()=>{assert.equal(el.querySelectorAll('.cps-nearby-device').length,2);assert.ok(el.textContent.includes('เหนือประตูมี'));assert.ok(!el.textContent.includes('Guard at the elevator'));assert.ok(!el.textContent.includes('[CP_DEVICE]'));assert.equal(w.CyberpunkSystem.getNpcs().some(n=>n.name==='กล้อง A'),false);});
  await check('Device metadata follows the final location even if emitted before CP_LOCATION',()=>{assert.ok(lookup('a').location.includes('lobby'));assert.equal(lookup('a').visit,b().visit);assert.equal(lookup('a').reachable,true);});
  const slots=JSON.stringify(player().quickhackSlots),ram=player().ram;
  click('[data-cps-device=a]');
  await check('Inspecting a device does not spend RAM or unlock permissions',()=>{assert.equal(player().ram,ram);assert.equal(dev.unlocked(lookup('a')),false);assert.ok(q('.cps-device-window [data-device-action=breach]'));assert.ok(q('[data-device-action="use:view"]').disabled);assert.ok(!q('.cps-device-window').textContent.includes('Guard at the elevator'));});
  await check('Device programs start in eight independent utility slots',()=>{assert.equal(b().slots.length,8);assert.equal(JSON.stringify(player().quickhackSlots),slots);});
  await check('Locked commands fail before changing resources',()=>{assert.throws(()=>dev.use('a','view','denied'),/Breach/);assert.equal(player().ram,ram);assert.ok(!b().receipts.includes('denied'));});
- click('[data-device-action=breach]');
+ click('[data-device-action=breach]');prepareLink();
  await check('Device breach opens the real puzzle without revealing data or granting access',()=>{assert.ok(q('.cps-breach'));assert.equal(dev.unlocked(lookup('a')),false);assert.equal(state().puzzle.deviceLink.deviceId,'a');assert.equal(player().ram,ram);});
  solveBreach();
  await check('Solving one confirmed shared network unlocks both cameras',()=>{assert.equal(dev.unlocked(lookup('a')),true);assert.equal(dev.unlocked(lookup('b')),true);assert.equal(b().grants.length,1);});
@@ -73,7 +74,7 @@ function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p)
  await check('Retarget records the explicit target and duration',()=>{assert.equal(lookup('drone').effects[0].target,'Hostile Drone B');assert.equal(lookup('drone').effects[0].until,state().turn+2);});
  await msg(record('DEVICE',{id:'reset-a',deviceId:'a',operation:'reset'}));
  await check('Reset removes shared permissions and requires rediscovery',()=>{assert.equal(dev.unlocked(lookup('b')),false);assert.match(dev.liveReason(lookup('a')),/range/);});
- await msg(jsonRecord('a','camera',{id:'a-return',securityRevision:'2'}));dev.open('a');dev.startBreach('a');
+ await msg(jsonRecord('a','camera',{id:'a-return',securityRevision:'2'}));dev.open('a');dev.startBreach('a');prepareLink();
  await msg(record('LOCATION',{id:'leave',district:'watson',building:'Megabuilding',floor:'2',area:'Hall'}));solveBreach();
  await check('Leaving during Breach invalidates even a solved puzzle',()=>{assert.equal(state().puzzle.status,'cancelled');assert.equal(b().grants.length,0);assert.ok(dev.liveReason(lookup('a')));});
  click('.cps-breach [data-rpg=cancel]');
@@ -84,14 +85,14 @@ function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p)
  await check('Returning alone does not revive stale connections',()=>assert.ok(dev.liveReason(lookup('b'))));
  await msg(jsonRecord('b','camera',{id:'rediscover-b',securityRevision:'2'}));
  await check('Rediscovery restores reachability but not old grants',()=>{assert.equal(dev.liveReason(lookup('b')),'');assert.equal(dev.unlocked(lookup('b')),false);});
- dev.open('b');dev.startBreach('b');click('.cps-breach [data-rpg=cancel]');
+ dev.open('b');dev.startBreach('b');prepareLink();click('.cps-breach [data-rpg=cancel]');
  await check('Cancelled breach cannot grant access',()=>assert.equal(dev.unlocked(lookup('b')),false));
- dev.startBreach('b');
+ dev.startBreach('b');prepareLink();
  await msg(record('DEVICE',{id:'b-link-lost',deviceId:'b',operation:'disconnect'}));
  await msg(jsonRecord('b','camera',{id:'b-link-restored',securityRevision:'2'}));solveBreach();
  await check('Disconnect and rediscovery cannot revive an in-flight breach',()=>{assert.equal(state().puzzle.status,'cancelled');assert.equal(dev.unlocked(lookup('b')),false);});
  click('.cps-breach [data-rpg=cancel]');
- await msg(jsonRecord('a','camera',{id:'same-network-peer',securityRevision:'2'}));dev.startBreach('b');
+ await msg(jsonRecord('a','camera',{id:'same-network-peer',securityRevision:'2'}));dev.startBreach('b');prepareLink();
  await msg(record('DEVICE',{id:'a-peer-reset',deviceId:'a',operation:'reset'}));solveBreach();
  await check('A network peer security reset invalidates an in-flight shared grant',()=>{assert.equal(state().puzzle.status,'cancelled');assert.equal(dev.unlocked(lookup('b')),false);});
  click('.cps-breach [data-rpg=cancel]');
@@ -131,7 +132,7 @@ function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p)
  dev.open(reported.deviceId);
  await check('Device Control explicitly labels the requested program as not executed',()=>{assert.ok(q('.cps-device-window [role=status]').textContent.includes('not executed'));assert.equal(q('[data-device-action="use:shutdown"]').disabled,true);});
  await check('Repeated AI requests cannot override existing security or network metadata',()=>{dev.receive({...reported,access:'open',networkId:'forged',securityRevision:'9'});assert.equal(lookup(reported.deviceId).access,'secured');assert.equal(lookup(reported.deviceId).networkId,'h10-local');assert.equal(lookup(reported.deviceId).revision,'1');assert.equal(player().ram,beforeRequest);});
- dev.startBreach(reported.deviceId);solveBreach();b().cooldowns.shutdown=0;dev.use(reported.deviceId,'shutdown','confirmed-request');
+ dev.startBreach(reported.deviceId);prepareLink();solveBreach();b().cooldowns.shutdown=0;dev.use(reported.deviceId,'shutdown','confirmed-request');
  await check('Real Breach and Upload execute once and clear the pending request',()=>{assert.equal(lookup(reported.deviceId).requestedProgram,undefined);assert.equal(player().ram,beforeRequest-2);assert.equal(dev.use(reported.deviceId,'shutdown','confirmed-request'),false);});
  await check('Intent for a disconnected device cannot restore reachability',()=>{dev.receive({deviceId:reported.deviceId,operation:'disconnect'});dev.receive(reported);assert.equal(lookup(reported.deviceId).reachable,false);assert.throws(()=>dev.use(reported.deviceId,'shutdown','disconnected-request'),/connection/);});
  await check('Unknown operations report the actual operation problem',()=>{assert.throws(()=>dev.receive({...reported,operation:'explode'}),/Unsupported device operation: explode/);});

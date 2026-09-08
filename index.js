@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.5.2';
+const CYBERPUNK_SYSTEM_VERSION = '3.6.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -266,9 +266,9 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       return `<svg class="cps-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false">${paths[name] || paths.chip}</svg>`;
     }
 
-    function avatarMarkup(name, large = false) {
+    function avatarMarkup(name, large = false, record = null) {
       const initials = clean(name).split(/\s+/).slice(0, 2).map(word => Array.from(word)[0] || '').join('').toLocaleUpperCase();
-      const portrait = findEffectiveNpc(name)?.portrait;
+      const portrait = (record || findEffectiveNpc(name))?.portrait;
       if (isPortraitData(portrait)) return `<span class="cps-avatar cps-avatar-photo${large ? ' large' : ''}"><img src="${htmlEscape(portrait)}" alt="${htmlEscape(name)}" width="384" height="384" loading="lazy" decoding="async"></span>`;
       return `<span class="cps-avatar${large ? ' large' : ''}" aria-hidden="true"><span>${htmlEscape(initials || '?')}</span></span>`;
     }
@@ -1147,8 +1147,27 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       });
     }
 
+    async function checkPortraitDimensions(file) {
+      if (!file.slice) return;
+      const blob=file.slice(0,262144);
+      const buffer=blob.arrayBuffer?await blob.arrayBuffer():await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsArrayBuffer(blob);});
+      const bytes=new Uint8Array(buffer),view=new DataView(buffer);let width=0,height=0;
+      if(bytes.length>=24&&view.getUint32(0)===0x89504e47){width=view.getUint32(16);height=view.getUint32(20);}
+      else if(bytes[0]===255&&bytes[1]===216){
+        let p=2;while(p+4<=bytes.length){if(bytes[p++]!==255)break;while(bytes[p]===255)p++;const marker=bytes[p++];if(marker===0xda||marker===0xd9)break;if(marker===0x01||marker>=0xd0&&marker<=0xd7)continue;if(p+2>bytes.length)break;const length=view.getUint16(p);if(length<2||p+length>bytes.length)break;if([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)&&length>=8){height=view.getUint16(p+3);width=view.getUint16(p+5);break;}p+=length;}
+      } else if(bytes.length>=30&&view.getUint32(0)===0x52494646&&view.getUint32(8)===0x57454250){
+        const kind=view.getUint32(12);
+        if(kind===0x56503858){width=1+bytes[24]+(bytes[25]<<8)+(bytes[26]<<16);height=1+bytes[27]+(bytes[28]<<8)+(bytes[29]<<16);}
+        else if(kind===0x56503820&&bytes[23]===0x9d&&bytes[24]===0x01&&bytes[25]===0x2a){width=view.getUint16(26,true)&0x3fff;height=view.getUint16(28,true)&0x3fff;}
+        else if(kind===0x5650384c&&bytes[20]===0x2f){const bits=view.getUint32(21,true);width=(bits&0x3fff)+1;height=((bits>>>14)&0x3fff)+1;}
+      }
+      if(!width||!height)throw new Error(settings().language==='th'?'อ่านขนาดภาพไม่ได้ กรุณาส่งออกเป็น JPEG หรือ PNG ใหม่':'Cannot safely read image dimensions. Re-export as JPEG or PNG.');
+      if(width>8192||height>8192||width*height>24000000)throw new Error(settings().language==='th'?'ภาพใหญ่เกินไป กรุณาย่อให้ไม่เกิน 24 ล้านพิกเซลก่อนอัปโหลด':'Image too large. Resize to 24 megapixels or less before uploading.');
+    }
+
     async function compressPortrait(file) {
       if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size > 20 * 1024 * 1024) throw new Error(t('imageFailed'));
+      await checkPortraitDimensions(file);
       const url = URL.createObjectURL(file);
       try {
         const img = await loadPortraitImage(url);
@@ -1196,7 +1215,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const setBusy = () => { generate.disabled = busy || loading; save.disabled = busy || loading; fileInput.disabled = busy || loading; cancelGenerate.hidden = !busy; };
       const cancelNpc = () => { if (!busy) return; requestEpoch++; systems?.support?.cancel('npc'); busy = false; npcGenerating = false; setBusy(); generate.setAttribute('aria-busy', 'false'); status.textContent = t('cancel'); };
       cancelGenerate.addEventListener('click', cancelNpc);
-      const studioCleanup = new MutationObserver(() => { if (modal.isConnected) return; studioCleanup.disconnect(); cancelNpc(); revision++; image = null; portraitSource = ''; }); studioCleanup.observe(document.body, { childList: true });
+      const studioCleanup = new MutationObserver(() => { if (modal.isConnected) return; studioCleanup.disconnect(); cancelNpc(); revision++; image = null; portraitSource = ''; canvas.width=1;canvas.height=1; }); studioCleanup.observe(document.body, { childList: true });
       const load = async (data, reset = true) => {
         const version = ++revision; loading = true; setBusy();
         try {
@@ -1431,17 +1450,21 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 
     function renderCharacters(body) {
       const records = effectiveRecords('npcs', true);
-      body.innerHTML = `${sectionHeading('01', 'contactsTitle', 'contactsHint', metric(records.length.toString().padStart(2, '0'), 'identities'))}${recordToolbar('characters', 'addNpc', 'searchContacts')}<div class="cps-card-grid"></div>${noResultsMarkup()}<p class="cps-footnote">${uiIcon('shield')}${htmlEscape(t('scopeHint'))}</p>`;
+      body.innerHTML = `${sectionHeading('01', 'contactsTitle', 'contactsHint', metric(records.length.toString().padStart(2, '0'), 'identities'))}${recordToolbar('characters', 'addNpc', 'searchContacts')}<div class="cps-card-grid"></div><nav class="cps-list-pagination" data-npc-pages aria-label="NPC pages"></nav>${noResultsMarkup()}<p class="cps-footnote">${uiIcon('shield')}${htmlEscape(t('scopeHint'))}</p>`;
       const grid = body.querySelector('.cps-card-grid');
+      const state=viewState.characters;
+      const draw=()=>{
+      const query=state.query.trim().toLocaleLowerCase(),matches=records.filter(r=>(state.scope==='all'||state.scope===r.scope)&&[r.name,r.handle,r.role,r.affiliation].join(' ').toLocaleLowerCase().includes(query));
+      const pages=Math.max(1,Math.ceil(matches.length/12));state.page=Math.min(pages-1,Math.max(0,state.page||0));grid.replaceChildren();
       if (!records.length) grid.innerHTML = emptyState('characters', 'noNpcs', 'emptyContactHint');
-      records.forEach(record => {
+      matches.slice(state.page*12,(state.page+1)*12).forEach(record => {
         const card = document.createElement('article');
         card.className = 'cps-card cps-contact-card';
         card.dataset.recordCard = '';
         card.dataset.recordScope = record.scope;
         card.dataset.search = [record.name, record.handle, record.role, record.affiliation].join(' ').toLocaleLowerCase();
         const facts = [['age', record.age], ['gender', record.gender]].filter(([, value]) => value);
-        card.innerHTML = `<div class="cps-card-topline">${scopeBadge(record.scope)}<span class="cps-card-id">${htmlEscape(record.handle ? `@${cleanHandle(record.handle)}` : t('identity'))}</span></div><div class="cps-contact-identity">${avatarMarkup(record.name)}<div><h3>${htmlEscape(record.name)}</h3><p>${htmlEscape(record.role || t('noRole'))}</p></div></div><div class="cps-chips">${[record.affiliation, record.status].filter(Boolean).map(value => `<span>${htmlEscape(value)}</span>`).join('')}</div>${facts.length ? `<dl class="cps-facts">${facts.map(([label, value]) => `<div><dt>${htmlEscape(t(label))}</dt><dd>${htmlEscape(value)}</dd></div>`).join('')}</dl>` : ''}${record.appearance || record.notes ? `<details class="cps-dossier"><summary>${htmlEscape(t('viewDossier'))}${uiIcon('chevron')}</summary>${record.appearance ? `<p><strong>${htmlEscape(t('appearanceField'))}</strong>${htmlEscape(record.appearance)}</p>` : ''}${record.notes ? `<p><strong>${htmlEscape(t('notes'))}</strong>${htmlEscape(record.notes)}</p>` : ''}</details>` : ''}<footer class="cps-card-actions"><button class="cps-button" type="button" role="switch" aria-label="${htmlEscape(t('enableNpc'))} ${htmlEscape(record.name)}" aria-checked="${record.enabled !== false}" data-action="toggle-npc">${htmlEscape(t(record.enabled === false ? 'npcDisabled' : 'npcEnabled'))}</button><button class="cps-button" type="button" data-action="assets">Cyberware</button><button class="cps-button primary" type="button" data-action="call">${uiIcon('calls')}<span>${htmlEscape(t('call'))}</span></button><button class="cps-button" type="button" data-action="edit">${uiIcon('edit')}<span>${htmlEscape(t('edit'))}</span></button><button class="cps-icon-button danger" type="button" data-action="remove" aria-label="${htmlEscape(`${t('remove')} ${record.name}`)}">${uiIcon('trash')}</button></footer>`;
+        card.innerHTML = `<div class="cps-card-topline">${scopeBadge(record.scope)}<span class="cps-card-id">${htmlEscape(record.handle ? `@${cleanHandle(record.handle)}` : t('identity'))}</span></div><div class="cps-contact-identity">${avatarMarkup(record.name,false,record)}<div><h3>${htmlEscape(record.name)}</h3><p>${htmlEscape(record.role || t('noRole'))}</p></div></div><div class="cps-chips">${[record.affiliation, record.status].filter(Boolean).map(value => `<span>${htmlEscape(value)}</span>`).join('')}</div>${facts.length ? `<dl class="cps-facts">${facts.map(([label, value]) => `<div><dt>${htmlEscape(t(label))}</dt><dd>${htmlEscape(value)}</dd></div>`).join('')}</dl>` : ''}${record.appearance || record.notes ? `<details class="cps-dossier"><summary>${htmlEscape(t('viewDossier'))}${uiIcon('chevron')}</summary>${record.appearance ? `<p><strong>${htmlEscape(t('appearanceField'))}</strong>${htmlEscape(record.appearance)}</p>` : ''}${record.notes ? `<p><strong>${htmlEscape(t('notes'))}</strong>${htmlEscape(record.notes)}</p>` : ''}</details>` : ''}<footer class="cps-card-actions"><button class="cps-button" type="button" role="switch" aria-label="${htmlEscape(t('enableNpc'))} ${htmlEscape(record.name)}" aria-checked="${record.enabled !== false}" data-action="toggle-npc">${htmlEscape(t(record.enabled === false ? 'npcDisabled' : 'npcEnabled'))}</button><button class="cps-button" type="button" data-action="assets">Cyberware</button><button class="cps-button primary" type="button" data-action="call">${uiIcon('calls')}<span>${htmlEscape(t('call'))}</span></button><button class="cps-button" type="button" data-action="edit">${uiIcon('edit')}<span>${htmlEscape(t('edit'))}</span></button><button class="cps-icon-button danger" type="button" data-action="remove" aria-label="${htmlEscape(`${t('remove')} ${record.name}`)}">${uiIcon('trash')}</button></footer>`;
         card.dataset.enabled = String(record.enabled !== false);
         card.querySelector('[data-action="call"]').disabled = record.enabled === false;
         card.querySelector('[data-action="assets"]').disabled = record.enabled === false;
@@ -1460,7 +1483,18 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         card.querySelector('[data-action="remove"]').addEventListener('click', () => removeRecord('npcs', record));
         grid.append(card);
       });
-      bindRecordFilters(body, 'characters', () => openNpcEditor());
+      body.querySelector('[data-filter-count]').textContent=`${matches.length} / ${records.length}`;
+      body.querySelector('[data-no-results]').hidden=matches.length>0||!records.length;
+      body.querySelectorAll('[data-filter-scope]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.filterScope===state.scope)));
+      const pager=body.querySelector('[data-npc-pages]');pager.hidden=pages===1;
+      pager.innerHTML=`<button type="button" data-npc-page="-1" aria-label="Previous page" ${state.page===0?'disabled':''}>←</button><span role="status">${state.page+1} / ${pages}</span><button type="button" data-npc-page="1" aria-label="Next page" ${state.page===pages-1?'disabled':''}>→</button>`;
+      pager.querySelectorAll('button').forEach(el=>el.onclick=()=>{state.page+=Number(el.dataset.npcPage);draw();body.scrollTop=0;pager.querySelector('[data-npc-page="'+el.dataset.npcPage+'"]').focus();});
+      };
+      body.querySelector('[data-record-add]').onclick=()=>openNpcEditor();
+      body.querySelector('[data-record-search]').oninput=e=>{state.query=e.target.value;state.page=0;draw();};
+      body.querySelectorAll('[data-filter-scope]').forEach(el=>el.onclick=()=>{state.scope=el.dataset.filterScope;state.page=0;draw();});
+      body.querySelector('[data-clear-filters]').onclick=()=>{state.query='';state.scope='all';state.page=0;body.querySelector('[data-record-search]').value='';draw();};
+      draw();
     }
 
     function renderHacking(body) {

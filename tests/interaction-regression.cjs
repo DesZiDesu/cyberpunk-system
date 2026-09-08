@@ -20,7 +20,7 @@ const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supp
  await w.eval('(async()=>{'+fs.readFileSync(path.join(root,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'))+'\n})()');await wait();
  state().settings.notifications=false;player().balance=1000;
  await reply(record('BREACH',{id:'new-link',target:'Kabuki terminal',data:'Secret coordinates'}));
- await test('Connection starts idle with three stages and a 12-second default',()=>{assert.equal(q('[data-link-pace]').value,'12');assert.equal(d.querySelectorAll('[data-link-phase]').length,3);assert.equal(d.querySelector('progress'),null);assert.equal(q('[role=progressbar]').getAttribute('aria-valuenow'),'0');});
+ await test('Connection starts idle with three stages and a 12-second default',()=>{assert.equal(q('[data-link-estimate]').textContent,'12s');assert.equal(d.querySelectorAll('[data-link-phase]').length,3);assert.equal(d.querySelector('progress'),null);assert.equal(q('[role=progressbar]').getAttribute('aria-valuenow'),'0');});
  let clock=require('./connection-clock.cjs')(w);click('[data-rpg=connect]');clock.advance(1600);
  await test('The old 1.25-second deadline no longer dismisses the code stream',()=>{assert.ok(q('.cps-hacking-intro'));assert.equal(q('.cps-link-console').dataset.linkState,'running');assert.ok(d.querySelectorAll('.cps-link-log-row').length>=2);assert.ok(d.querySelectorAll('.cps-link-log-row').length<12);assert.equal(state().puzzle,undefined);assert.ok(!q('.cps-hacking-intro').textContent.includes('Secret coordinates'));});
  const percent=q('[data-link-percent]').textContent;clock.jump(60000);
@@ -35,8 +35,8 @@ const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supp
  hostBusy=true;click('[data-rpg=enter-breach]');
  await test('A generation in progress blocks continuing without consuming the request',()=>{assert.equal(state().hackingRequest.status,'pending');assert.ok(q('[data-link-error]').textContent);});hostBusy=false;click('[data-rpg=enter-breach]');
  await test('Continuing opens the real puzzle with secrets still concealed',()=>{assert.ok(q('.cps-breach'));assert.equal(state().puzzle.status,'ready');assert.ok(!q('.cps-breach').textContent.includes('Secret coordinates'));});click('.cps-breach [data-rpg=cancel]');
- await reply(record('BREACH',{id:'cancel-link',target:'Other terminal',data:'Hidden payload'}));const pace=q('[data-link-pace]');pace.value='20';pace.dispatchEvent(new w.Event('change'));clock=require('./connection-clock.cjs')(w);click('[data-rpg=connect]');clock.advance(12000);
- await test('The 20-second pace persists and is still running at 12 seconds',()=>{assert.equal(state().settings.breachLinkSeconds,20);assert.equal(q('.cps-link-console').dataset.linkState,'running');});click('[data-rpg=cancel-hack]');clock.advance(30000);
+ await reply(record('BREACH',{id:'cancel-link',target:'Other terminal',data:'Hidden payload',connection:{seconds:20,reason:'Hardened corporate ICE'}}));clock=require('./connection-clock.cjs')(w);click('[data-rpg=connect]');clock.advance(12000);
+ await test('AI chooses 20 seconds before opening and the link is still running at 12 seconds',()=>{assert.equal(state().hackingRequest.connection.seconds,20);assert.equal(q('.cps-link-console').dataset.linkState,'running');});click('[data-rpg=cancel-hack]');clock.advance(30000);
  await test('Cancellation stops all connection work and never reveals data',()=>{assert.equal(clock.tasks.size,0);assert.equal(state().hackingRequest.status,'cancelled');assert.equal(d.querySelector('.cps-hacking-intro'),null);});clock.restore();
  await reply(record('BREACH',{id:'closed-link',target:'Closed terminal',data:'Never reveal'}));clock=require('./connection-clock.cjs')(w);click('[data-rpg=connect]');click('.cps-hacking-intro [data-rpg=close]');
  await test('The window close control immediately releases the connection timer',()=>assert.equal(clock.tasks.size,0));clock.restore();state().hackingRequest.status='cancelled';
@@ -60,7 +60,7 @@ const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supp
  await test('Repeated decoration never duplicates recovered device controls',()=>assert.equal(observed.el.querySelectorAll('[data-cps-device]').length,1));
  const broken=await reply(record('DEVICE',{id:'bad-operation',deviceId:'broken-camera',name:'Side camera',type:'camera',operation:'unsupported'}));
  await test('A rejected device record still exposes an inspection path in chat',()=>{broken.el.querySelector('[data-device-scan]').click();assert.equal(q('.cps-device-scan [name=name]').value,'Side camera');systems.devices.close();});
- const orphan=await reply('[CP_DEVICE|missing-target]Unrecorded terminal[/CP_DEVICE]');orphan.el.querySelector('[data-cps-device]').click();
+ const orphan=await reply('[CP_DEVICE|missing-target]Unrecorded terminal[/CP_DEVICE]');orphan.el.querySelector('[data-cps-device=missing-target]').click();
  await test('An inline label without metadata opens a usable confirmation form',()=>{assert.ok(q('.cps-device-scan form'));assert.equal(q('.cps-device-scan [name=name]').value,'Unrecorded terminal');});systems.devices.close();
  ctx.chat.push({mes:'ฉันมองไปที่กล้อง',is_user:true});const noTags=await reply('You inspect the room.');
  await test('Natural Thai inspection gets a scan entry even when AI omits every device tag',()=>{assert.ok(noTags.el.querySelector('[data-device-scan]'));assert.ok(systems.prompt().includes('ฉันมองไปที่กล้อง'));});noTags.el.querySelector('[data-device-scan]').click();
@@ -68,6 +68,23 @@ const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supp
  await reply(location({...at,area:'Outside'}));ctx.chat.push({mes:'ฉันมองไปที่กล้อง',is_user:true});const unknown=await reply('You look around.');const n=systems.devices.store().devices.length;unknown.el.querySelector('[data-device-scan]').click();
  await test('A mention alone does not invent a device or grant control',()=>{assert.ok(q('.cps-device-scan'));assert.equal(systems.devices.store().devices.length,n);});const form=q('.cps-device-scan form');form.elements.name.value='Camera above service exit';submit(form);
  await test('User confirmation records a standalone secured device without charging RAM',()=>{const v=systems.devices.store().devices.at(-1);assert.equal(v.name,'Camera above service exit');assert.equal(v.networkId,'');assert.equal(v.access,'secured');assert.equal(v.effects.length,0);assert.ok(q('[data-device-action=breach]'));});systems.devices.close();
+ // AI pacing is per observation, bounded, and independent of puzzle time.
+ for(const [value,expected] of [[2,3],[90,60],['bad',12]]){
+   await reply(record('BREACH',{id:'estimate-'+seq++,target:'Timing fixture',seconds:45,connection:{seconds:value,reason:'Established route'}}));
+   await test('Connection estimate '+value+' safely resolves to '+expected+' seconds',()=>{assert.equal(q('[data-link-estimate]').textContent,expected+'s');assert.equal(state().hackingRequest.seconds,45);assert.equal(d.querySelector('[data-link-pace]'),null);});click('[data-rpg=cancel-hack]');
+ }
+ await reply(record('BREACH',{id:'fast-'+seq++,target:'Local port',connection:{seconds:3,reason:'Direct local link'}}));clock=require('./connection-clock.cjs')(w);click('[data-rpg=connect]');clock.advance(3040);
+ await test('An AI-selected fast link is ready after three seconds',()=>{assert.equal(q('.cps-link-console').dataset.linkState,'ready');assert.ok(q('.cps-link-assessment').textContent.includes('Direct local link'));});click('[data-rpg=cancel-hack]');clock.restore();
+ const many=await reply(Array.from({length:13},(_,i)=>record('DEVICE',{id:'nearby-'+i,deviceId:'nearby-'+i,name:'Nearby camera '+i,type:'camera',connection:{seconds:5,reason:'Local secured route'}})).join(''));
+ await test('Nearby devices render in one box with only five rows',()=>{assert.equal(many.el.querySelectorAll('.cps-device-discovery').length,1);assert.equal(many.el.querySelectorAll('[data-cps-device]').length,5);assert.equal(d.querySelectorAll('.mes_text > .cps-device-discovery').length,1);assert.equal(many.el.querySelectorAll('.cps-device-inline').length,0);});
+ const firstIds=[...many.el.querySelectorAll('[data-cps-device]')].map(n=>n.dataset.cpsDevice);many.el.querySelector('[data-device-page="1"]').click();
+ await test('Device pagination replaces rows and retains the registry',()=>{assert.equal(many.el.querySelectorAll('[data-cps-device]').length,5);assert.ok([...many.el.querySelectorAll('[data-cps-device]')].every(n=>!firstIds.includes(n.dataset.cpsDevice)));assert.ok(systems.devices.store().devices.length>=13);});
+ systems.devices.startBreach('nearby-0');clock=require('./connection-clock.cjs')(w);
+ await test('Device Breach uses its AI estimate before the real puzzle',()=>{assert.equal(q('[data-link-estimate]').textContent,'5s');assert.equal(state().hackingRequest.deviceLink.deviceId,'nearby-0');assert.equal(systems.devices.unlocked(systems.devices.store().devices.find(n=>n.id==='nearby-0')),false);});
+ click('[data-rpg=connect]');clock.advance(5040);systems.devices.receive({deviceId:'nearby-0',operation:'disconnect'});systems.devices.receive({deviceId:'nearby-0',name:'Nearby camera 0',type:'camera'});click('[data-rpg=enter-breach]');
+ await test('Disconnect and rediscovery cannot revive a prepared device link',()=>{assert.equal(state().hackingRequest.status,'pending');assert.ok(q('[data-link-error]').textContent.includes('Connection changed'));});click('[data-rpg=cancel-hack]');clock.restore();
+ await reply(location({...at,area:'Different room'}));
+ await test('Leaving the scene removes the old nearby-device box',()=>{assert.equal(d.querySelectorAll('[data-cps-device]').length,0);});
  await test('The reported interaction paths make no additional AI requests',()=>assert.equal(requests,0));
  await test('Connection CSS parses and respects mobile sizing and reduced motion',()=>{const css=fs.readFileSync(path.join(root,'breach-style.css'),'utf8');require('postcss').parse(css);assert.ok(css.includes('prefers-reduced-motion'));assert.ok(css.includes('--cps-viewport-height'));});
  assert.deepEqual(errors,[]);console.log(count+' connection and reported interaction checks passed. DOM, timers and host APIs simulated.');w.close();

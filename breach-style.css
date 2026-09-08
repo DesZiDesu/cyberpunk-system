@@ -1,4 +1,13 @@
-/* The connection console uses the shared theme; its log never auto-dismisses. */
+/* Original ICE schematic; preparation never implies an access grant. */
+.cps-ice-map{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.cps-ice-progress{stroke-dasharray:var(--link-progress,0) 100;transform:rotate(-90deg);transform-origin:100px 100px}
+.cps-ice-core{fill:color-mix(in srgb,var(--cps-accent) 7%,var(--cps-surface));stroke-width:2}
+.cps-link-chip{text-align:center}.cps-link-chip small{display:block;font:6px/2 monospace;letter-spacing:.1em;margin-top:7px}
+.cps-link-assessment{grid-column:1/-1;font:12px/1.6 var(--cps-font-th);margin:0;color:var(--cps-text);border-left:2px solid var(--cps-accent);padding-left:10px;overflow-wrap:anywhere}
+.cps-link-pace strong{font:22px/1 var(--cps-font-en);color:var(--cps-accent)}.cps-link-pace small{font-size:10px}
+html[data-cps-motion=on][data-cps-ambient=on] [data-link-state=running] .cps-ice-orbit{animation:cps-ice-orbit 16s linear infinite;transform-origin:100px 100px}
+@keyframes cps-ice-orbit{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.cps-ice-orbit{animation:none!important}}
 dialog.cps-ui.cps-hacking-intro{width:min(820px,calc(100% - 32px));height:min(870px,calc(var(--cps-viewport-height,100dvh) - 32px));border-top-color:var(--cps-accent)}
 .cps-hacking-intro .cps-rpg-content{padding:0;display:flex;flex-direction:column;overflow:hidden}
 .cps-hacking-intro .cps-rpg-top{background:var(--cps-surface)}

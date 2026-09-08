@@ -1,6 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap');
-@import url('./device-style.css?v=3.5.2');
-@import url('./breach-style.css?v=3.5.2');
+@import url('./device-style.css?v=3.6.0');
+@import url('./breach-style.css?v=3.6.0');
+
+/* Bounded discovery/contact pages, original vendor terminal treatment. */
+.cps-list-pagination{display:flex;align-items:center;justify-content:center;gap:20px;padding:14px;border-top:1px solid var(--cps-line);font:12px/1.5 var(--cps-font-en);color:var(--cps-muted)}
+.cps-list-pagination[hidden]{display:none}.cps-list-pagination button{width:44px;min-height:44px;border:1px solid var(--cps-line);background:var(--cps-surface);color:var(--cps-accent);cursor:pointer;font-size:20px}.cps-list-pagination button:disabled{opacity:.3;cursor:default}
+.cps-device-discovery{display:block!important;margin:20px 0!important;border:1px solid var(--cps-line);border-top:3px solid var(--cps-accent);background:var(--cps-surface);color:var(--cps-text);overflow:hidden}
+.cps-nearby-heading{display:flex;align-items:center;gap:14px;padding:18px;background:linear-gradient(110deg,color-mix(in srgb,var(--cps-accent) 12%,var(--cps-surface)),var(--cps-surface))}.cps-nearby-heading>span{font-size:32px;color:var(--cps-accent)}.cps-nearby-heading>div{flex:1;min-width:0}.cps-nearby-heading small{display:block;font:9px/1.6 var(--cps-font-en);letter-spacing:.1em;color:var(--cps-muted)}.cps-nearby-heading strong{display:block;font:600 18px/1.5 var(--cps-font-th)}.cps-nearby-heading>b{font:28px/1 var(--cps-font-en);color:var(--cps-accent)}
+.cps-nearby-device{display:flex;width:100%;align-items:center;gap:14px;text-align:left;padding:15px 18px;border:0;border-top:1px solid var(--cps-line);background:transparent;color:var(--cps-text);cursor:pointer;min-height:78px}.cps-nearby-device>span:nth-child(2){flex:1;min-width:0}.cps-nearby-device small{display:block;font:9px/1.6 var(--cps-font-en);color:var(--cps-muted);overflow-wrap:anywhere}.cps-nearby-device strong{display:block;font:600 15px/1.6 var(--cps-font-th);overflow-wrap:anywhere}.cps-nearby-device em{display:block;font:9px/1.6 var(--cps-font-th);font-style:normal;color:var(--cps-accent)}.cps-nearby-index{font:12px/1 monospace;color:var(--cps-muted)}.cps-nearby-device>span:last-child{font-size:22px;color:var(--cps-accent)}
+.cps-nearby-device:hover,.cps-nearby-device:focus-visible{background:color-mix(in srgb,var(--cps-accent) 8%,transparent);outline:1px solid var(--cps-accent);outline-offset:-2px}
+.cps-shop-card .cps-shop-card-mark{display:flex;flex-direction:column;align-items:center;width:64px;min-width:64px;gap:5px;border:1px solid currentColor;padding:9px;background:color-mix(in srgb,var(--cps-accent) 8%,transparent)}.cps-shop-card-mark svg{width:44px;height:44px}.cps-shop-card-mark small{font:7px/1 monospace;letter-spacing:.06em}
+.cps-shop-card:not(.unavailable){border-left-width:4px;background:linear-gradient(120deg,color-mix(in srgb,var(--cps-accent) 12%,var(--cps-surface)),var(--cps-surface) 65%)}
+.cps-shop-card:not(.unavailable)>button{min-height:52px;background:var(--cps-accent);color:var(--cps-surface);border-color:var(--cps-accent);font-weight:700;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);padding:12px 22px}
+html[data-cps-motion=on] .cps-shop-card>button,html[data-cps-motion=on] .cps-nearby-device{transition:background .16s ease,transform .16s ease}.cps-shop-card:not(.unavailable)>button:hover{transform:translateY(-2px)}
+@media(max-width:520px){.cps-shop-card>button.cps-button{width:100%;margin-left:0;grid-column:1/-1}.cps-shop-card .cps-shop-card-copy{flex-basis:calc(100% - 80px)}.cps-nearby-heading{padding:14px 12px;gap:10px}.cps-nearby-heading strong{font-size:16px}.cps-nearby-device{padding:13px 12px;gap:10px}}
+@media(prefers-reduced-motion:reduce){.cps-shop-card>button,.cps-nearby-device{transition:none!important;transform:none!important}}
 
 /* Connected systems: shared tokens, calm motion, deliberate typography. */
 .cps-support,.cps-asset-dossier { max-width:1120px; margin:auto; width:100%; }
