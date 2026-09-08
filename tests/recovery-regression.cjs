@@ -6,7 +6,7 @@ const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function
 const events=new Map();let stops=0,hostBusy=false;
 const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt:async()=>'',stopGeneration(){stops++;},isGenerating:()=>hostBusy};
 w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const C=w.CyberpunkRpgCore,q=s=>{const el=d.querySelector(s);assert.ok(el,'Missing '+s);return el;},click=s=>q(s).click(),wait=()=>new Promise(r=>setTimeout(r,20)),json=x=>JSON.stringify(x);
 const bucket=()=>ctx.chatMetadata.cyberpunk_system,state=()=>bucket().rpg,record=(tag,v)=>'[CP_'+tag+']'+json(v)+'[/CP_'+tag+']';let count=0,seq=0;

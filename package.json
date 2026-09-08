@@ -1,11 +1,11 @@
 {
   "name": "cyberpunk-system",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check rpg-assets.js && node --check rpg-support.js && node --check rpg-scene.js && node --check index.js && node --check rpg-core.js && node --check rpg-ui.js && node --check rpg-mail.js && node --check rpg-catalog.js && node --check rpg-map-data.js && node --check rpg-map.js",
-    "test": "node tests/ui-regression.cjs && node tests/portrait-regression.cjs && node tests/rpg-regression.cjs && node tests/map-regression.cjs && node tests/mail-regression.cjs && node tests/scene-regression.cjs && node tests/expansion-regression.cjs && node tests/recovery-regression.cjs"
+    "check": "node --check rpg-devices.js && node --check rpg-assets.js && node --check rpg-support.js && node --check rpg-scene.js && node --check index.js && node --check rpg-core.js && node --check rpg-ui.js && node --check rpg-mail.js && node --check rpg-catalog.js && node --check rpg-map-data.js && node --check rpg-map.js",
+    "test": "node tests/ui-regression.cjs && node tests/portrait-regression.cjs && node tests/rpg-regression.cjs && node tests/map-regression.cjs && node tests/mail-regression.cjs && node tests/scene-regression.cjs && node tests/expansion-regression.cjs && node tests/recovery-regression.cjs && node tests/device-regression.cjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "0.1.100",

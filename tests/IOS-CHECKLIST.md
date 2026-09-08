@@ -1,10 +1,15 @@
-# v3.3.0 device release checklist
+# v3.4.0 device release checklist
 
 Status: automated host/DOM tests passed; these device checks are **not yet executed**. The local browser preview was blocked in the authoring environment. Use a copy of a chat and export a backup before destructive/restore tests. Never use a paid model merely to run the automated suite.
 
 ## iPhone Safari
 
-- [ ] Update and reload; confirm 3.3.0 in the settings drawer and newly opened windows.
+- [ ] Update and reload; confirm 3.4.0 in the settings drawer and newly opened windows.
+- [ ] Open `tests/preview.html` → Device scene: inline camera/drone names keep the paragraph's font and line spacing. Tap each name with a finger and focus it with an external keyboard.
+- [ ] Device Control stays within the visible viewport at 320–430 CSS px widths, with Back/Close, Upload, RAM and rejection reasons readable. Target Override input stays reachable with the keyboard open.
+- [ ] Breach Camera A, finish ACCESS, close Breach and use Camera B. The separate drone network stays locked. Cancel a second breach and verify no rights are granted.
+- [ ] Quickhack Deck tabs retain independent selections. Shrinking occupied Device slots reports an error without dropping programs; the device switch blocks Upload without deleting data.
+- [ ] Change theme colors and disable motion; check device panels, inline underlines, reticle and program controls. Turning the feature off must not alter ordinary narration.
 - [ ] Enter each workspace from Wand and from Cyberware; Back returns to its parent/previous section, and Close remains reachable in portrait/landscape.
 - [ ] Switch saved accent/background colors; check Mailbox, house/car cards, dossiers, support monitor and recovery dialogs match.
 - [ ] With a keyboard open, verify text fields do not force an unwanted page zoom and Send/Save/Cancel remain reachable. Test at 320–430 CSS px widths and with larger text settings.

@@ -1,5 +1,50 @@
 # Cyberpunk System
 
+## v3.4.0 — Main-chat devices and shared-network Breach
+
+Discovered device names are now inline buttons with the same font and line spacing as the surrounding narration. Tap a camera, door, drone, turret or terminal to inspect its **Device Control** panel. Inspection is free. Supported commands show their RAM cost, cooldown and any reason they are unavailable. Unsupported commands are omitted. Narrative names are never guessed into devices; the AI must emit the device protocol below in its ordinary response.
+
+**Wand → Quickhack Deck → Device Hacks** manages an independent utility loadout beside the original Quickhacks tab. Eight built-in utilities are preloaded for immediate use; Reboot is also available to install. These are extension utilities, separate from owned NPC Quickhack inventory. Both decks share the player's RAM. Device slots are configurable from 1–16; unload the excess slots before shrinking. Duplicate installations are rejected. The Device Hacks switch disables control without deleting observations or programs.
+
+| Utility | Targets | RAM | Cooldown / duration in story turns |
+| --- | --- | --- | --- |
+| Remote Deactivation | All supported devices | 2 | 2 / 2 |
+| Loop Camera Feed | Camera | 3 | 3 / 3 |
+| Camera Feed | Camera | 1 | 1 / immediate reading |
+| Remote Unlock / Remote Lock | Door | 1 | 1 / persistent lock state |
+| Signal Jam | Drone, turret | 3 | 2 / 2 |
+| Target Override | Drone, turret | 4 | 3 / 2 |
+| Read Data | Terminal | 1 | 1 / immediate reading |
+| Reboot Device | All supported devices | 2 | 3 / 1 |
+
+Only a loaded, compatible program can execute. RAM and cooldown settle once when Upload succeeds. A repeated action cannot charge again; cooldowns apply across devices for the same program. Target Override requires the player to name an established target. Camera/data commands show only supplied fictional observations; when content is unknown, the next normal story response must describe it. This is not a live video feed. Temporary shutdown/reboot blocks device access until it expires. Other temporary effects are recorded for the narrator; they do not render a 3D world simulation.
+
+**Secured devices require the real Breach puzzle.** Successful ACCESS grants control to observed devices sharing the same explicitly supplied network ID, location visit and security revision. Matching names, types or districts never establish connectivity. Standalone devices unlock individually. Failure, cancellation, leaving the location during Breach, or security changes cannot grant access. Existing general-purpose Breach behavior remains available separately.
+
+Moving to a different district/subdistrict/building/floor/interior area invalidates device reachability and clears grants. Returning requires explicit rediscovery; it never automatically restores previous rights. Story events can also disconnect, destroy or reset a device. Historical inline names remain inspectable but cannot operate an unavailable target. Devices retain stable IDs across messages and are isolated per chat. Observations in Braindance or private calls cannot create physically reachable targets. Backups include the registry, loadout, cooldowns and receipts, with validation on restore.
+
+### Device protocol
+
+Use this inline, within narration:
+
+```text
+เหนือประตูมี [CP_DEVICE|lobby-camera-a]กล้องวงจรปิด A[/CP_DEVICE] หันเข้าหาลิฟต์
+```
+
+Include hidden metadata in the same reply:
+
+```text
+[CP_DEVICE]{"id":"discovery-001","deviceId":"lobby-camera-a","name":"กล้องวงจรปิด A","type":"camera","access":"secured","networkId":"lobby-security","networkName":"ระบบรักษาความปลอดภัยโถง","securityRevision":"1","reachable":true,"actions":["shutdown","loop","view"],"data":"ยามสองคนยืนข้างลิฟต์"}[/CP_DEVICE]
+```
+
+Use a unique event `id` and stable `deviceId` (letters/numbers/underscore/dash/dot/colon). Additional confirmed cameras can share `networkId` and `securityRevision`; omit `networkId` for a standalone device. Add CP_LOCATION when the player moves: device observations are applied at that reply's final physical location. Do not register old-room devices in a new room. `type` supports camera, door, drone, turret, terminal and device. `actions` can restrict the default compatible commands. `access:"open"` means already unprotected/authorized, never assumed future puzzle success.
+
+For established world changes, use `operation:"disconnect"`, `"destroy"` or `"reset"` with an existing `deviceId`. Reset requires rediscovery before use. Change `securityRevision` when a known network changes security. Do not duplicate locally settled commands with CP_STATE/CP_SKILL resource charges. Device metadata and partial machine records are hidden from narration. Unknown/invalid records remain reviewable in System / Recovery.
+
+The registry retains up to 300 devices per chat and injects summaries for up to 40 devices at the current location. All updates use the normal response; no polling or additional AI generation is added. Archived prose is not retrospectively scanned for equipment or devices. `tests/preview.html` includes a **Device scene** control with two connected cameras and an independent drone.
+
+Update and reload; confirm **3.4.0**. JavaScript and the device stylesheet use versioned URLs. Syntax validation and all **468 automated checks** passed, including 50 device checks for commands, network isolation, stale mentions, puzzle settlement, receipts and backup validation. Disconnect/reconnect and a peer security reset during an active Breach cannot revive its old permission grant. Native iPhone Safari visuals, touch targets and keyboard behavior still require device verification.
+
 ## v3.3.0 — Connected assets, recovery and interface polish
 
 This release connects the existing systems without adding relationship or reputation mechanics. Update the extension, reload SillyTavern and confirm **3.3.0**. Existing saved NPCs, portraits, mail, inventories, themes and assets are retained. New fields initialize when needed; no chat history is scanned for invented retroactive rewards.
