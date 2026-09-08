@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.2.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.2.1','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-mail.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -124,4 +124,3 @@ let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=ap
  test('No unhandled DOM or module errors',()=>assert.deepEqual(errors,[]));
  console.log(`\n${count} mailbox behavior checks passed. Touch events and host APIs simulated; native Safari requires device testing.`);dom.window.close();
 })().catch(e=>{console.error(e.stack);dom.window.close();process.exitCode=1;});
-

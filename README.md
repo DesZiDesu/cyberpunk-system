@@ -1,5 +1,13 @@
 # Cyberpunk System
 
+## v3.2.1 — Holographic AI / Blackwall terminal
+
+Cyberware → AI / Blackwall now opens a two-sided neural conversation: AI messages on the left and user messages on the right. A CSS holographic sphere with orbital rings sits above the conversation. Blackwall uses a dark core and red energy; other AIs inherit the saved accent and surface colors. The signal bars respond to pending generation.
+
+The docked composer keeps Send reachable while the transcript scrolls. Its header contracts on short viewports, including keyboard-sized windows. Enter inserts a line break; Ctrl/Cmd+Enter sends. The input is temporarily read-only during generation, protecting drafts from being overwritten by a completed response. Cancel and closing the terminal discard late answers; chat isolation and existing transcripts are retained. Ambient motion, animation-off and reduced-motion settings are respected. This is a fictional neural-link visual, not end-to-end encryption or voice chat.
+
+Validation: automated regression coverage includes message sides, hologram structure, theme/Blackwall separation, thinking/cancel states and close-during-generation. Native Safari appearance and keyboard behavior still require device verification.
+
 ## v3.2.0 — Blackwall neural channels, property and garage
 
 - **Cyberware → AI / Blackwall:** open the unlocked Blackwall channel or name another established fictional AI. Send to AI makes one quiet request. Cancel discards late responses; switching chats closes the channel and isolates history. Main-chat `CP_AI` records render a dedicated neural header and decrypted dialogue, and are retained in the corresponding thread. Private channel replies cannot execute transactions.
@@ -350,4 +358,3 @@ Validation for v1.2.0: JavaScript syntax and CSS parse checks, 41 DOM checks and
 - Braindance has a headset launcher with viewport-aware dragging, a sensory monitor, playback state, and recording cards. Motion respects reduced-motion and extension animation settings.
 
 Device verification still required: on iOS Safari, open Create NPC, choose a JPEG/PNG/WebP portrait, cancel and reopen the picker, then crop/save and reopen the NPC. Check a large phone photo and keyboard/orientation changes. Confirm the Braindance launcher drags without opening, taps to open, and playback/pause/resume/exit work. Automated tests simulate the host and events; they do not reproduce an iOS process crash.
-

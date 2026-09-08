@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.2.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.2.1';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -1811,4 +1811,3 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 }
 
 await globalThis.CyberpunkSystemRuntimePromise;
-
