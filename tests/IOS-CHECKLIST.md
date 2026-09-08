@@ -1,10 +1,10 @@
-# v3.5.1 shops and Device Hacking release checklist
+# v3.5.2 shops and Device Hacking release checklist
 
 Status: automated host/DOM tests passed; these device checks are **not yet executed**. The local browser preview was blocked in the authoring environment. Use a copy of a chat and export a backup before destructive/restore tests. Never use a paid model merely to run the automated suite.
 
 ## iPhone Safari
 
-- [ ] Update and reload; confirm 3.5.1 in the settings drawer and newly opened windows.
+- [ ] Update and reload; confirm 3.5.2 in the settings drawer and newly opened windows.
 - [ ] Retry a current-message camera record with `operation:"shutdown"`: registration succeeds, Device Control shows the pending request, and no RAM or effect changes until a permitted Upload. An older-message retry must request a fresh observation rather than claim success.
 - [ ] Open `tests/preview.html` → Shop scene / return. Buy and Sell, categories, search, quantity fields, receipt review and Edit shop remain readable at 320–430 CSS px widths and with the keyboard open.
 - [ ] Stay in shop for multiple messages: the original button remains usable. Leave counter: the old card becomes muted; an already open confirmation cannot charge. Return: a fresh card replaces the old one and depleted stock stays depleted.
@@ -45,3 +45,11 @@ Status: automated host/DOM tests passed; these device checks are **not yet execu
 - [ ] Confirm JSON download/import works and exported backups are stored privately.
 
 Record device, iOS/browser and SillyTavern versions with failures. Do not paste private prompts, API keys or full backups into public issues.
+
+## 3.5.2 connection and interaction follow-up — native checks pending
+
+- [ ] Story connection: the three stages and code stream fit portrait iPhone; footer controls remain reachable while the log scrolls.
+- [ ] Select 8, 12 and 20 seconds. The finished log waits for Enter Breach; going to another app pauses preparation.
+- [ ] Close, cancel and reopen. Ready logs persist, cancelled links never open protected data.
+- [ ] A shop containing an unknown catalog row still opens; that row is not purchasable. Verify recovery of an earlier failed opening at the same counter.
+- [ ] Device metadata without inline tags creates a control. Thai look/scan narration without tags exposes Inspect device. Confirming a scene device still requires Breach before commands.

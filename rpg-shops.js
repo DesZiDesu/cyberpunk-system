@@ -30,8 +30,10 @@ globalThis.CyberpunkShopsFactory = api => {
   function stockRow(value){
     const sku=id(value.sku),quantity=integer(value.quantity),price=C.money(value.price);
     if(price<1)throw Error('Unit sale price must be positive');
-    const template=value.catalogId?catalog().find(x=>x.id===value.catalogId):null;
-    if(value.catalogId&&!template)throw Error('Unknown curated catalog ID; use a reviewed name or clearly marked story item');
+    const token=v=>norm(v).replace(/^cps[:_-]/,'').replace(/[\s_-]+/g,'');
+    const named=C.text(value.item?.name||value.name,180);
+    const template=value.origin==='story'?null:(catalog().find(x=>token(x.id)===token(value.catalogId))||catalog().find(x=>named&&token(x.name)===token(named)));
+    if(value.catalogId&&!template&&value.origin!=='story'){const e=Error('Unrecognized catalog item: '+C.text(named||value.catalogId,180));e.code='CATALOG_UNRESOLVED';throw e;}
     let item,category;
     if(template){
       category=categoryFor(template);
@@ -75,11 +77,13 @@ globalThis.CyberpunkShopsFactory = api => {
     refreshCards();
     if(windowNode?.isConnected&&windowOwner===api.chatBucket())draw(false);
   }
-  function receive(data,key){
+  function receive(data,key,options={}){
     const eventId=id(data.id),shopId=id(data.shopId),source=/^(\d+):swipe:(\d+)$/.exec(key);
     const chat=api.context()?.chat||[];
     // A historic rerender or a private call cannot open/restock a physical store.
-    if(!source||Number(source[1])!==chat.length-1||chat[Number(source[1])]?.is_user||chat[Number(source[1])]?.is_system)return false;
+    if(!source||chat[Number(source[1])]?.is_user||chat[Number(source[1])]?.is_system)return false;
+    if(options.retry&&data.operation==='open'&&(address(data.location)!==address(api.state().map.location)||!sourceMessage({index:Number(source[1]),swipe:Number(source[2]),recordId:eventId,shopId})))throw Error(tr('Return to this counter with its original visit message before retrying.','กลับมาที่เคาน์เตอร์นี้และใช้ข้อความเข้าร้านเดิมก่อนลองใหม่'));
+    if(Number(source[1])!==chat.length-1&&!(options.retry&&data.operation==='open'&&address(data.location)===address(api.state().map.location)&&sourceMessage({index:Number(source[1]),swipe:Number(source[2]),recordId:eventId,shopId})))return false;
     if(api.state().bd.status!=='stopped'||api.state().bd.rendering)return false;
     const market=store(),old=find(shopId);
     if(data.operation==='close'){
@@ -90,8 +94,9 @@ globalThis.CyberpunkShopsFactory = api => {
       let shop=old;
       if(!shop){
         if(!C.text(data.name)||!Array.isArray(data.stock)||!data.stock.length||data.stock.length>80)throw Error('A new shop needs a name and 1–80 stock rows');
-        const stock=data.stock.map(stockRow);if(new Set(stock.map(x=>x.id)).size!==stock.length)throw Error('Duplicate shop SKU');
-        shop={id:shopId,name:C.text(data.name,180),merchant:C.text(data.merchant||data.name,180),kind:kinds.some(x=>x[0]===data.kind)?data.kind:'general',location:point(data.location),stock,funds:C.money(data.funds??0),buyPrices:rules(data.buyPrices),version:1,history:[]};
+        const stock=[],pendingStock=[];if(new Set(data.stock.map(x=>id(x.sku))).size!==data.stock.length)throw Error('Duplicate shop SKU');
+        for(const row of data.stock){try{stock.push(stockRow(row));}catch(e){if(e.code!=='CATALOG_UNRESOLVED')throw e;pendingStock.push({input:copy(row),reason:e.message});}}
+        shop={id:shopId,name:C.text(data.name,180),merchant:C.text(data.merchant||data.name,180),kind:kinds.some(x=>x[0]===data.kind)?data.kind:'general',location:point(data.location),stock,pendingStock,funds:C.money(data.funds??0),buyPrices:rules(data.buyPrices),version:1,history:[]};
         if(market.shops.length>=200)throw Error('Shop limit reached');
         market.shops.push(shop);
       }
@@ -200,6 +205,14 @@ globalThis.CyberpunkShopsFactory = api => {
   function decorate(element){
     const node=element.closest('[mesid]'),index=Number(node?.getAttribute('mesid'));
     if(!node||!Number.isInteger(index))return;
+    element.querySelectorAll(':scope > .cps-shop-recovery').forEach(n=>n.remove());
+    if(api.settings().enabled&&api.state().bd.status==='stopped'&&!api.state().bd.rendering)for(const row of api.state().recordLog||[]){
+      if(row.type!=='SHOP'||row.status!=='failed'||!row.source?.startsWith(index+':swipe:'))continue;
+      let v;try{v=JSON.parse(row.raw.match(/^\[CP_SHOP\]([\s\S]*)\[\/CP_SHOP\]$/i)[1]);}catch{continue;}
+      if(v.operation!=='open'||find(v.shopId)||address(v.location)!==address(api.state().map.location)||!sourceMessage({index,swipe:Number(row.source.split(':').at(-1)),recordId:v.id,shopId:v.shopId}))continue;
+      const recovery=document.createElement('section'),owner=api.chatBucket();recovery.className='cps-shop-recovery';recovery.innerHTML='<strong>'+E(v.name||tr('Shop','ร้านค้า'))+'</strong><p>'+E(tr('The earlier shop record needs another check. Unrecognized goods will remain unavailable for purchase.','ตรวจข้อมูลร้านเดิมอีกครั้ง สินค้าที่ระบบยังไม่รู้จักจะถูกแยกไว้ก่อน'))+'</p>'+button('retry',tr('Open shop / check goods','เปิดร้าน / ตรวจสินค้า'));
+      recovery.querySelector('button').onclick=()=>{if(owner!==api.chatBucket()||!recovery.isConnected)return;try{api.retryRecord(row.key,row.raw);const shop=find(v.shopId);if(shop?.visit&&accessible(shop,shop.visit.id))open(shop.id,shop.visit.id);}catch(e){api.toast(e.message);}};element.append(recovery);
+    }
     const candidates=api.settings().enabled?store().shops.filter(s=>s.visit?.index===index&&sourceMessage(s.visit)):[];
     const wanted=new Set(candidates.map(s=>s.visit.id));
     element.querySelectorAll(':scope > .cps-shop-card').forEach(n=>{if(!wanted.has(n.dataset.shopVisit))n.remove();});
@@ -232,6 +245,7 @@ globalThis.CyberpunkShopsFactory = api => {
     host.innerHTML='<header class="cps-shop-hero"><div><small>NIGHT CITY / LOCAL COMMERCE</small><h2>'+E(shop.name)+'</h2><p>'+E(shop.merchant)+' · '+E(shop.location.area)+'</p></div><div class="cps-shop-wallet"><span>'+E(tr('YOUR EDDIES','เงินของคุณ'))+'</span><strong>€$'+player.balance.toLocaleString('en-US')+'</strong><small>'+E(tr('Shop buyback funds','เงินรับซื้อของร้าน'))+' €$'+shop.funds.toLocaleString('en-US')+'</small></div></header>'+
       (!enabled?'<p class="cps-shop-closed" role="status">'+E(tr('This visit is no longer available. Return in the story for a new shop button.','การเยี่ยมชมนี้ใช้ไม่ได้แล้ว กลับเข้าร้านในเนื้อเรื่องเพื่อรับปุ่มใหม่'))+'</p>':'')+
       '<nav class="cps-shop-modes" aria-label="Trade mode">'+button('mode:buy',tr('Buy','ซื้อ'),'aria-pressed="'+(mode==='buy')+'"')+button('mode:sell',tr('Sell','ขาย'),'aria-pressed="'+(mode==='sell')+'"')+button('history',tr('Receipts','ใบเสร็จ'))+button('edit',tr('Edit shop','แก้ไขร้าน'),enabled?'':'disabled')+'</nav>'+
+      (shop.pendingStock?.length?'<details class="cps-shop-pending"><summary>'+E(tr('Goods awaiting identification','สินค้าที่รอตรวจสอบ'))+' ('+shop.pendingStock.length+')</summary><p>'+E(tr('These rows cannot be purchased. Use Edit shop to add the reviewed item and terms.','รายการเหล่านี้ยังซื้อไม่ได้ ใช้แก้ไขร้านเพื่อเพิ่มสินค้าที่ตรวจแล้วพร้อมราคา'))+'</p>'+shop.pendingStock.map(x=>'<p>'+E(x.input?.item?.name||x.input?.name||x.input?.catalogId||'—')+'</p>').join('')+'</details>':'')+
       '<div class="cps-shop-search"><label>'+E(tr('Search goods','ค้นหาสินค้า'))+'<input type="search" data-shop-search value="'+E(search)+'" placeholder="'+E(tr('Name or description…','ชื่อหรือรายละเอียด…'))+'"></label><select data-shop-category aria-label="'+E(tr('Category','หมวดหมู่'))+'"><option value="all">'+E(tr('All categories','ทุกหมวด'))+'</option>'+categories.map(([k,en,th])=>'<option value="'+k+'" '+(filter===k?'selected':'')+'>'+E(tr(en,th))+'</option>').join('')+'</select></div>'+
       '<p class="cps-shop-terms">'+E(tr('Prices, stock and buyback terms are saved RP offers. Buying cyberware adds it to inventory; installation uses Cyberware. Stock changes only through purchases, sales, confirmed story deliveries or your edits.','ราคา สต็อก และราคารับซื้อเป็นข้อเสนอ RP ที่บันทึกไว้ ซื้อไซเบอร์แวร์แล้วเข้าคลัง ติดตั้งจากหน้า Cyberware สต็อกเปลี่ยนเมื่อซื้อ ขาย เรื่องยืนยันการส่งของ หรือคุณแก้ไข'))+'</p>'+
       '<div class="cps-shop-layout"><div><div class="cps-shop-grid">'+(shown.map(row=>'<button type="button" class="cps-shop-product '+(!row.quantity||!row.price?'sold-out':'')+'" data-shop-item="'+E(row.key)+'" aria-pressed="'+(selected===row.key)+'"><span class="cps-shop-product-top">'+E(label(row.category))+'<b>×'+row.quantity+'</b></span><span class="cps-shop-product-icon" aria-hidden="true">'+api.icon(row.item.category)+'</span><strong>'+E(row.item.name)+'</strong><span>'+E(row.origin==='story'?tr('STORY ITEM','ไอเทมในโรล'):row.origin==='resale'?tr('RESALE','สินค้ารับซื้อคืน'):row.origin==='catalog'?tr('CATALOG NAME / RP STATS','ชื่อจากรายการ / ค่าสำหรับ RP'):row.origin==='equipped'?tr('UNEQUIP TO SELL','ถอดก่อนขาย'):tr('OWNED','เป็นเจ้าของ'))+'</span><footer><b>'+(row.price?'€$'+row.price.toLocaleString('en-US'):E(tr('No buyback offer','ร้านไม่รับซื้อ')))+'</b><small>'+E(row.quantity?tr('Select','เลือก'):tr('SOLD OUT','หมด'))+'</small></footer></button>').join('')||'<p class="cps-shop-empty">'+E(tr('No goods in this category.','ไม่มีสินค้าในหมวดนี้'))+'</p>')+'</div><nav class="cps-shop-pagination">'+button('prev','←',page?'':'disabled')+'<span>'+(page+1)+' / '+Math.max(1,Math.ceil(visible.length/24))+'</span>'+button('next','→',(page+1)*24<visible.length?'':'disabled')+'</nav></div><aside class="cps-shop-selection">'+(pick?'<small>'+E(mode==='buy'?tr('PURCHASE DETAILS','รายละเอียดการซื้อ'):tr('SELL TO SHOP','ขายให้ร้าน'))+'</small><h3>'+E(pick.item.name)+'</h3><p>'+E(pick.item.effect||tr('No additional effect specified.','ยังไม่มีรายละเอียดผลเพิ่มเติม'))+'</p><dl><dt>'+E(tr('Category','หมวด'))+'</dt><dd>'+E(label(pick.category))+'</dd><dt>'+E(tr('Available','จำนวนที่มี'))+'</dt><dd>'+pick.quantity+'</dd><dt>'+E(tr('Unit price','ราคาต่อชิ้น'))+'</dt><dd>€$'+pick.price+'</dd><dt>LV / RAM</dt><dd>'+E(pick.item.level||1)+' / '+E(pick.item.category==='quickhack'?pick.item.ramCost:'—')+'</dd></dl><form data-shop-order><label>'+E(tr('Quantity','จำนวน'))+'<input name="quantity" type="number" value="1" min="1" max="'+pick.quantity+'" step="1" required inputmode="numeric"></label><p data-shop-total></p><button class="cps-button primary" '+(!enabled||!pick.quantity||!pick.price?'disabled':'')+'>'+E(tr('Review transaction','ตรวจรายการก่อนยืนยัน'))+'</button></form>':'<div class="cps-shop-empty"><span aria-hidden="true">◇</span><h3>'+E(tr('Select an item','เลือกสินค้า'))+'</h3><p>'+E(tr('Inspect the offer and quantity before confirming.','ตรวจรายละเอียด ราคา และจำนวนก่อนยืนยัน'))+'</p></div>')+'<p data-shop-error role="alert"></p></aside></div>';

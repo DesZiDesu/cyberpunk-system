@@ -1,5 +1,19 @@
 # Cyberpunk System
 
+## v3.5.2 — Readable Breach connection and reliable interaction entries
+
+The pre-Breach connection now uses a three-stage neural console: synchronize, map ICE, and prepare the buffer. The default sequence takes **12 seconds**, with **8 / 12 / 20 seconds** selectable in the window and remembered per chat. Twelve code lines arrive gradually from the start; completed lines remain readable. Preparation pauses while the page is hidden, and delayed timer callbacks cannot rush the whole log through. Once ready, the log stays open until **Enter Breach** (or the existing learned LV.50+ data access) is pressed. Closing or cancelling releases the timer. Reopening a prepared connection restores its log. This preparation never grants puzzle success or reveals protected contents. Decorative motion respects the theme's motion switch and Reduce Motion.
+
+Shop opening no longer fails solely because one catalog ID is unknown. Exact reviewed names and simple ID formatting are recognized; unmatched goods remain in **Goods awaiting identification**, outside purchasable stock. The shop button and recognized goods stay usable. Explicitly marked story goods retain their story label. No unknown item is silently sold as a canonical item. Existing failed shop openings expose **Open shop / check goods** in their original main-chat message when the source still matches and the player is at that counter; retry retains the original event ID and a recovery checkpoint. Review unmatched goods with Edit shop. Stock, prices, receipts and wallet settlement keep their existing safeguards.
+
+Device observation metadata now creates a clickable entry even if the AI omits the inline name tag. Common camera/type/action field aliases are normalized, and non-ASCII device identifiers receive stable internal keys. Missing device IDs can resolve from the named observation. Compatible programs still require the normal deck, RAM and security checks. Rejected device records retain an inspection entry; an orphan inline label opens a confirmation form instead of a dead end.
+
+Natural inspection such as **ฉันมองไปที่กล้อง** or **I look at the camera** is included in the normal AI prompt. If the response omits device metadata entirely, a main-chat **Inspect device** entry remains available. One confirmed nearby device opens directly; otherwise the user can choose a recorded device or confirm its name/type in the current scene. A mention alone never invents a physical device, grants network access, executes a command or spends RAM. Newly user-confirmed devices are standalone and secured. No extra AI generation is added.
+
+Validation: syntax checks and all **558 automated checks** passed, including 28 connection/reported-interaction cases. Host APIs, timing and DOM interactions are simulated.
+
+Update and reload to **3.5.2**. `tests/preview.html` → **Story connection** demonstrates the new console. Browser preview access was blocked in the authoring environment; native iPhone Safari appearance and touch behavior remain unverified.
+
 ## v3.5.1 — Device command-record hotfix
 
 Fixes the misleading `Observe requires device name and supported type` rejection when the AI emits valid device metadata with `operation:"shutdown"` (or another supported Upload program). Mixed records now register a new secured device or retain the existing device and show a **pending request** in Device Control. They never execute a program, charge RAM, revive a disconnected device or grant Breach access automatically. Complete Breach if needed and press Upload; successful execution clears the request and remains protected against replay. The narrator prompt now distinguishes observation operations from UI commands explicitly.

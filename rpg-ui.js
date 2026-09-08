@@ -12,7 +12,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   const support=globalThis.CyberpunkSupportFactory({...api,state,dialog,retry:retryRecord,busy:()=>aiBusy||mail.busy(),closeWorkspaces:()=>{mail.onChatChanged();closePanel();closeExperience();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);}});
   const mail=globalThis.CyberpunkMailFactory({...api,request:support.request,cancelRequestJob:support.cancel,isGenerating:()=>aiBusy||api.isGenerating?.(),state,actor,dialog,event,notify,prompt,openGig:()=>open('user','quests')});
   const assets=globalThis.CyberpunkAssetsFactory({...api,state,dialog,buttons,render,event});
-  const shops=globalThis.CyberpunkShopsFactory({...api,state,dialog,icon,event,share,busy:()=>support.busy()||mail.busy()||aiBusy});
+  const shops=globalThis.CyberpunkShopsFactory({...api,state,dialog,icon,event,share,retryRecord,busy:()=>support.busy()||mail.busy()||aiBusy});
   const scene=globalThis.CyberpunkSceneFactory?.({...api,state});
   let deckMode='quickhacks';
   const devices=globalThis.CyberpunkDevicesFactory({...api,state,dialog,render,event,beginBreach,busy:()=>support.busy()||aiBusy||mail.busy(),openDeck:()=>{deckMode='devices';open('user','quickhacks');}});
@@ -83,7 +83,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   }
   function dialog(title,body,cls=''){
     const d=document.createElement('dialog');d.className=`cps-ui cps-rpg-dialog ${cls}`;d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.5.1')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.5.2')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
   }
   function detail(title,content){api.removeUiDialog(popup);popup=dialog(title,`<div class="cps-rpg-detail">${E(content)}</div>`);}
@@ -96,7 +96,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     current.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move(e.key==='ArrowRight'?1:-1);}});
     draw();
   }
-  let experience=null,introTimer=null,bdGenerating=false,bdResizeCleanup=null,bdGenerationState=null;
+  let experience=null,introCleanup=null,bdGenerating=false,bdResizeCleanup=null,bdGenerationState=null;
   async function continueBd(){
     const bd=state().bd,ctx=api.context();
     if(bdGenerating||api.isGenerating?.()||bd.status!=='playing')return;
@@ -104,7 +104,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     bdGenerationState=bd;bdGenerating=true;bd.rendering=true;save();
     try{await ctx.generate('normal');}catch(e){api.toast(e.message);}finally{bdGenerating=false;bdGenerationState=null;bd.rendering=false;api.saveChat();}
   }
-  function closeExperience(){clearInterval(introTimer);introTimer=null;api.removeUiDialog(experience);experience=null;}
+  function closeExperience(){introCleanup?.();introCleanup=null;api.removeUiDialog(experience);experience=null;}
   function payments(){
     closeExperience();const s=state();experience=dialog(tr('Payment requests','คำขอชำระเงิน'),s.payments.slice().reverse().map(p=>`<article class="cps-payment" data-payment="${E(p.id)}"><small>${E(p.status.toUpperCase())} / ${E(p.merchant)}</small><h3>${E(p.title)}</h3><strong class="cps-price">€$${p.amount.toLocaleString()}</strong>${note(p.description)}${note(p.items.map(it=>it.name+' ×'+it.quantity).join(' · '))}${p.property?note(tr('Property record: ','บันทึกทรัพย์สิน: ')+p.property):''}<div class="cps-rpg-actions">${buttons(tr('Accept & pay','ตกลงและจ่าย'),'accept',p.status!=='pending'?'disabled':'')}${buttons(tr('Decline','ปฏิเสธ'),'decline',p.status!=='pending'?'disabled':'')}</div><p role="alert" data-payment-error></p></article>`).join('')||note(tr('No requests.','ไม่มีคำขอ')),'cps-payments');
     const owner=safeOwner();
@@ -247,23 +247,64 @@ globalThis.CyberpunkSystemsFactory = api => {
   function hackingWindow(){
     const s=state(),request=s.hackingRequest;if(!request||request.status!=='pending')return;
     closeExperience();const owner=safeOwner();
-    experience=dialog('HACKING / ACCESS LINK',`<section class="cps-hack-connect"><small>ENCRYPTED ACCESS POINT</small><h3>${E(request.target)}</h3>${note(tr('Connect to analyze security and initiate a breach.','เชื่อมต่อเพื่อวิเคราะห์ระบบรักษาความปลอดภัยและเริ่มเจาะระบบ'))}${buttons(tr('Connect','เชื่อมต่อ'),'connect')}${buttons(tr('Cancel','ยกเลิก'),'cancel-hack')}<progress max="100" value="0" aria-label="Connection progress"></progress><pre class="cps-code-stream" aria-live="off"></pre></section>`,'cps-hacking-intro');
-    const current=experience;
-    current.querySelector('[data-rpg=cancel-hack]').onclick=()=>{request.status='cancelled';event('hack cancelled',request.target);closeExperience();};
-    current.querySelector('[data-rpg=connect]').onclick=e=>{
-      e.currentTarget.disabled=true;let progress=0;
-      introTimer=setInterval(()=>{
-        if(owner!==safeOwner()||!current.isConnected){clearInterval(introTimer);introTimer=null;return;}
-        progress+=5;current.querySelector('progress').value=Math.min(progress,100);
-        if(progress>=100){const stream=current.querySelector('pre');stream.textContent+=Array.from({length:8},(_,i)=>'0x'+(4096+progress*16+i).toString(16).toUpperCase()+'  '+['SCAN ROUTE','VERIFY ICE','NEGOTIATE BUFFER','CHECK NEURAL LINK'][i%4]+' :: '+((progress*7919+i*97)>>>0).toString(16).padStart(8,'0')).join('\n')+'\n';stream.scrollTop=stream.scrollHeight;}
-        if(progress>=125){
-          closeExperience();request.status='opened';save();
-          const expert=s.player.skills.some(sk=>/hack|netrun|breach/i.test(sk.name)&&Number(sk.level)>=50);
-          if(expert){event('breach result',request.target+': success via learned LV.50+ hacking expertise. '+request.data);openData({kind:'data',title:'ACCESS GRANTED / '+request.target,content:request.data});}
-          else beginBreach({id:request.id,target:request.target,seconds:request.seconds,buffer:request.buffer,difficulty:request.grid.length-3,data:request.data});
-        }
-      },50);
+    const phases=[
+      [tr('Synchronize','ซิงก์สัญญาณ'),tr('Establishing your neural link','กำลังเชื่อมต่อสัญญาณประสาท')],
+      [tr('Map ICE','สำรวจ ICE'),tr('Mapping the security layers','กำลังสำรวจชั้นรักษาความปลอดภัย')],
+      [tr('Stage buffer','เตรียมบัฟเฟอร์'),tr('Preparing the breach interface','กำลังเตรียมอินเทอร์เฟซเจาะระบบ')],
+    ];
+    const entries=['LINK // CARRIER DETECTED','LINK // NEURAL SYNC REQUEST','LINK // HANDSHAKE ACKNOWLEDGED','LINK // CHANNEL STABLE',
+      'ICE  // PROBE ROUTE 01','ICE  // MAP ENCRYPTION LAYERS','ICE  // ACCESS REMAINS LOCKED','ICE  // SECURITY MAP READY',
+      'BUFF // RESERVE LOCAL BUFFER','BUFF // STAGE CODE MATRIX','BUFF // VERIFY INPUT CHANNEL','LINK // AWAIT USER AUTHORIZATION'];
+    const seconds=[8,12,20].includes(s.settings.breachLinkSeconds)?s.settings.breachLinkSeconds:12;
+    experience=dialog('BREACH / NEURAL LINK',`<section class="cps-link-console" data-link-state="idle">
+      <div class="cps-link-body"><header class="cps-link-target"><div><small>ENCRYPTED ACCESS POINT</small><h3>${E(request.target)}</h3></div><span class="cps-link-lock">${E(tr('DATA LOCKED','ข้อมูลถูกล็อก'))}</span></header>
+      <div class="cps-link-stage"><div class="cps-link-layers" aria-hidden="true"><i></i><i></i><i></i><div class="cps-link-chip">ICE</div><span>1C · BD · E9</span></div>
+      <div class="cps-link-readout"><small>NEURAL SYNCHRONIZATION</small><div class="cps-link-count" role="progressbar" aria-label="${E(tr('Connection preparation','การเตรียมเชื่อมต่อ'))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><b data-link-percent>00</b><span>%</span></div><p data-link-status role="status">${E(tr('Ready to establish a link','พร้อมเริ่มเชื่อมต่อ'))}</p></div></div>
+      <ol class="cps-link-phases" aria-label="${E(tr('Connection stages','ขั้นตอนเชื่อมต่อ'))}">${phases.map((p,i)=>`<li data-link-phase="${i}"><b>0${i+1}</b><span>${E(p[0])}</span><small data-phase-state>${E(tr('WAIT','รอ'))}</small></li>`).join('')}</ol>
+      <section class="cps-link-terminal"><header><span>DECRYPTION STREAM</span><small data-link-stream-status>STANDBY</small></header><div class="cps-link-stream" tabindex="0" role="region" aria-label="${E(tr('Connection log','บันทึกการเชื่อมต่อ'))}" aria-live="off"><p class="cps-link-placeholder">${E(tr('Connect to trace the access route.','เชื่อมต่อเพื่อเริ่มตรวจเส้นทางเข้าถึง'))}<span>_</span></p></div></section></div>
+      <footer class="cps-link-footer"><label class="cps-link-pace">${E(tr('Sequence duration','ระยะเวลาเชื่อมต่อ'))}<select data-link-pace>${[8,12,20].map(n=>`<option value="${n}" ${n===seconds?'selected':''}>${n} ${E(tr('seconds','วินาที'))}</option>`).join('')}</select></label><p class="cps-link-hint" data-link-hint>${E(tr('The log stays open until you continue.','บันทึกจะค้างไว้จนกว่าคุณกดไปต่อ'))}</p><div class="cps-link-actions">${buttons(tr('Cancel','ยกเลิก'),'cancel-hack')}${buttons(tr('Establish link','เริ่มเชื่อมต่อ'),'connect')}${buttons(tr('Enter Breach','เข้าสู่ Breach'),'enter-breach','hidden disabled')}</div><p role="alert" data-link-error></p></footer>
+      </section>`,'cps-hacking-intro');
+    const current=experience,console=current.querySelector('.cps-link-console'),stream=current.querySelector('.cps-link-stream'),status=current.querySelector('[data-link-status]'),pace=current.querySelector('[data-link-pace]'),connect=current.querySelector('[data-rpg=connect]'),enter=current.querySelector('[data-rpg=enter-breach]');
+    let clock=null,elapsed=0,last=0,phase=-1,running=false,paused=false,duration=seconds*1000;
+    const rows=[];
+    const valid=()=>owner===safeOwner()&&experience===current&&current.isConnected&&s.hackingRequest===request&&request.status==='pending';
+    const stop=()=>{if(clock!==null)clearInterval(clock);clock=null;running=false;};
+    introCleanup=stop;const previousCleanup=current.cpsCleanup;current.cpsCleanup=()=>{stop();previousCleanup?.();};current.addEventListener('close',stop,{once:true});
+    const expert=()=>s.player.skills.some(sk=>/hack|netrun|breach/i.test(sk.name)&&Number(sk.level)>=50);
+    const motion=()=>document.documentElement.dataset.cpsMotion!=='off'&&!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    function draw(){
+      const progress=Math.min(100,Math.floor(elapsed/duration*100)),next=Math.min(2,Math.floor(elapsed/duration*3)),done=elapsed>=duration;
+      current.querySelector('[data-link-percent]').textContent=String(progress).padStart(2,'0');current.querySelector('[role=progressbar]').setAttribute('aria-valuenow',String(progress));
+      if(next!==phase||done||paused){phase=next;paused=false;status.textContent=done?tr('Link ready — continue when you are ready','เชื่อมต่อพร้อมแล้ว — กดไปต่อเมื่อพร้อม'):phases[phase][1];}
+      current.querySelectorAll('[data-link-phase]').forEach((el,i)=>{const state=done||i<phase?'done':i===phase?'active':'waiting';el.dataset.state=state;el.querySelector('[data-phase-state]').textContent=state==='done'?tr('READY','พร้อม'):state==='active'?tr('SCAN','สแกน'):tr('WAIT','รอ');if(state==='active')el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
+      const rowTime=duration/entries.length,follow=stream.scrollHeight-stream.scrollTop-stream.clientHeight<32;
+      for(let i=0;i<entries.length;i++){
+        if(elapsed<i*rowTime)break;
+        if(!rows[i]){stream.querySelector('.cps-link-placeholder')?.remove();const row=document.createElement('div');row.className='cps-link-log-row';row.innerHTML=`<small>${String(i+1).padStart(2,'0')}</small><code></code><span></span>`;stream.append(row);rows[i]=row;}
+        const amount=Math.min(1,(elapsed-i*rowTime)/(rowTime*.78)),full=amount>=1||!motion(),text=entries[i],prefix=('0000'+(0x1c00+i*0xbd).toString(16).toUpperCase()).slice(-4)+'  ';
+        rows[i].querySelector('code').textContent=prefix+(full?text:text.slice(0,Math.floor(text.length*amount))+' ▒');rows[i].querySelector('span').textContent=full?'✓':'·';rows[i].dataset.resolved=String(full);
+      }
+      if(follow)stream.scrollTop=stream.scrollHeight;
+      if(done){stop();console.dataset.linkState='ready';current.querySelector('[data-link-stream-status]').textContent='LINK PREPARED';connect.hidden=true;enter.hidden=false;enter.disabled=false;enter.textContent=expert()?tr('Open decrypted data','เปิดข้อมูลที่ถอดรหัส'):tr('Enter Breach','เข้าสู่ Breach');request.linkReady=true;save();}
+    }
+    function tick(){
+      if(!valid()){stop();return;}const now=performance.now(),delta=Math.max(0,Math.min(160,now-last));last=now;
+      if(document.hidden){paused=true;console.dataset.linkState='paused';status.textContent=tr('Sequence paused while away','พักลำดับเชื่อมต่อขณะออกจากหน้านี้');return;}
+      console.dataset.linkState='running';elapsed=Math.min(duration,elapsed+delta);draw();
+    }
+    pace.onchange=()=>{if(!valid()||running||request.linkReady)return;const value=Number(pace.value);if(![8,12,20].includes(value))return;s.settings.breachLinkSeconds=value;duration=value*1000;save();};
+    connect.onclick=()=>{if(!valid()||running||request.linkReady)return;running=true;connect.disabled=true;pace.disabled=true;console.dataset.linkState='running';current.querySelector('[data-link-stream-status]').textContent='RECEIVING';last=performance.now();draw();clock=setInterval(tick,80);};
+    current.querySelector('[data-rpg=cancel-hack]').onclick=()=>{if(!valid())return;stop();request.status='cancelled';event('hack cancelled',request.target);closeExperience();};
+    enter.onclick=()=>{
+      if(!valid()||!request.linkReady||running)return;
+      if(api.isGenerating?.()||support.busy()||aiBusy||mail.busy()){current.querySelector('[data-link-error]').textContent=tr('Wait for the current reply to finish.','รอคำตอบปัจจุบันให้เสร็จก่อน');return;}
+      if(!api.settings().enabled||!api.settings().hackingEnabled||s.bd.status!=='stopped'||s.bd.rendering){current.querySelector('[data-link-error]').textContent=tr('Enable hacking and exit Braindance first.','เปิดระบบแฮ็กและออกจาก Braindance ก่อน');return;}
+      if(s.puzzle&&['ready','running'].includes(s.puzzle.status)){current.querySelector('[data-link-error]').textContent=tr('Finish or cancel the current breach first.','จบหรือยกเลิกการเจาะระบบเดิมก่อน');return;}
+      const learned=expert();enter.disabled=true;request.status='opened';closeExperience();save();
+      if(learned){event('breach result',request.target+': success via learned LV.50+ hacking expertise. '+request.data);openData({kind:'data',title:'ACCESS GRANTED / '+request.target,content:request.data});}
+      else beginBreach({id:request.id,target:request.target,seconds:request.seconds,buffer:request.buffer,difficulty:request.grid.length-3,data:request.data});
     };
+    if(request.linkReady){elapsed=duration;pace.disabled=true;draw();}
   }
   function notify(title,body,danger=false){
     const s=state(),n={id:C.uid(),title:C.text(title,180),body:C.text(body,3000),danger,at:Date.now()};s.notifications.push(n);s.notifications=s.notifications.slice(-60);save();
@@ -546,7 +587,7 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='suppo
         success=true;
         if(type==='BD_UPDATE'){if(s.bd.status==='playing'&&data.itemId===s.bd.itemId){s.bd.summary=C.text(data.summary,6000);save();}continue;}
         if(s.bd.status!=='stopped'||s.bd.rendering||api.chatBucket().braindanceMessages?.includes(key)){ignored=true;continue;}
-        if(type==='SHOP'){shops.receive(data,key);continue;}
+        if(type==='SHOP'){shops.receive(data,key,{retry:!!options.retry});continue;}
         if(type==='DEVICE'){devices.receive(data,key,{retry:!!options.retry});continue;}
         if(type==='AI'){receiveAI(data,receipt);continue;}
         if(type==='PROPERTY'||type==='VEHICLE'){assetOperation(type==='PROPERTY'?'property':'vehicles',data,receipt);continue;}

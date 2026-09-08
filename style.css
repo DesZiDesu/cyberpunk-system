@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap');
-@import url('./device-style.css?v=3.4.0');
+@import url('./device-style.css?v=3.5.2');
+@import url('./breach-style.css?v=3.5.2');
 
 /* Connected systems: shared tokens, calm motion, deliberate typography. */
 .cps-support,.cps-asset-dossier { max-width:1120px; margin:auto; width:100%; }

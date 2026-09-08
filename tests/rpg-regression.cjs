@@ -2,20 +2,21 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const narrativeText=el=>{const copy=el.cloneNode(true);copy.querySelectorAll('.cps-scene-stack').forEach(n=>n.remove());return copy.textContent;};
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.5.1','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.5.2','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
 const C=w.CyberpunkRpgCore;let count=0;const test=(n,f)=>{f();console.log('PASS '+n);count++;};
 const q=s=>{const e=d.querySelector(s);assert.ok(e,'Missing '+s);return e;};const click=s=>q(s).click();const wait=()=>new Promise(r=>setTimeout(r,35));
 const state=()=>ctx.chatMetadata.cyberpunk_system.rpg;
+function connectAndContinue(){const clock=require('./connection-clock.cjs')(w);try{click('.cps-hacking-intro [data-rpg=connect]');clock.advance(21000);assert.equal(q('.cps-link-console').dataset.linkState,'ready');}finally{clock.restore();}click('.cps-hacking-intro [data-rpg=enter-breach]');}
 async function message(raw,user=false){const i=ctx.chat.push({mes:raw,is_user:user})-1;const m=d.createElement('div');m.className='mes';m.setAttribute('mesid',i);const t=d.createElement('div');t.className='mes_text';t.textContent=raw;m.append(t);q('#chat').append(m);events.get(user?'sent':'received')(i);await wait();return {i,m,t};}
 const record=(tag,data)=>`[CP_${tag}]${JSON.stringify(data)}[/CP_${tag}]`;
 function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,axis,used)=>{if(at===seq.length)return used;for(let j=0;j<p.grid.length;j++){const r=axis==='row'?row:j,c=axis==='row'?j:col;if(p.grid[r][c]!==seq[at]||used.some(x=>x[0]===r&&x[1]===c))continue;const v=solve(at+1,r,c,axis==='row'?'column':'row',[...used,[r,c]]);if(v)return v;}return null;};return solve(0,0,0,'row',[]);}
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.5.1');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.5.2');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  w.CyberpunkSystem.startCall('Lucy','@@lucy');
@@ -124,9 +125,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  q('.cps-call-input').value='Send the location then hang up';q('.cps-call-input').dispatchEvent(new w.Event('input',{bubbles:true}));click('[data-call-action=queue]');click('.cps-call-send');await wait();
  test('One quiet call response delivers data and lets NPC hang up',()=>{assert.equal(requests,1);assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,false);assert.equal(d.querySelector('.cps-call-overlay'),null);assert.ok(ctx.chatMetadata.cyberpunk_system.call.messages.some(m=>m.attachment?.title==='Rendezvous'));});
  await message(record('BREACH',{id:'breach-1',target:'Encrypted shard',difficulty:2,seconds:45,data:'Secret rendezvous coordinates'}));
- click('.cps-hacking-intro [data-rpg=connect]');
- // The connection has 25 timer ticks; wait for its result under slow CI scheduling.
- const accessDeadline=Date.now()+5000;while(!d.querySelector('.cps-data-reader')&&Date.now()<accessDeadline)await wait();
+ connectAndContinue();
  test('Story breach opens fullscreen puzzle without revealing payload',()=>{assert.ok(q('.cps-breach'));assert.ok(!q('.cps-breach').textContent.includes('Secret rendezvous coordinates'));assert.equal(state().puzzle.status,'ready');assert.equal(state().puzzle.startedAt,null);});
  test('Premature upload is disabled and cannot fail an untouched puzzle',()=>{assert.equal(q('[data-rpg=finish]').disabled,true);click('[data-rpg=finish]');assert.equal(state().puzzle.status,'ready');assert.equal(state().puzzle.sequence.length,0);});
  test('Breach suspends underlying Cyberware without replacing it',()=>assert.ok(q('.cps-rpg-main').hasAttribute('data-cps-breach-suspended')));
@@ -319,8 +318,8 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  click('.cps-quickhack-dialog [data-rpg=close]');
  C.addSkill(state().player,{id:'expert',name:'Netrunning',cost:0,resource:'ram'}).level=50;
  await message(record('BREACH',{id:'expert-access',target:'Expert terminal',data:'Expert unlocked file'}));
- test('Story access waits for user connection and keeps hidden data out of the intro',()=>{assert.ok(q('.cps-hacking-intro'));assert.ok(!q('.cps-hacking-intro').textContent.includes('Expert unlocked file'));assert.equal(q('progress').value,0);});
- click('.cps-hacking-intro [data-rpg=connect]');await new Promise(r=>setTimeout(r,1500));
+ test('Story access waits for user connection and keeps hidden data out of the intro',()=>{assert.ok(q('.cps-hacking-intro'));assert.ok(!q('.cps-hacking-intro').textContent.includes('Expert unlocked file'));assert.equal(q('.cps-hacking-intro [role=progressbar]').getAttribute('aria-valuenow'),'0');});
+ connectAndContinue();
  test('Established level-50 hacking bypasses the puzzle after connection animation',()=>{assert.equal(d.querySelector('.cps-breach'),null);assert.ok(q('.cps-data-reader').textContent.includes('Expert unlocked file'));});
  w.CyberpunkSystem.startCall('Maevie Vance');
  const tagExample='[CP_CALL_END|Maevie Vance]In-person transition[/CP_CALL_END]The heavy, soundproofed access door slid shut behind them.';
