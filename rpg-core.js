@@ -150,7 +150,7 @@
     }else{
       if(!Array.isArray(data.items)||!data.items.length||data.items.length>50)throw Error('Sold items missing');
       for(const row of data.items){
-        const it=a.inventory.find(x=>x.id===row.itemId),qty=Number(row.quantity??1);
+        const it=resolveItem(a,row),qty=Number(row.quantity??1);
         if(!it||!Number.isInteger(qty)||qty<1||qty>it.quantity)throw Error('Invalid sold item or quantity');
         goods.push({...it,quantity:qty});it.quantity-=qty;
       }
@@ -162,6 +162,26 @@
     a.ledger.push(receipt);a.ledger=a.ledger.slice(-300);
     if(b){b.ledger.push({...receipt,delta:-receipt.delta});b.ledger=b.ledger.slice(-300);}
     Object.assign(player,a);if(b)Object.assign(merchant,b);return {amount,items:goods};
+  }
+  function blackwallFeedback(a) {
+    a.blackwall.exposure=cap(a.blackwall.exposure+20,0,100);a.stress=cap(a.stress+10,0,100);
+    if(a.blackwall.exposure>=60)a.hp=cap(a.hp-15,0,a.maxHp);
+  }
+  function resolveItem(a, data) {
+    const id=text(data.itemId,180), name=text(data.name||data.item?.name||id,180).normalize('NFKC').toLocaleLowerCase().trim();
+    const exact=a.inventory.filter(x=>id&&(x.id===id||x.catalogId===id));
+    const matches=exact.length?exact:a.inventory.filter(x=>name&&text(x.name).normalize('NFKC').toLocaleLowerCase().trim()===name);
+    if(matches.length>1)throw Error('Multiple matching items; use the inventory itemId');
+    return matches[0];
+  }
+  function unlockBlackwall(a) {
+    a.blackwall.unlocked=true;
+    if(a.blackwall.granted)return false;
+    let program=a.inventory.find(x=>x.name==='Blackwall Gateway'&&x.category==='quickhack');
+    if(!program){program=item({name:'Blackwall Gateway',category:'quickhack',ramCost:4,cooldown:3,effect:'Breach the selected hostile neural link. Local RP ability; consequences resolve in the next story reply.'});a.inventory.push(program);}
+    syncDeck(a);const slot=a.quickhackSlots.indexOf(null);if(slot>=0&&!a.quickhackSlots.includes(program.id))setQuickhackSlot(a,slot,program.id);
+    for(const skill of [{name:'Blackwall Interface',cost:4,cooldown:2,description:'Establish a restricted neural link with an AI.'},{name:'Blackwall Containment',cost:2,cooldown:3,description:'Isolate a compromised local neural connection; does not grant omniscience.'}])if(!a.skills.some(x=>x.name===skill.name))addSkill(a,{...skill,resource:'ram'});
+    a.blackwall.granted=true;return true;
   }
   function load(a) { return a.inventory.filter(x=>x.category==='cyberware'&&x.equipped).reduce((n,x)=>n+cap(x.capacity,0,300),0); }
   function risk(a, scale = 1) { const ratio=load(a)/Math.max(1,a.capacity); return cap((Math.max(0,ratio-.6)*20 + Math.max(0,ratio-1)*50 + cap(a.stress,0,100)*.15) * scale, 0, 95); }
@@ -196,7 +216,7 @@
   function useSkill(a, data, turn) {
     const skill=addSkill(a,data);if(skill.readyTurn>turn)throw Error('Skill cooling down');
     if(a[skill.resource]<skill.cost)throw Error('Insufficient resource');
-    a[skill.resource]-=skill.cost;skill.readyTurn=turn+skill.cooldown;skill.xp+=Math.round(cap(data.xp??5,0,100));
+    a[skill.resource]-=skill.cost;if(skill.name==='Blackwall Interface')blackwallFeedback(a);if(skill.name==='Blackwall Containment')a.blackwall.exposure=cap(a.blackwall.exposure-15,0,100);skill.readyTurn=turn+skill.cooldown;skill.xp+=Math.round(cap(data.xp??5,0,100));
     while(skill.xp>=100&&skill.level<60){skill.level++;skill.xp-=100;}return skill;
   }
   function tick(a, random = Math.random, scale = 1) {
@@ -227,5 +247,6 @@
     return true;
   }
   function finish(p,now=Date.now()){if(!['running','ready'].includes(p.status))return;p.status=p.daemons[0].done&&remaining(p,now)>0?'success':'failed';pause(p,now);p.minimized=false;}
-  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,itemCategory,syncDeck,setQuickhackSlot,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
+  globalThis.CyberpunkRpgCore = Object.freeze({cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,itemCategory,syncDeck,setQuickhackSlot,resolveItem,unlockBlackwall,blackwallFeedback,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
 })();
+

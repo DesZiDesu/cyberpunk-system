@@ -91,3 +91,12 @@ The mailbox uses original HTML/CSS and envelope icon geometry. No portfolio scre
 - Official story setting: https://www.cyberpunk.net/en/cyberpunk-2077 and https://www.cyberpunk.net/en/phantom-liberty
 - UI research: https://21st.dev/community/components/s/badge and https://21st.dev/community/components/s/card — status/badge grouping inspiration; implementation is original vanilla DOM/CSS, with no React dependency or copied component source.
 - The per-faction voice, privacy and social-context guidance is authored role-play instruction, not a claim that every member of a faction speaks identically. Source-backed setting facts and this guidance are distinguished in each optional reference.
+
+
+
+## v3.2.0 research and scope
+
+- Visual reference: [Vladimír Vilimovský, Cyberpunk 2077 UI Part 1](https://www.behance.net/gallery/118663901/Cyberpunk-2077User-Interface-(Part-1)), the game senior UI artist’s portfolio. Original local panels use angular framing, hierarchy and the extension’s saved theme colors. No portfolio images are copied into the extension.
+- [Official Update 2.3 notes](https://www.cyberpunk.net/en/news/51674/update-2-3-patch-notes) and [official feature page](https://www.cyberpunk.net/us/en/update-2.3) document added vehicles, AutoDrive and Delamain. The extension garage is a local RP system; it does not implement physical driving or claim full game parity.
+- [GamesAtlas vehicle index](https://www.gamesatlas.com/cyberpunk-2077/vehicles/) and [VULKK ownable-vehicle catalog](https://vulkk.com/2024/02/02/cyberpunk-2077-vehicles-complete-catalog-and-guide/) were located for future image coverage. No scraped image archive is bundled. The 24 named presets are a starter list, not all base-game/Phantom Liberty/patch variants.
+- House resale, five-level room upgrades, editable preset prices and vehicle repair payments are explicit extension RP rules. Blackwall Gateway plus Interface/Containment on unlock is the requested extension behavior, not the game’s canonical unlock package.

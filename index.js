@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.1.1';
+const CYBERPUNK_SYSTEM_VERSION = '3.2.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -741,6 +741,12 @@ ${systems?.prompt() || ''}`.trim();
         header.before(thread); thread.append(...blocks);
       });
       compactProtocolSpacing(element);
+      const messageId=element.closest('[mesid]')?.getAttribute('mesid')||'preview';
+      element.querySelectorAll('.cps-chat-name,.cps-chat-dialogue .cps-chat-copy,.cps-ai-heading,.cps-ai-copy').forEach((copy,i)=>{
+        if(copy.dataset.cpsDecrypted)return;copy.dataset.cpsDecrypted='1';
+        const walker=document.createTreeWalker(copy,NodeFilter.SHOW_TEXT),leaves=[];while(walker.nextNode())if(walker.currentNode.textContent.trim())leaves.push(walker.currentNode);
+        leaves.forEach((node,j)=>{const text=node.textContent,span=document.createElement('span');span.textContent=text;node.replaceWith(span);animateSignal(span,{id:'chat:'+messageId+':'+i+':'+j+':'+markupFingerprint(text),role:'assistant',text});});
+      });
     }
 
     function renderMessageElement(element, force = false) {
@@ -748,14 +754,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
@@ -1760,7 +1766,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, assetUrl:path=>new URL(path,import.meta.url).href, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();
@@ -1805,3 +1811,4 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 }
 
 await globalThis.CyberpunkSystemRuntimePromise;
+

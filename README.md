@@ -1,5 +1,23 @@
 # Cyberpunk System
 
+## v3.2.0 — Blackwall neural channels, property and garage
+
+- **Cyberware → AI / Blackwall:** open the unlocked Blackwall channel or name another established fictional AI. Send to AI makes one quiet request. Cancel discards late responses; switching chats closes the channel and isolates history. Main-chat `CP_AI` records render a dedicated neural header and decrypted dialogue, and are retained in the corresponding thread. Private channel replies cannot execute transactions.
+- **Blackwall unlock:** immediately grants one Blackwall Gateway quickhack and the Blackwall Interface / Containment skills. An empty deck slot is used when available; a full deck retains all existing programs and keeps Gateway in inventory. Existing unlocked saves migrate once. Interface/Gateway add exposure and stress, with health feedback at high exposure; Containment lowers exposure. These are local RP abilities and balance rules, not a claim that the game grants this package.
+- **NPC presentation:** header names and dialogue decrypt using the existing call effect, preserving rich text and Thai grapheme clusters. Existing motion-off, signal-decryption and reduced-motion settings apply.
+- **Item resolution:** operations accept the saved ID, catalog ID, or unique exact name (case-insensitive). Ambiguous names require an ID. Removing more than the owned quantity is rejected without destroying the remaining stack. No item is invented to hide a missing-item error.
+- **Payments:** named shops and service providers no longer need an NPC profile. Invoices still await Accept & pay, check funds and preserve receipts. External merchant accounts are chat-local and do not create placeholder NPCs.
+- **House / Property:** buy a preset or custom home, enter it, upgrade security/stash/garage/workshop/living areas up to level 5, and sell at an agreed price. Upgrades are persistent role-play records, not automatic game-engine room construction or inventory-capacity changes. Purchases and upgrades debit the player; sales credit once. Existing property invoices remain visible.
+- **Garage:** buy a preset or custom vehicle, summon it to the scene, park, record damage, repair and sell. A destroyed vehicle cannot be summoned. Repairs require payment; active-vehicle state clears on destruction, parking or sale. Only one summoned vehicle is active.
+- All new asset state, receipts and AI threads are isolated per chat. Story updates use the normal response through `CP_PROPERTY` and `CP_VEHICLE`; no background generation is added. Do not emit an asset purchase and a separate payment record for the same transaction.
+
+**Catalog scope:** four apartment presets and 24 vehicle presets, plus custom entries. Preset prices are editable RP defaults, not verified current game prices. This release does **not** bundle photographs of every Cyberpunk vehicle; asset cards use a neutral local schematic fallback. It is not a complete vehicle/image archive.
+
+**Update:** update the extension and reload SillyTavern. Confirm **3.2.0**; runtime and stylesheet URLs are versioned.
+
+**Validation:** 345 simulated checks across UI, portraits, RPG, map, mailbox, scenes and expansion regressions, plus JavaScript syntax and CSS parsing. Cloud Browser rejected the local preview with `ERR_BLOCKED_BY_CLIENT`; native Safari visuals, keyboard/touch behavior and live AI model compliance remain unverified. Test dependencies were installed without changing the project dependency declarations; a temporary tokenizer version was used after the lockfile tarball returned 404.
+
+
 ## v3.1.1 — Consistent Back controls and independent scene display switches
 
 Shared window headers place text-only Back beside Close. The Mailbox reader no longer adds a second Back row: header Back returns to the mailbox before exiting to its parent. Draft preservation and Cyberware section history remain intact.
@@ -332,3 +350,4 @@ Validation for v1.2.0: JavaScript syntax and CSS parse checks, 41 DOM checks and
 - Braindance has a headset launcher with viewport-aware dragging, a sensory monitor, playback state, and recording cards. Motion respects reduced-motion and extension animation settings.
 
 Device verification still required: on iOS Safari, open Create NPC, choose a JPEG/PNG/WebP portrait, cancel and reopen the picker, then crop/save and reopen the NPC. Check a large phone photo and keyboard/orientation changes. Confirm the Braindance launcher drags without opening, taps to open, and playback/pause/resume/exit work. Automated tests simulate the host and events; they do not reproduce an iOS process crash.
+
