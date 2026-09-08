@@ -27,7 +27,7 @@ const wait=async predicate=>{for(let i=0;i<100;i++){if(predicate())return;await 
 const pointer=(type,id,x,y)=>{const event=new w.Event(type,{bubbles:true,cancelable:true});Object.assign(event,{pointerId:id,clientX:x,clientY:y});q('canvas').dispatchEvent(event);};
 let passed=0;const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
- for (const file of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+ for (const file of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()');await wait(()=>w.CyberpunkSystem);w.CyberpunkSystem.open();click('[data-record-add]');
  test('NPC editor replaces the manager with one native modal',()=>{assert.equal(d.querySelectorAll('dialog[open]').length,1);assert.equal(d.querySelector('.cps-overlay'),null);});
  q('[data-portrait-file]').dispatchEvent(new w.Event('cancel',{bubbles:true}));

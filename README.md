@@ -1,5 +1,57 @@
 # Cyberpunk System
 
+## v3.5.0 — Persistent local shops, buying and selling
+
+Built on the **v3.4.0 Device Hacking release**. Inline device controls, separate Device Hacks slots, shared-network Breach and saved device data are retained. Shops and devices can appear in the same main-chat reply and use the same final scene location. No relationship or reputation system/pricing is added.
+
+### Using a shop
+
+1. Enter an established shop/counter in the story. The AI supplies a full `CP_LOCATION` and a `CP_SHOP` opening record; **Open shop** appears below that main-chat message.
+2. The button remains usable across subsequent messages while you stay at that exact shop/counter. It does not require a fresh button every turn.
+3. Open **Buy** or **Sell**, search/filter a category, inspect an item, choose quantity and review the total. Nothing moves until **Confirm**. Back cancels the review and returns to the shop.
+4. Purchases transfer money, inventory and stock together. Sales remove the selected owned quantity, pay from the shop's finite till and add the actual sold copy to resale stock. Receipts are retained under **Receipts** and the existing data archive; the AI receives an already-settled outcome for the next story reply.
+
+| Scene event | Main-chat button | Saved inventory |
+| --- | --- | --- |
+| Continue talking at the same counter | Original button stays active | No automatic changes |
+| Leave the counter, including another room in the building | Old card becomes muted and cannot open the shop | Remaining stock is retained |
+| Return without a new visit record | Old visit remains closed | No refill |
+| Return with the same shop ID and a new visit ID | Fresh card on the new message; the older card for that shop is removed | Same remaining stock, prices and till |
+| Confirmed delivery in the story | Current visit rules still apply | Delivered quantities/funds are added once |
+
+Opening a window, a new AI generation, the real-world clock and revisiting **never automatically restock**. A promise of a future shipment is not a delivery. A shop outside your current scene cannot be opened remotely, including from an old confirmation window. Braindance temporarily blocks physical commerce.
+
+### Categories and editable offers
+
+Clothing, weapons, everyday goods, medicine, equipment, cyberware, Quickhacks, ammunition and other goods have separate filters. A specialized vendor should stock relevant categories, not every item in the game.
+
+- Initial AI offers prefer the existing curated named equipment entries. Technical `Items.*` identifiers are not presented as verified names. Unlisted established goods are explicitly labeled **STORY ITEM**.
+- **Edit shop** changes stock counts, unit prices, buyback prices, shop name and till funds. It can add a reviewed catalog entry or an explicitly named story item. Setup does not charge or grant anything to the player. Set stock to zero to stop selling a row.
+- Owned goods matching stock use that row's buyback price. Other owned goods use the category buyback price; zero means the shop does not buy them. Equipped/loaded or explicitly protected goods cannot be sold. Insufficient player money, stock or shop funds rejects the whole transaction.
+- Bought cyberware enters inventory; installation remains a separate Cyberware action. Bought Quickhacks can be loaded through the existing deck. Device programs remain in their independent utility slots.
+- Prices, stock, item stats and shop funds are **editable RP terms**, not exact current Cyberpunk 2077 economic data. Resold owned items keep their level, ammunition and cooldown metadata. The catalog is not exhaustive.
+
+### Story protocol and recovery
+
+Use a stable `shopId` across visits and unique event IDs. A new shop requires its name, an explicit building/counter location and 1–80 stock rows. Example (prices are illustrative RP terms):
+
+```text
+[CP_LOCATION]{"id":"market-arrival-1","district":"watson","subdistrict":"Kabuki","building":"Market arcade","floor":"G","area":"Mara counter"}[/CP_LOCATION]
+[CP_SHOP]{"id":"mara-visit-1","operation":"open","shopId":"mara-market","name":"Mara Supplies","merchant":"Mara","kind":"weapons","location":{"district":"watson","subdistrict":"Kabuki","building":"Market arcade","floor":"G","area":"Mara counter"},"funds":2000,"buyPrices":{"weapons":100},"stock":[{"sku":"unity","catalogId":"cps:unity","quantity":3,"price":500,"buyPrice":200}]}[/CP_SHOP]
+```
+
+A later visit needs only a new event `id`, `operation:"open"` and the same `shopId`, at the established location. Repeated opening fields cannot reset existing stock/funds. Departure uses full `CP_LOCATION` or `CP_SHOP` with `operation:"close"`, `shopId`, `id` and `reason`.
+
+Delivered stock uses `operation:"restock"`, a unique event `id`, `shopId`, a story-confirmed `reason`, and `stock:[{"sku":"unity","quantity":2}]`. Optional `funds` adds to the business till, not the NPC's personal wallet. New delivered rows need all initial stock fields. Existing row prices are changed through the user editor.
+
+The model must emit these structured records; ordinary prose alone cannot reliably establish stock or a departure. Malformed complete records appear in **System / Recovery → Review & retry**. Historical/private-channel callbacks cannot open or restock physical shops. Changing/removing the visit's source record or switching its swipe closes that access. Success receipts prevent rerendering or duplicate confirmation from settling twice; this is not an automatic rollback of completed purchases when editing old prose.
+
+Shop data is isolated per chat and included in validated backups. Restoring keeps the saved stock/receipts but closes transient visits, so re-enter in the story for a new button. Stock supports up to 200 rows per shop, with 24 products per page and the latest 100 activity entries displayed; settlement IDs remain retained separately.
+
+### Update and verification
+
+Update the extension from `main`, reload SillyTavern and confirm **3.5.0** in the settings and new windows. Existing Device Hacking data is preserved; dependency versions are unchanged. Syntax validation and all **521 automated checks** passed: the prior 468 checks plus 53 shop/location/transaction integration checks. See `tests/IOS-CHECKLIST.md` for the remaining real-device checks. The browser preview is blocked in the authoring environment; native iPhone Safari layout/touch is not yet verified. A model-free demo is available in `tests/preview.html` using **Shop scene / return**, **Stay in shop**, **Leave counter** and **Delivered restock**.
+
 ## v3.4.0 — Main-chat devices and shared-network Breach
 
 Discovered device names are now inline buttons with the same font and line spacing as the surrounding narration. Tap a camera, door, drone, turret or terminal to inspect its **Device Control** panel. Inspection is free. Supported commands show their RAM cost, cooldown and any reason they are unavailable. Unsupported commands are omitted. Narrative names are never guessed into devices; the AI must emit the device protocol below in its ordinary response.

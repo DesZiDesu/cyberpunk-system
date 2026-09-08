@@ -6,12 +6,13 @@ globalThis.CyberpunkSystemsFactory = api => {
   const tr=(en,th)=>api.settings?.()?.language==='th'?th:en;
   let panel=null, breach=null, timer=null, actorName='user', tab='status', popup=null, mapCleanup=null;
   const noticeTimers=new Map();
-  const tags='DEVICE|AI|PROPERTY|VEHICLE|SCENE|MAIL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
+  const tags='SHOP|DEVICE|AI|PROPERTY|VEHICLE|SCENE|MAIL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
   const buttons=(label,action,extra='')=>`<button type="button" class="cps-button" data-rpg="${E(action)}" ${extra}>${E(label)}</button>`;
   const note=v=>`<p class="cps-rpg-note">${E(v)}</p>`;
   const support=globalThis.CyberpunkSupportFactory({...api,state,dialog,retry:retryRecord,busy:()=>aiBusy||mail.busy(),closeWorkspaces:()=>{mail.onChatChanged();closePanel();closeExperience();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);}});
   const mail=globalThis.CyberpunkMailFactory({...api,request:support.request,cancelRequestJob:support.cancel,isGenerating:()=>aiBusy||api.isGenerating?.(),state,actor,dialog,event,notify,prompt,openGig:()=>open('user','quests')});
   const assets=globalThis.CyberpunkAssetsFactory({...api,state,dialog,buttons,render,event});
+  const shops=globalThis.CyberpunkShopsFactory({...api,state,dialog,icon,event,share,busy:()=>support.busy()||mail.busy()||aiBusy});
   const scene=globalThis.CyberpunkSceneFactory?.({...api,state});
   let deckMode='quickhacks';
   const devices=globalThis.CyberpunkDevicesFactory({...api,state,dialog,render,event,beginBreach,busy:()=>support.busy()||aiBusy||mail.busy(),openDeck:()=>{deckMode='devices';open('user','quickhacks');}});
@@ -66,7 +67,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     mail.onQuest(old||q);
     event('quest',q.title+': '+q.status);notify('MISSION UPDATE',q.title+' · '+q.status);
   }
-  const save=()=>{api.saveChat();api.refreshPrompt();};
+  const save=()=>{shops.sync();api.saveChat();api.refreshPrompt();};
   function event(type,detail){const s=state();s.events.push({id:C.uid(),turn:s.turn,type,detail:C.text(detail,1200)});s.events=s.events.slice(-50);save();}
   function guard(fn){try{return fn();}catch(e){api.toast(e.message);return null;}}
   function rollback(target,source){
@@ -82,7 +83,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   }
   function dialog(title,body,cls=''){
     const d=document.createElement('dialog');d.className=`cps-ui cps-rpg-dialog ${cls}`;d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.4.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.5.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
   }
   function detail(title,content){api.removeUiDialog(popup);popup=dialog(title,`<div class="cps-rpg-detail">${E(content)}</div>`);}
@@ -515,7 +516,7 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='suppo
     return `<section class="cps-chat-block cps-chat-skill ${info.rejected?'rejected':''}"><div class="cps-chat-kicker">${icon('quickhack')}<span>${E(displayName)}</span><small>${E(info.rejected?tr('NOT ACTIVATED','ไม่ได้ใช้งาน'):tr('SKILL ACTIVATED','ใช้งานสกิล'))}</small></div><div class="cps-chat-skill-heading"><div><small>${E(String(info.category||'ABILITY').toUpperCase())}${number(info.level)?` / LV.${E(info.level)}`:''}</small><strong>${E(skill)}</strong></div>${info.rank?`<span class="cps-chat-skill-rank"><small>${E(tr('RANK','แรงก์'))}</small><b>${E(info.rank)}</b></span>`:''}</div>${(description||info.description)?note(description||info.description):''}${stats?`<dl class="cps-chat-skill-specs">${stats}</dl>`:''}${progress===null?'':`<div class="cps-chat-mastery"><div><span>${E(tr('MASTERY','ความชำนาญ'))}</span><b>${E(info.progress)} / ${E(info.maximum)}</b></div><div class="cps-progress" role="progressbar" aria-label="${E(tr('Mastery','ความชำนาญ'))}" aria-valuemin="0" aria-valuemax="${E(info.maximum)}" aria-valuenow="${C.cap(info.progress,0,info.maximum)}" style="--cps-progress:${progress}%"><i></i></div></div>`}${info.rejected?note(info.rejected):''}</section>`;
   }
   function localSkill(name,skill,description,itemRecord=null){const s=state(),index=(api.context()?.chat?.length||0)-1;s.skillCards??=[];s.skillCards.push({id:C.uid(),index,name,skill,description,info:skillReading(name,skill,{description},itemRecord)});s.skillCards=s.skillCards.slice(-100);save();document.querySelectorAll('.mes_text').forEach(decorate);}
-  function decorate(element){scene?.decorate(element);devices.decorate(element);const index=Number(element.closest('[mesid]')?.getAttribute('mesid'));if(!element.closest('[mesid]')||!Number.isInteger(index))return;for(const card of state().skillCards||[]){if(card.index!==index||[...element.querySelectorAll('[data-local-skill]')].some(n=>n.dataset.localSkill===card.id))continue;const block=document.createElement('div');block.dataset.localSkill=card.id;block.innerHTML=skillHtml(card.name,card.skill,card.description,card.info);element.append(block);}}
+  function decorate(element){scene?.decorate(element);shops.decorate(element);devices.decorate(element);const index=Number(element.closest('[mesid]')?.getAttribute('mesid'));if(!element.closest('[mesid]')||!Number.isInteger(index))return;for(const card of state().skillCards||[]){if(card.index!==index||[...element.querySelectorAll('[data-local-skill]')].some(n=>n.dataset.localSkill===card.id))continue;const block=document.createElement('div');block.dataset.localSkill=card.id;block.innerHTML=skillHtml(card.name,card.skill,card.description,card.info);element.append(block);}}
   function recordedSkill(data){const info=api.chatBucket?.()?.rpg?.skillReadings?.find(x=>x.key===skillKey(data))?.info;return skillHtml(data.actor||'user',data.name||'Ability',data.description||'',info||skillReading(data.actor||'user',data.name,{description:data.description,cost:data.cost,resource:data.resource,cooldown:data.cooldown}));}
   function decode(value){const n=document.createElement('div');n.innerHTML=value;return n.textContent||'';}
   function transform(value, markHidden=false){const hidden=markHidden?'<!--cps-hidden-record-->':'';let out=devices.transform(String(value||'')).replace(/\[CP_AI\]([\s\S]*?)\[\/CP_AI\]/gi,(_,json)=>{try{const v=JSON.parse(decode(json));if(!C.text(v.text))return '';return `<section class="cps-chat-block cps-ai-message cps-ai-public"><header class="cps-ai-heading">${E(v.name||'Blackwall')} / NEURAL LINK</header><div class="cps-ai-copy">${E(v.text)}</div></section>`;}catch{return hidden;}}).replace(/\[CP_SKILL\|([^\]|]+)\|([^\]]+)\]([\s\S]*?)\[\/CP_SKILL\]/gi,(_,name,skill,desc)=>recordedSkill({actor:decode(name),name:decode(skill),description:decode(desc)}));
@@ -530,7 +531,7 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='suppo
     const records=[...String(raw||'').matchAll(new RegExp(`\\[CP_(${tags})\\]([\\s\\S]*?)\\[\\/CP_\\1\\]`,'gi'))];
     for(const m of String(raw||'').matchAll(/\[CP_SKILL\|([^\]|]+)\|([^\]]+)\]([\s\S]*?)\[\/CP_SKILL\]/gi))records.push([m[0],'SKILL',JSON.stringify({actor:m[1],name:m[2],description:m[3]})]);
     for(const m of String(raw||'').matchAll(/\[CP_CALL_END\|([^\]]+)\]([\s\S]*?)\[\/CP_CALL_END\]/gi))records.push([m[0],'CALL_END',JSON.stringify({actor:m[1].trim(),reason:m[2].trim()})]);
-    records.sort((a,b)=>Number(a[1].toUpperCase()==='DEVICE')-Number(b[1].toUpperCase()==='DEVICE'));
+    records.sort((a,b)=>Number(['DEVICE','SHOP'].includes(a[1].toUpperCase()))-Number(['DEVICE','SHOP'].includes(b[1].toUpperCase())));
     let changed=false;
     const turnKey=`turn:${String(key).replace(/:swipe:\d+$/, '')}`;if(!options.retry&&s.bd.status==='stopped'&&!s.bd.rendering&&!api.chatBucket().braindanceMessages?.includes(key)&&!claimed.has(turnKey)){changed=true;claimed.add(turnKey);newClaims.push(turnKey);s.turn++;for(const a of [s.player,...Object.values(s.actors)]){const was=a.cyberpsychosis;C.tick(a,Math.random,s.settings.riskScale);if(!was&&a.cyberpsychosis)notify('NEURAL INSTABILITY','Cyberpsychosis episode: recover, reduce implant load or seek help in the story.',true);}}
     for(const m of records){
@@ -545,6 +546,7 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='suppo
         success=true;
         if(type==='BD_UPDATE'){if(s.bd.status==='playing'&&data.itemId===s.bd.itemId){s.bd.summary=C.text(data.summary,6000);save();}continue;}
         if(s.bd.status!=='stopped'||s.bd.rendering||api.chatBucket().braindanceMessages?.includes(key)){ignored=true;continue;}
+        if(type==='SHOP'){shops.receive(data,key);continue;}
         if(type==='DEVICE'){devices.receive(data,key);continue;}
         if(type==='AI'){receiveAI(data,receipt);continue;}
         if(type==='PROPERTY'||type==='VEHICLE'){assetOperation(type==='PROPERTY'?'property':'vehicles',data,receipt);continue;}
@@ -609,7 +611,7 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='suppo
   }
   function prompt(){if(!api.settings().enabled)return '';const s=state();const a=s.player;const summary=x=>({progression:x.progression,balance:x.balance,hp:x.hp,maxHp:x.maxHp,stamina:x.stamina,maxStamina:x.maxStamina,ram:x.ram,maxRam:x.maxRam,capacity:x.capacity,implantUnlocks:x.implantUnlocks,location:x.location,stress:x.stress,cyberpsychosis:x.cyberpsychosis,inventory:[...x.inventory.filter(it=>it.category==='quickhack'),...x.inventory.filter(it=>it.category!=='quickhack')].slice(0,60).map(it=>({id:it.id,name:it.name,quantity:it.quantity,equipped:it.equipped,weaponType:it.weaponType,ammo:it.ammo,magazines:it.magazines,category:it.category,slot:it.slot,capacity:it.capacity,level:it.level,ramCost:it.ramCost,cooldown:it.cooldown,effect:it.effect})),skills:x.skills.slice(0,15),relic:x.relic,blackwall:x.blackwall});
     const active=s.puzzle&&['ready','running'].includes(s.puzzle.status);
-    return devices.prompt()+assetPrompt()+ (scene?.prompt()||'')+mail.prompt()+`\n[Cyberware role-play state and event protocol]
+    return devices.prompt()+assetPrompt()+ (scene?.prompt()||'')+shops.prompt()+mail.prompt()+`\n[Cyberware role-play state and event protocol]
 This is fictional simulation only. Values are extension rules, not exact game balance. State is private narrator context; NPCs do not automatically know the player's balance, equipment, thoughts, location, hidden missions or other NPCs' information. No unearned powers or forced plot. Never simulate puzzle success: the user connects and plays it; only the extension may bypass it for an existing hacking/netrunning skill level of at least 50.
 Evaluate status, equipment, skills, missions and location changes after every normal main-chat reply. Emit all relevant updates in that same response; no extra API request is needed. Emit complete JSON records only for events that actually happen. Each record needs an id unique to that event; reuse that id if restating the same event. Do not print examples unless that event occurs. JSON strings must escape newlines and quotes. Never include closing tag text inside a JSON string.
 - Show every actual ability use by USER or NPC with [CP_SKILL]{"id":"event-id","actor":"user or exact NPC name","name":"skill","description":"observable effect","resource":"ram or stamina","cost":2,"cooldown":1}[/CP_SKILL]. Do not invent user actions. Existing skill costs/cooldowns are authoritative. No repeated skill record for one action.
@@ -657,7 +659,7 @@ Recent authoritative outcomes (do not replay records for these): ${JSON.stringif
     }
   }
 
-  function onChatChanged(){devices.close();deckMode='quickhacks';const hadRequest=support.busy();support.close();if(aiBusy&&!hadRequest)api.context()?.stopGeneration?.();aiEpoch++;aiBusy=false;mail.onChatChanged();if(bdGenerating)api.context()?.stopGeneration?.();closeExperience();bdResizeCleanup?.();bdResizeCleanup=null;document.getElementById('cps-bd-float')?.remove();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);closePanel();stopBreach();api.removeUiDialog(popup);popup=null;noticeTimers.forEach(clearTimeout);noticeTimers.clear();document.getElementById('cps-immersion')?.remove();minimized();bdButton();}
-  return Object.freeze({devices,support,assets,retryRecord,captureScene:(m,i)=>scene?.capture(m,i),open,openMail:mail.open,mailBusy:()=>mail.busy()||aiBusy,mail,process,prompt,transform,decorate,ensureWand,callToolbar,attachment,userText,onChatChanged,beginBreach,state:()=>JSON.parse(JSON.stringify(state())),transfer,share,addContact,icon,quickhack});
+  function onChatChanged(){shops.close();devices.close();deckMode='quickhacks';const hadRequest=support.busy();support.close();if(aiBusy&&!hadRequest)api.context()?.stopGeneration?.();aiEpoch++;aiBusy=false;mail.onChatChanged();if(bdGenerating)api.context()?.stopGeneration?.();closeExperience();bdResizeCleanup?.();bdResizeCleanup=null;document.getElementById('cps-bd-float')?.remove();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);closePanel();stopBreach();api.removeUiDialog(popup);popup=null;noticeTimers.forEach(clearTimeout);noticeTimers.clear();document.getElementById('cps-immersion')?.remove();minimized();bdButton();}
+  return Object.freeze({shops,devices,support,assets,retryRecord,captureScene:(m,i)=>scene?.capture(m,i),open,openMail:mail.open,mailBusy:()=>mail.busy()||aiBusy,mail,process,prompt,transform,decorate,ensureWand,callToolbar,attachment,userText,onChatChanged,beginBreach,state:()=>JSON.parse(JSON.stringify(state())),transfer,share,addContact,icon,quickhack});
 };
 })();

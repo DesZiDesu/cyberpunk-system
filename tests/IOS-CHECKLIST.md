@@ -1,10 +1,16 @@
-# v3.4.0 device release checklist
+# v3.5.0 shops and Device Hacking release checklist
 
 Status: automated host/DOM tests passed; these device checks are **not yet executed**. The local browser preview was blocked in the authoring environment. Use a copy of a chat and export a backup before destructive/restore tests. Never use a paid model merely to run the automated suite.
 
 ## iPhone Safari
 
-- [ ] Update and reload; confirm 3.4.0 in the settings drawer and newly opened windows.
+- [ ] Update and reload; confirm 3.5.0 in the settings drawer and newly opened windows.
+- [ ] Open `tests/preview.html` → Shop scene / return. Buy and Sell, categories, search, quantity fields, receipt review and Edit shop remain readable at 320–430 CSS px widths and with the keyboard open.
+- [ ] Stay in shop for multiple messages: the original button remains usable. Leave counter: the old card becomes muted; an already open confirmation cannot charge. Return: a fresh card replaces the old one and depleted stock stays depleted.
+- [ ] Buy the last item, double-tap Confirm, sell an owned stack and buy back its resale copy. Check stock, money, ammunition/level metadata and a single receipt. Equipped gear and loaded Quickhacks cannot be sold.
+- [ ] Edit catalog/story stock and buyback terms; cancel/back without saving, then save deliberately. Shop funds and player money remain separate. No refresh or real-time delay replenishes stock.
+- [ ] Change theme colors and motion preferences; shop cards, product grid, editor and receipt dialog use the saved palette. Scroll/select products without losing the quantity field to an unchanged background refresh.
+- [ ] Use inline devices and a storefront in the same scene; leaving invalidates the correct shop visit and device connectivity. Device Hacks, Quickhack slots and shared-network Breach keep their prior behavior.
 - [ ] Open `tests/preview.html` → Device scene: inline camera/drone names keep the paragraph's font and line spacing. Tap each name with a finger and focus it with an external keyboard.
 - [ ] Device Control stays within the visible viewport at 320–430 CSS px widths, with Back/Close, Upload, RAM and rejection reasons readable. Target Override input stays reachable with the keyboard open.
 - [ ] Breach Camera A, finish ACCESS, close Breach and use Camera B. The separate drone network stays locked. Cancel a second breach and verify no rights are granted.

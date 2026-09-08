@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.4.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.5.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -754,14 +754,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
@@ -1768,7 +1768,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (typeof host.isGenerating==='function') hostGenerationProbe=host.isGenerating;
       } catch { /* Context probe or lifecycle events support alternate hosts. */ }
       try {
-        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
+        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-shops.js', 'CyberpunkShopsFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
         systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });

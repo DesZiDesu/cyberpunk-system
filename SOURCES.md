@@ -2,6 +2,14 @@
 
 Reviewed through 2026-09-06. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols are original code. The v2.4 map uses attributed NC Zoning Board geometry and remotely loaded map tiles, described below.
 
+## v3.5.0 shops: references and scope (2026-09-08)
+
+- [CD PROJEKT RED — Update 2.0](https://www.cyberpunk.net/en/news/49060/update-2-0): vendor specialization and the removal of crafting/Quickhack components from vendor stock inform the shop prompt. No automatic component-vendor list is generated.
+- [CD PROJEKT RED — Cyberware in 2.0](https://www.cyberpunk.net/en/news/49129/whats-coming-in-2-0-cyberware): cyberware installation remains separate from an inventory purchase. The extension uses its existing configurable capacity rules.
+- The previously reviewed UI-artist portfolio and official build planner informed original angular panels, typography, categories and restrained accent framing. No game store screenshots, inventory textures or proprietary component code were copied.
+
+The shop's named subset comes from the existing curated catalog described below, excluding Erebus from default retail suggestions. This is not an exhaustive verified game shop database. Story-created clothing, goods and other custom items are explicitly labeled. Prices, till funds, quantity limits, narrative restocks, persistence, buyback rules and source-message access are original RP behavior; they are not claims of exact game economy, vendor schedules or current game stats.
+
 ## Official setting and gameplay references
 
 - [CD PROJEKT RED — Update 2.0](https://www.cyberpunk.net/en/news/49060/update-2-0): cyberware capacity, RAM/Overclock, the five progression tracks and the distinction between quickhacks and access-point Breach Protocol. Breach is not offered as the pre-2.0 enemy-breaching action.

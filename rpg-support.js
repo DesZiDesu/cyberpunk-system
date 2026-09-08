@@ -23,6 +23,18 @@ globalThis.CyberpunkSupportFactory=api=>{
       for(const k of ['receipts','grants'])if(!Array.isArray(b[k])||b[k].some(v=>typeof v!=='string'))throw Error('Invalid device '+k);
       if(!object(b.cooldowns)||Object.entries(b.cooldowns).some(([id,turn])=>!ids.includes(id)||!Number.isSafeInteger(turn)||turn<0))throw Error('Invalid device cooldowns');
     }
+    if(r.market!==undefined){
+      const b=r.market,validId=v=>typeof v==='string'&&/^[a-zA-Z0-9_.:-]{1,140}$/.test(v)&&!['__proto__','prototype','constructor'].includes(v),qty=v=>Number.isInteger(v)&&v>=0&&v<=9999;
+      const categories=['clothing','weapons','essentials','medicine','equipment','cyberware','quickhack','ammo','other'];
+      if(!object(b)||!Array.isArray(b.shops)||b.shops.length>200||new Set(b.shops.map(x=>x?.id)).size!==b.shops.length||!Array.isArray(b.receipts)||b.receipts.some(v=>typeof v!=='string'))throw Error('Invalid shop registry');
+      for(const shop of b.shops){
+        if(!object(shop)||!validId(shop.id)||typeof shop.name!=='string'||!shop.name||typeof shop.merchant!=='string'||!object(shop.location)||!shop.location.building||!shop.location.area||!Number.isSafeInteger(shop.version)||shop.version<1||!Array.isArray(shop.history)||!Array.isArray(shop.stock)||shop.stock.length>200||new Set(shop.stock.map(x=>x?.id)).size!==shop.stock.length||!object(shop.buyPrices))throw Error('Invalid saved shop');
+        if(!Number.isSafeInteger(shop.funds))throw Error('Invalid shop funds');C.money(shop.funds);for(const [key,price]of Object.entries(shop.buyPrices)){if(!categories.includes(key)||!Number.isSafeInteger(price))throw Error('Invalid shop buyback category or price');C.money(price);}
+        for(const row of shop.stock){if(!object(row)||!validId(row.id)||!qty(row.quantity)||!categories.includes(row.category)||!object(row.item)||typeof row.item.name!=='string'||!row.item.name||!['catalog','story','resale'].includes(row.origin))throw Error('Invalid shop stock');if(!Number.isSafeInteger(row.price)||!Number.isSafeInteger(row.buyPrice)||C.money(row.price)<1||C.money(row.buyPrice)>row.price)throw Error('Invalid shop prices');}
+        if(shop.visit){const v=shop.visit;if(!object(v)||typeof v.id!=='string'||!validId(v.recordId)||v.shopId!==shop.id||typeof v.active!=='boolean'||!Number.isSafeInteger(v.index)||v.index<0||!Number.isSafeInteger(v.swipe)||v.swipe<0)throw Error('Invalid shop visit');}
+        if(shop.history.some(x=>!object(x)||typeof x.id!=='string'||typeof x.kind!=='string'||!Number.isFinite(x.at)))throw Error('Invalid shop history');
+      }
+    }
     C.money(r.player.balance);if(!Array.isArray(r.player.inventory))throw Error('Invalid inventory');
     for(const a of [r.player,...Object.values(r.actors||{}),...Object.values(r.merchants||{})]){if(!object(a)||!Number.isSafeInteger(a.balance))throw Error('Invalid actor balance');C.money(a.balance);if(!Array.isArray(a.inventory))throw Error('Invalid actor inventory');for(const i of a.inventory){if(!i?.id||!i.name||!Number.isInteger(i.quantity)||i.quantity<1||i.quantity>9999)throw Error('Invalid saved item');}}
     if(r.mailbox&&(!Array.isArray(r.mailbox.documents)||!Array.isArray(r.mailbox.seen)||!r.mailbox.offers||Array.isArray(r.mailbox.offers)||(r.mailbox.trash!==undefined&&!Array.isArray(r.mailbox.trash))))throw Error('Invalid mailbox');
@@ -36,6 +48,7 @@ globalThis.CyberpunkSupportFactory=api=>{
     const v=validate(value),owner=api.chatBucket();checkpoint('Before restore');api.closeWorkspaces?.();
     const keep=owner.recovery;for(const k of Object.keys(owner))if(k!=='recovery')delete owner[k];Object.assign(owner,v.chat);owner.recovery=keep;
     if(owner.call){owner.call.active=false;owner.call.minimized=false;}if(owner.rpg?.bd){owner.rpg.bd.status='stopped';owner.rpg.bd.rendering=false;}if(owner.rpg?.puzzle)owner.rpg.puzzle.status='cancelled';for(const row of owner.rpg.requests||[])if(row.status==='running'){row.status='cancelled';row.ended=Date.now();row.error='Restored checkpoint; retry explicitly';}
+    for(const shop of owner.rpg.market?.shops||[])if(shop.visit){shop.visit.active=false;shop.visit.reason='Restored checkpoint; return to the shop for a new visit';}
     if(includeCharacter&&api.characterBucket){const target=api.characterBucket();for(const k of Object.keys(target))delete target[k];Object.assign(target,v.character||{});api.saveSettings?.();}
     save();return true;
   }
