@@ -1,5 +1,9 @@
 # NC Zoning Board map attribution
 
+## Packaged district photographs
+
+assets/locations contains six original JPEG photographs from CDPR's public Night City tourism site. They are district references at 960×540, not interior coverage. Individual source URLs, dimensions and hashes are recorded in assets/locations/coverage.json; limitations are in that folder's README. Copyright belongs to CD PROJEKT RED; these images are not MIT-licensed and no commercial reuse permission is asserted.
+
 The extension uses the NC Zoning Board map as a free, unofficial Cyberpunk fan mapping interface.
 
 - Source: https://github.com/nczoning/nc-zoning-board/tree/3a3ddc2f3e015206ec7d619b4ba7ebcb4daf93ff

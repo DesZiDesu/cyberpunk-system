@@ -81,3 +81,13 @@ XP thresholds, attribute bonuses, external story-income records and contract rew
 - [CD PROJEKT RED — Phantom Liberty](https://www.cyberpunk.net/us/en/phantom-liberty): official visual setting reference.
 
 The mailbox uses original HTML/CSS and envelope icon geometry. No portfolio screenshots or game UI assets are bundled. Its threaded correspondence, accept/refuse contracts, transfer semantics, swipe controls and mailbox storage are extension features, not a claim to recreate the game's exact mail mechanics.
+# Scene Tracker and reference additions (v3.1.0)
+
+- Official district photographs and public district descriptions: https://www.nightcity.love/en/ — six original 960×540 JPEGs, stored with hashes in assets/locations/coverage.json. Not a complete interior archive.
+- Official police/MaxTac escalation reference: https://www.cyberpunk.net/en/news/49060/update-2-0
+- Official corporation announcement: https://forums.cdprojektred.com/index.php?threads/corp-feature-arasaka.11029253/ (search-index excerpt; live thread redirects to forum listing).
+- Militech background: https://game8.co/games/Cyberpunk-2077/archives/Factions-Militech (community guide; live fetch unavailable).
+- Gang reference: https://eip.gg/cyberpunk-2077/guides/cyberpunk-2077-gangs/ (community guide; faction background only, no damage tables or scripted quest outcomes imported).
+- Official story setting: https://www.cyberpunk.net/en/cyberpunk-2077 and https://www.cyberpunk.net/en/phantom-liberty
+- UI research: https://21st.dev/community/components/s/badge and https://21st.dev/community/components/s/card — status/badge grouping inspiration; implementation is original vanilla DOM/CSS, with no React dependency or copied component source.
+- The per-faction voice, privacy and social-context guidance is authored role-play instruction, not a claim that every member of a faction speaks identically. Source-backed setting facts and this guidance are distinguished in each optional reference.

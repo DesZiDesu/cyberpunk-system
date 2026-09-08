@@ -1,10 +1,11 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const narrativeText=el=>{const copy=el.cloneNode(true);copy.querySelectorAll('.cps-scene-stack').forEach(n=>n.remove());return copy.textContent;};
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.0.6','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.1.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
-w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-mail.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-mail.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
 const C=w.CyberpunkRpgCore;let count=0;const test=(n,f)=>{f();console.log('PASS '+n);count++;};
 const q=s=>{const e=d.querySelector(s);assert.ok(e,'Missing '+s);return e;};const click=s=>q(s).click();const wait=()=>new Promise(r=>setTimeout(r,35));
 const state=()=>ctx.chatMetadata.cyberpunk_system.rpg;
@@ -14,7 +15,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.0.6');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.1.0');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  w.CyberpunkSystem.startCall('Lucy','@@lucy');
@@ -71,7 +72,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('NPC pipe skill protocol renders and uses NPC skill storage',()=>{assert.ok(npcSkill.t.querySelector('.cps-chat-skill'));assert.equal(state().actors['npc:lucy'].skills[0].name,'Optical Camo');});
  test('NPC telemetry does not borrow player mastery',()=>{assert.ok(npcSkill.t.textContent.includes('Lucy'));assert.equal(npcSkill.t.querySelector('[role=progressbar]').getAttribute('aria-valuenow'),'5');});
  const loc=await message(record('LOCATION',{id:'loc1',district:'watson',subdistrict:'Kabuki',building:'Megabuilding',floor:'12',area:'East corridor',danger:true}));
- test('Location preserves district, interior and floor while hiding machine JSON',()=>{assert.equal(state().map.location.floor,'12');assert.ok(state().map.discovered.includes('watson'));assert.equal(loc.t.textContent.trim(),'');assert.ok(state().notifications.some(n=>n.title==='DANGER ZONE'));});
+ test('Location preserves district, interior and floor while hiding machine JSON',()=>{assert.equal(state().map.location.floor,'12');assert.ok(state().map.discovered.includes('watson'));assert.ok(!loc.t.textContent.includes('CP_LOCATION'));assert.ok(!loc.t.textContent.includes('"district"'));assert.ok(loc.t.querySelector('.cps-scene-tracker'));assert.ok(state().notifications.some(n=>n.title==='DANGER ZONE'));});
  click('[data-rpg="tab:map"]');
  test('Map has a current marker and obscures undiscovered district labels',()=>{assert.equal(d.querySelectorAll('.cps-map-player').length,1);assert.equal(d.querySelectorAll('.cps-map-zone.locked').length,8);assert.equal(q('.cps-map-zone.locked text').textContent,'LOCKED');});
  test('Atlas preserves floor information, credits NC Zoning Board and hides undiscovered search results',()=>{assert.ok(q('.cps-map-position').textContent.includes('12'));assert.equal(q('.cps-ncz-credit a').href,'https://nczoning.net/');assert.ok(!q('[data-map-search]').textContent.includes('Westbrook'));});
@@ -147,7 +148,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Prompt includes authoritative state and knowledge boundaries',()=>{w.CyberpunkSystem.refreshPrompt();assert.ok(lastPrompt.includes('Private player state'));assert.ok(lastPrompt.includes('NPCs do not automatically know'));assert.ok(lastPrompt.includes('Do not award repeatedly'));});
  click('.cps-rpg-main [data-rpg=close]');
  const patched=await message(record('STATE',{id:'story-stats',actor:'user',maxHp:140,hp:121,maxRam:12,ram:9,maxStamina:120,stamina:80,capacity:140,reason:'Training and upgrades completed'}));
- test('Main-chat state updates resources and maxima while Cyberware is closed',()=>{assert.equal(d.querySelector('.cps-rpg-main'),null);assert.equal(state().player.maxHp,140);assert.equal(state().player.hp,121);assert.equal(state().player.stamina,80);assert.equal(state().player.maxRam,12);assert.equal(state().player.capacity,140);assert.equal(patched.t.textContent.trim(),'');});
+ test('Main-chat state updates resources and maxima while Cyberware is closed',()=>{assert.equal(d.querySelector('.cps-rpg-main'),null);assert.equal(state().player.maxHp,140);assert.equal(state().player.hp,121);assert.equal(state().player.stamina,80);assert.equal(state().player.maxRam,12);assert.equal(state().player.capacity,140);assert.ok(!patched.t.textContent.includes('CP_STATE'));assert.ok(patched.t.textContent.includes('HP 121 / 140'));});
  w.CyberpunkSystem.openCyberware();
  test('Cyberware has one bounded decorative environment behind its content',()=>{assert.equal(d.querySelectorAll('.cps-rpg-main > .cps-environment').length,1);assert.equal(q('.cps-environment').getAttribute('aria-hidden'),'true');assert.equal(d.querySelectorAll('.cps-rpg-main .cps-particle').length,12);});
  test('HUD values reflect authoritative state with accessible segmented bars',()=>{const hp=q('[data-vital=health] [role=progressbar]');assert.equal(hp.getAttribute('aria-valuenow'),'121');assert.equal(hp.getAttribute('aria-valuemax'),'140');assert.equal(d.querySelectorAll('.cps-rpg-main meter').length,0);assert.ok(q('[data-vital=ram] .cps-hud-divisions'));});
@@ -322,16 +323,16 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  w.CyberpunkSystem.startCall('Maevie Vance');
  const tagExample='[CP_CALL_END|Maevie Vance]In-person transition[/CP_CALL_END]The heavy, soundproofed access door slid shut behind them.';
  const tagMsg=await message(tagExample);
- test('Screenshot pipe CALL_END ends its named active call and preserves surrounding narration',()=>{assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,false);assert.equal(tagMsg.t.textContent,'The heavy, soundproofed access door slid shut behind them.');assert.ok(ctx.chatMetadata.cyberpunk_system.call.messages.some(m=>m.text==='In-person transition'));});
+ test('Screenshot pipe CALL_END ends its named active call and preserves surrounding narration',()=>{assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,false);assert.equal(narrativeText(tagMsg.t),'The heavy, soundproofed access door slid shut behind them.');assert.ok(ctx.chatMetadata.cyberpunk_system.call.messages.some(m=>m.text==='In-person transition'));});
  w.CyberpunkSystem.startCall('Lucy');
  events.get('received')(tagMsg.i);await wait();
  test('Re-rendering a consumed call-end cannot close a later call',()=>assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,true));
  await message('[CP_CALL_END|Maevie Vance]Wrong caller[/CP_CALL_END]Story continues.');
  test('A different NPC cannot end the active call',()=>assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,true));
  const incomplete=await message('Before [CP_CALL_END|Lucy]Secret partial');
- test('Incomplete pipe machine records remain hidden without ending calls',()=>{assert.equal(incomplete.t.textContent,'Before ');assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,true);});
+ test('Incomplete pipe machine records remain hidden without ending calls',()=>{assert.equal(narrativeText(incomplete.t),'Before ');assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,true);});
  const jsonEnd=await message('[CP_CALL_END]{"id":"json-end-test","actor":"Lucy","reason":"Goodbye"}[/CP_CALL_END]After.');
- test('JSON call-end remains compatible and hidden',()=>{assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,false);assert.equal(jsonEnd.t.textContent,'After.');});
+ test('JSON call-end remains compatible and hidden',()=>{assert.equal(ctx.chatMetadata.cyberpunk_system.call.active,false);assert.equal(narrativeText(jsonEnd.t),'After.');});
  const acquired=record('LOOT',{id:'quickhack-loot-fix',actor:'user',source:'Defeated netrunner',items:[{id:'recovered-qh',name:'Recovered shock',category:'Quick Hack',level:4,ramCost:3,cooldown:2,effect:'Electrical damage'}]});
  await message(acquired);
  test('Main-chat quickhack loot keeps its category, level, RAM cost and cooldown',()=>{const it=state().player.inventory.find(it=>it.id==='recovered-qh');assert.equal(it.category,'quickhack');assert.equal(it.level,4);assert.equal(it.ramCost,3);assert.equal(it.cooldown,2);});

@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.0.6';
+const CYBERPUNK_SYSTEM_VERSION = '3.1.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -30,6 +30,8 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       ambientMotion: true,
       signalDecrypt: true,
       loreEnabled: false,
+      sceneTracker: true,
+      areaCards: true,
       loreEntries: {},
       customPrompt: '',
       characters: {},
@@ -318,11 +320,11 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
             const route=node.cpsBack;
             const close=node.querySelector('[data-rpg="close"], [data-action="close-manager"]');
             if(close)close.click();else removeUiDialog(node);
-            if(route)route();else if(parent?.isConnected&&parent.open)parent.querySelector('[data-ui-back],button')?.focus();else openManager();
+            if(route)route();else if(parent?.isConnected&&parent.open)parent.querySelector('[data-ui-back],button')?.focus();else if(!node.matches('.cps-rpg-main'))openManager();
           };
           const close=header.querySelector('[data-rpg="close"], [data-action="close-manager"]');
-          if (node.matches('.cps-mail-window') && close) {
-            const actions=document.createElement('div');actions.className='cps-mail-window-actions';
+          if (header.matches('.cps-rpg-top') && close) {
+            const actions=document.createElement('div');actions.className='cps-window-actions cps-mail-window-actions';
             header.append(actions);actions.append(back,close);
           } else header.append(back);
         }
@@ -452,6 +454,12 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     // Original summaries; sources and the distinction between canon and role-play
     // knowledge policy are visible to the user. No RED 2045 mechanics are injected.
     const LORE_SOURCES = {
+      gangs: ['EIP · Night City gangs (community guide)', 'https://eip.gg/cyberpunk-2077/guides/cyberpunk-2077-gangs/'],
+      arasaka: ['CDPR · Arasaka corporation feature', 'https://forums.cdprojektred.com/index.php?threads/corp-feature-arasaka.11029253/'],
+      militech: ['Game8 · Militech (community guide)', 'https://game8.co/games/Cyberpunk-2077/archives/Factions-Militech'],
+      relic: ['CDPR · Cyberpunk 2077 story', 'https://www.cyberpunk.net/en/cyberpunk-2077'],
+      police: ['CDPR · Update 2.0 police response', 'https://www.cyberpunk.net/en/news/49060/update-2-0'],
+      phantom: ['CDPR · Phantom Liberty', 'https://www.cyberpunk.net/en/phantom-liberty'],
       blackwall: ['Community transcription · NetWatch game database', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3594999196'],
       slang: ['Game8 · slang glossary', 'https://game8.co/games/Cyberpunk-2077/archives/Slang-Explained-Street-Talk-Dictionary'],
       chrome: ['R. Talsorian · Cyberpunk', 'https://rtalsoriangames.com/cyberpunk/'],
@@ -461,6 +469,24 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       fixers: ['CD PROJEKT RED · Additional gigs', 'https://www.cyberpunk.net/en/dlc'],
     };
     const WORLD_LORE = [
+      {id:'voice-register',title:'Culture / ระดับภาษาและตัวตน',source:'city',en:'Role-play guidance: establish each speaker’s upbringing, profession, audience, intimacy and mood. Corporate meetings favor surnames, titles and controlled business language. Off duty, the same employee may code-switch with trusted friends. Street contacts may use slang sparingly; a formal fixer may not. Never add choom as a mandatory greeting. Ethnicity, accent or a district does not establish gang membership. Distinguish individual behavior from group reputation.',th:'แนวทางโรล: เลือกภาษาตามภูมิหลัง อาชีพ ผู้ฟัง ความสนิท และอารมณ์ ประชุมบริษัทใช้ชื่อ ตำแหน่ง และภาษาธุรกิจ แต่หลังเลิกงานคนเดิมอาจใช้ศัพท์ถนนกับเพื่อนสนิท ไม่เติม choom เป็นคำทักทายบังคับ ไม่ตัดสินแก๊งจากชาติพันธุ์ สำเนียง หรือเขตที่อยู่ และแยกบุคคลออกจากชื่อเสียงกลุ่ม'},
+      {id:'arasaka',title:'Corporations / Arasaka',source:'arasaka',en:'Japanese family-controlled corporation associated with security, banking and legal services. Role-play guidance: rank, discretion and reputation affect a meeting; an ordinary employee has no automatic access to executives, classified projects or another department’s files.',th:'บริษัทยักษ์จากญี่ปุ่นที่ควบคุมโดยตระกูล ทำธุรกิจความปลอดภัย ธนาคาร และกฎหมาย แนวทางโรล: ลำดับชั้น ความรอบคอบ และชื่อเสียงมีผลต่อการเจรจา พนักงานทั่วไปไม่ได้รู้โครงการลับหรือเข้าถึงผู้บริหารและไฟล์ทุกแผนก'},
+      {id:'militech',title:'Corporations / Militech',source:'militech',en:'Major arms and military-services corporation. Role-play guidance: separate sales staff, contractors and combat personnel; formal procurement language differs from squad shorthand. Wearing its equipment does not prove employment, clearance or allegiance.',th:'บริษัทด้านอาวุธและบริการทางทหาร แนวทางโรล: แยกฝ่ายขาย ผู้รับเหมา และกำลังรบ ภาษาจัดซื้อทางการต่างจากคำย่อในหน่วยทหาร การใช้อาวุธยี่ห้อนี้ไม่ได้ยืนยันว่าเป็นพนักงาน มีสิทธิ์เข้าถึงข้อมูล หรือจงรักภักดีต่อบริษัท'},
+      {id:'ncpd',title:'Security / NCPD',source:'police',en:'Night City police response escalates with the threat. Role-play guidance: reports, witnesses and evidence determine what an officer knows; do not turn public law enforcement into an omniscient narrator or copy game wanted levels into every conversation.',th:'ตำรวจ Night City เพิ่มระดับการตอบโต้ตามภัยคุกคาม แนวทางโรล: ความรู้เจ้าหน้าที่มาจากรายงาน พยาน และหลักฐาน ไม่ใช่รู้ความลับผู้เล่นทุกเรื่อง และไม่ต้องยัดระบบดาวตำรวจลงทุกบทสนทนา'},
+      {id:'maxtac',title:'Security / MaxTac',source:'police',en:'MaxTac is the elite response at the highest police escalation. Role-play guidance: deployment is a major event requiring an established serious threat, not a casual patrol. Training does not reveal thoughts or make every operative invulnerable.',th:'MaxTac เป็นหน่วยตอบโต้ระดับสูงสุดของตำรวจ แนวทางโรล: การส่งหน่วยนี้เป็นเหตุการณ์ใหญ่ที่ต้องมีภัยร้ายแรงรองรับ ไม่ใช่สายตรวจทั่วไป ความชำนาญไม่ได้ทำให้อ่านใจหรือไร้จุดอ่อน'},
+      {id:'relic-public',title:'Technology / Relic',source:'relic',en:'The Relic is a unique experimental biochip central to V’s story. Role-play guidance: separate public immortality marketing from private prototype behavior. Seeing a shard or an implant does not identify a Relic; require evidence. Never give every NPC knowledge of its carrier or Johnny’s presence.',th:'Relic คือไบโอชิปทดลองสำคัญในเรื่องของ V แนวทางโรล: แยกโฆษณาความเป็นอมตะออกจากพฤติกรรมต้นแบบที่เป็นความลับ เห็นชิปหรืออวัยวะเสริมไม่ได้รู้ทันทีว่าเป็น Relic และ NPC ไม่ได้รู้ผู้ครอบครองหรือการมีอยู่ของ Johnny โดยอัตโนมัติ'},
+      {id:'dogtown',title:'Factions / Dogtown & Barghest',source:'phantom',en:'Dogtown is the walled district at the center of Phantom Liberty’s espionage story. Role-play guidance: treat checkpoints, local authority and restricted access as established scene facts, not a license to reveal covert agents or plot outcomes.',th:'Dogtown เป็นพื้นที่มีกำแพงล้อมที่เป็นศูนย์กลางเรื่องสายลับ Phantom Liberty แนวทางโรล: ให้ด่าน อำนาจในพื้นที่ และสิทธิ์เข้าถึงเป็นข้อมูลตามฉาก ไม่ใช่เหตุให้รู้สายลับหรือผลลัพธ์เนื้อเรื่องล่วงหน้า'},
+      {id:'maelstrom',title:'Gangs / Maelstrom',source:'gangs',en:'Northside gang known for extreme body modification. Guidance: do not equate every augmented person with membership or identical mental health.',th:'แก๊ง Northside ที่ขึ้นชื่อเรื่องดัดแปลงร่างกายสุดขั้ว แนวทางโรล: คนใส่โครมไม่ได้เป็นสมาชิกเสมอ และสมาชิกแต่ละคนไม่ได้มีสภาพจิตเหมือนกัน'},
+      {id:'mox',title:'Gangs / The Mox',source:'gangs',en:'Lizzie’s Bar community defending vulnerable workers. Guidance: protection has boundaries; membership does not guarantee intimacy or free services.',th:'ชุมชนที่เกี่ยวข้องกับ Lizzie’s Bar และการปกป้องคนทำงานที่ถูกคุกคาม แนวทางโรล: การคุ้มครองมีขอบเขต ไม่ได้แปลว่าสนิทหรือให้บริการฟรี'},
+      {id:'tyger-claws',title:'Gangs / Tyger Claws',source:'city',en:'Strong presence in Japantown’s entertainment economy. Guidance: venue workers and local residents are not automatically members; public reputation is not evidence of a specific crime.',th:'มีอิทธิพลในย่านบันเทิง Japantown แนวทางโรล: พนักงานร้านและผู้อาศัยไม่ใช่สมาชิกอัตโนมัติ ชื่อเสียงของแก๊งไม่ใช่หลักฐานว่าบุคคลใดก่อเหตุ'},
+      {id:'valentinos',title:'Gangs / Valentinos',source:'city',en:'Associated with Heywood. Guidance: neighborhood relationships can shape dialogue, but never turn all Heywood residents into gangsters or use ethnicity as proof of allegiance.',th:'มีความเกี่ยวข้องกับ Heywood แนวทางโรล: ความสัมพันธ์ในละแวกมีผลต่อบทสนทนา แต่คน Heywood ไม่ได้เป็นแก๊งทุกคน และเชื้อชาติไม่ใช่หลักฐานสังกัด'},
+      {id:'sixth-street',title:'Gangs / 6th Street',source:'gangs',en:'Patriotic, veteran-rooted gang associated with Santo Domingo. Guidance: slogans are self-presentation, not proof of moral authority.',th:'แก๊งที่มีรากจากทหารผ่านศึกและแนวคิดชาตินิยม เชื่อมโยงกับ Santo Domingo แนวทางโรล: คำขวัญเป็นการนำเสนอตัวตน ไม่ใช่การยืนยันความชอบธรรม'},
+      {id:'animals',title:'Gangs / Animals',source:'gangs',en:'Physical enhancement specialists, often hired as muscle. Guidance: strength does not make every member unintelligent or loyal to one employer.',th:'เน้นเสริมสมรรถภาพร่างกายและรับงานใช้กำลัง แนวทางโรล: แข็งแรงไม่ได้แปลว่าโง่ และสมาชิกไม่ได้ภักดีต่อนายจ้างคนเดียวเสมอ'},
+      {id:'voodoo-boys',title:'Gangs / Voodoo Boys',source:'gangs',en:'Pacifica netrunning faction. Guidance: technical plans remain secret; Haitian residents are not automatically members or hackers.',th:'กลุ่ม netrunner ใน Pacifica แนวทางโรล: แผนทางเทคนิคยังเป็นความลับ คนเชื้อสายเฮติไม่ได้เป็นสมาชิกหรือแฮ็กเกอร์ทุกคน'},
+      {id:'aldecaldos',title:'Nomads / Aldecaldos',source:'gangs',en:'Nomad families running guarded transport across the Badlands and beyond. Guidance: trust is earned through relationships, not shared clothing.',th:'ครอบครัว Nomad ที่ทำงานขนส่งและคุ้มกันผ่าน Badlands และพื้นที่อื่น แนวทางโรล: ความไว้ใจมาจากความสัมพันธ์ ไม่ใช่ใส่เสื้อคล้ายกัน'},
+      {id:'wraiths',title:'Nomads / Wraiths',source:'gangs',en:'Hostile Badlands nomad group. Guidance: distinguish them from other nomad families; not all travelers are raiders.',th:'กลุ่ม Nomad อันตรายใน Badlands แนวทางโรล: แยกจากครอบครัว Nomad อื่น คนเดินทางไม่ได้เป็นโจรทุกคน'},
+      {id:'scavengers',title:'Groups / Scavengers',source:'gangs',en:'Criminal scavenging and stolen-implant trade. Guidance: do not identify a scav solely through language, nationality or poverty.',th:'เกี่ยวข้องกับอาชญากรรมและการค้าอวัยวะเสริมที่ขโมยมา แนวทางโรล: อย่าตัดสินว่าเป็น scav จากภาษา สัญชาติ หรือความยากจนเพียงอย่างเดียว'},
+      {id:'culture-services',title:'Culture / Cost of living',source:'city',en:'Role-play guidance: housing, transport, medical access and corporate employment create different daily pressures. Let characters care about rent, work, family, music or reputation rather than discussing cyberware constantly. Advertising and tourism copy are interested viewpoints, not neutral truth.',th:'แนวทางโรล: ค่าที่พัก การเดินทาง การรักษา และงานบริษัทสร้างแรงกดดันต่างกัน ให้ตัวละครสนใจค่าเช่า งาน ครอบครัว เพลง หรือชื่อเสียง ไม่ต้องพูดแต่โครม โฆษณาและข้อมูลท่องเที่ยวมีผลประโยชน์แฝง ไม่ใช่ความจริงที่เป็นกลาง'},
       {id:'blackwall',title:'Blackwall / เขตแดนเครือข่าย',en:'The Blackwall separates usable network space from dangerous rogue AIs beyond it. NetWatch maintains this barrier. Crossing it is not an ordinary quickhack or a routine way to open a locked door. Its technical secrets require expertise and established access; it does not grant universal knowledge.',th:'Blackwall แยกพื้นที่เครือข่ายที่ใช้งานได้ออกจาก AI อิสระอันตราย โดย NetWatch ดูแลแนวกั้นนี้ การข้ามไม่ใช่ quickhack ทั่วไปหรือวิธีเปิดประตูธรรมดา ความลับเชิงเทคนิคต้องมีความเชี่ยวชาญและช่องทางเข้าถึง ไม่ได้ทำให้รู้ทุกอย่าง',source:'blackwall'},
       {id:'netwatch',title:'NetWatch / การควบคุมเครือข่าย',en:'NetWatch polices network threats, pursues unauthorized AI activity and restricts movement across the Blackwall. Corporate support and security interests shape its operations. Do not assume a character is being tracked without evidence in the scene.',th:'NetWatch จัดการภัยเครือข่าย ไล่ตามกิจกรรม AI ที่ไม่ได้รับอนุญาต และควบคุมการข้าม Blackwall โดยมีผลประโยชน์ด้านความปลอดภัยและแรงสนับสนุนจากบริษัทเกี่ยวข้อง อย่าสมมติว่าตัวละครถูกติดตามหากไม่มีหลักฐานในฉาก',source:'blackwall'},
       {id:'old-net',title:'Old NET / เครือข่ายหลัง DataKrash',en:'The post-Krash network contains dangerous AI threats. Access to a local terminal does not imply access to every corporate data fortress or the space beyond the Blackwall. Treat recovered files as specific evidence, not unrestricted access to all secrets.',th:'เครือข่ายหลัง DataKrash มีภัยจาก AI การเข้าถึงเทอร์มินัลท้องถิ่นไม่ได้แปลว่าเข้าถึงป้อมข้อมูลทุกบริษัทหรือพื้นที่หลัง Blackwall ไฟล์ที่กู้ได้เป็นหลักฐานเฉพาะเรื่อง ไม่ใช่สิทธิ์อ่านความลับทั้งหมด',source:'blackwall'},
@@ -487,7 +513,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     }
     function loreConfig(s) {
       const lang = s.language === 'th' ? 'th' : 'en';
-      return `${configToggle(t('loreEnabled'), 'loreEnabled', s.loreEnabled)}<p class="cps-inline-note wide">${htmlEscape(t('lorePolicy'))}</p><fieldset class="cps-lore-list wide" data-lore-list ${s.loreEnabled ? '' : 'disabled'}><legend>${htmlEscape(t('loreSelect'))}</legend>${WORLD_LORE.map(entry => { const [label, url] = LORE_SOURCES[entry.source]; return `<article class="cps-lore-entry"><label><input type="checkbox" data-lore-id="${entry.id}" ${s.loreEntries[entry.id] !== false ? 'checked' : ''}><strong>${entry.title}</strong></label><p>${htmlEscape(entry[lang])}</p><a href="${url}" target="_blank" rel="noopener noreferrer">${htmlEscape(label)}</a></article>`; }).join('')}</fieldset>`;
+      return `${configToggle(t('loreEnabled'), 'loreEnabled', s.loreEnabled)}<p class="cps-inline-note wide">${htmlEscape(t('lorePolicy'))}</p><fieldset class="cps-lore-list wide" data-lore-list ${s.loreEnabled ? '' : 'disabled'}><legend>${htmlEscape(t('loreSelect'))}</legend><label class="wide">${s.language==='th'?'ค้นหาข้อมูลโลก':'Search world references'}<input type="search" data-lore-search placeholder="Arasaka, gangs, culture…"></label>${WORLD_LORE.map(entry => { const [label, url] = LORE_SOURCES[entry.source]; return `<article class="cps-lore-entry"><label><input type="checkbox" data-lore-id="${entry.id}" ${s.loreEntries[entry.id] !== false ? 'checked' : ''}><strong>${entry.title}</strong></label><p>${htmlEscape(entry[lang])}</p><a href="${url}" target="_blank" rel="noopener noreferrer">${htmlEscape(label)}</a></article>`; }).join('')}</fieldset>`;
     }
 
     function aiProtocol() {
@@ -721,14 +747,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
@@ -754,6 +780,7 @@ ${systems?.prompt() || ''}`.trim();
       if (!message || message.is_user) return;
       const index = context().chat.indexOf(message);
       processMachineRecords(message.mes || '', `${index}:swipe:${message.swipe_id ?? 0}`);
+      systems?.captureScene?.(message,index);
       const renderPass = () => {
         const target = index >= 0 ? document.querySelector(`.mes[mesid="${index}"] .mes_text`) : null;
         if (target) renderMessageElement(target, true);
@@ -1048,7 +1075,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (!sameCall()) return;
         const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
         const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
-        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|PAYMENT|BD_UPDATE|TRADE|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)(?:\||\])/i.test(result)) throw new Error('Empty private response');
+        if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|SCENE|PAYMENT|BD_UPDATE|TRADE|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)(?:\||\])/i.test(result)) throw new Error('Empty private response');
         if (replace) {
           if (!reply) throw new Error('Empty regenerated reply');
           replace.text = reply;
@@ -1483,7 +1510,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const paletteMarkup = Object.entries(PALETTES).map(([key, palette]) => `<button class="cps-palette" type="button" data-palette="${key}" aria-pressed="${colorKeys.every(color => s[color] === palette[color])}"><span class="cps-palette-swatches" aria-hidden="true">${[palette.surface, palette.accent, palette.danger].map(color => `<i style="background:${color}"></i>`).join('')}</span><span>${palette.name}</span>${uiIcon('check')}</button>`).join('');
       const colors = colorKeys.map(key => configField(t(key === 'text' ? 'textColor' : key), `<span class="cps-color-control"><input name="${key}" type="color" value="${htmlEscape(s[key])}"><output data-color-output="${key}">${htmlEscape(s[key])}</output></span>`, 'cps-config-color')).join('');
       const appearance = `<fieldset class="cps-palette-field wide"><legend>${htmlEscape(t('palette'))}</legend><div class="cps-palette-grid">${paletteMarkup}</div></fieldset><div class="cps-theme-preview wide"><span class="cps-eyebrow">${htmlEscape(t('livePreview'))}</span><div class="cps-preview-identity">${uiIcon('signal')}<strong>NEURAL LINK</strong><span class="cps-status-tag">${htmlEscape(t('signalReady'))}</span></div><p>${htmlEscape(t('previewLine'))}</p></div>${colors}<div class="wide"><button class="cps-button" type="button" data-reset-appearance>${htmlEscape(t('resetAppearance'))}</button></div>`;
-      const layout = `${configRange(t('uiScale'), 'uiScale', 80, 120, 2, s.uiScale, '%')}${configField(t('density'), configSelect('density', s.density, ['comfortable','compact'].map(key => [key, t(key)])))}${configRange(t('callOpacity'), 'callOpacity', 20, 90, 5, s.callOpacity, '%')}${configRange(t('callBlur'), 'callBlur', 0, 24, 1, s.callBlur, 'px')}${configField(t('animationSpeed'), configSelect('animationSpeed', s.animationSpeed, ['off','slow','normal','fast'].map(key => [key, t(key)])))}${configField(t('headerPosition'), configSelect('headerPosition', s.headerPosition, ['left','center','right'].map(key => [key, t(key)])))}${configToggle(t('scanlines'), 'scanlines', s.scanlines)}${configToggle(t('ambientMotion'), 'ambientMotion', s.ambientMotion)}${configToggle(t('signalDecrypt'), 'signalDecrypt', s.signalDecrypt)}`;
+      const layout = `${configToggle(s.language==='th'?'Scene Tracker บนคำตอบ AI':'Scene Tracker on AI replies','sceneTracker',s.sceneTracker)}${configToggle(s.language==='th'?'ภาพเมื่อเข้าสู่พื้นที่':'Area arrival cards','areaCards',s.areaCards)}${configRange(t('uiScale'), 'uiScale', 80, 120, 2, s.uiScale, '%')}${configField(t('density'), configSelect('density', s.density, ['comfortable','compact'].map(key => [key, t(key)])))}${configRange(t('callOpacity'), 'callOpacity', 20, 90, 5, s.callOpacity, '%')}${configRange(t('callBlur'), 'callBlur', 0, 24, 1, s.callBlur, 'px')}${configField(t('animationSpeed'), configSelect('animationSpeed', s.animationSpeed, ['off','slow','normal','fast'].map(key => [key, t(key)])))}${configField(t('headerPosition'), configSelect('headerPosition', s.headerPosition, ['left','center','right'].map(key => [key, t(key)])))}${configToggle(t('scanlines'), 'scanlines', s.scanlines)}${configToggle(t('ambientMotion'), 'ambientMotion', s.ambientMotion)}${configToggle(t('signalDecrypt'), 'signalDecrypt', s.signalDecrypt)}`;
       const behavior = `${[['enableSystem','enabled'],['showWand','showWand'],['autoProfiles','autoProfiles'],['hackingTracking','hackingEnabled']].map(([label,key]) => configToggle(t(label), key, s[key])).join('')}${configField(t('language'), configSelect('language', s.language, [['en','English'],['th','ไทย']]))}${configField(t('defaultScope'), configSelect('defaultScope', s.defaultScope, ['chat','character'].map(key => [key,t(key)])))}${configField(t('callHistory'), `<input name="callHistoryLimit" type="number" min="20" max="300" step="10" inputmode="numeric" value="${htmlEscape(s.callHistoryLimit)}">`)}`;
       const protocol = `${configToggle(t('teachAi'), 'injectPrompt', s.injectPrompt)}${configToggle(t('callSignals'), 'callMainSignals', s.callMainSignals)}<p class="cps-inline-note wide">${uiIcon('shield')}${htmlEscape(t('quotaNote'))}</p><label class="cps-config-field wide"><span>${htmlEscape(t('customInstructions'))}</span><textarea name="customPrompt" rows="5" maxlength="6000">${htmlEscape(s.customPrompt)}</textarea></label><details class="cps-tag-reference wide"><summary>${htmlEscape(t('tagReference'))}</summary><pre>[CP_HEADER|Name|role|status][/CP_HEADER]
 [CP_DIALOGUE|Name]Spoken words[/CP_DIALOGUE]
@@ -1533,6 +1560,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       });
       form.addEventListener('input', event => {
         const target = event.target;
+        if(target.matches('[data-lore-search]')){const query=target.value.trim().toLocaleLowerCase();form.querySelectorAll('.cps-lore-entry').forEach(el=>{el.hidden=!el.textContent.toLocaleLowerCase().includes(query);});return;}
         if (target.dataset.loreId) { s.loreEntries[target.dataset.loreId] = target.checked; save(); return; }
         if (!target.name || !Object.hasOwn(DEFAULTS, target.name)) return;
         const numeric = ['uiScale', 'callOpacity', 'callBlur', 'callHistoryLimit'].includes(target.name);
@@ -1547,6 +1575,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (switchState) switchState.textContent = t(target.checked ? 'on' : 'off');
         save();
         if (target.name === 'loreEnabled') form.querySelector('[data-lore-list]').disabled = !s.loreEnabled;
+        if (['sceneTracker','areaCards','language'].includes(target.name)) document.querySelectorAll('.mes_text').forEach(el=>renderMessageElement(el,true));
         if (target.name === 'language') {
           const scroll = body.scrollTop;
           renderManager();
@@ -1727,10 +1756,10 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (typeof host.isGenerating==='function') hostGenerationProbe=host.isGenerating;
       } catch { /* Context probe or lifecycle events support alternate hosts. */ }
       try {
-        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
+        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, assetUrl:path=>new URL(path,import.meta.url).href, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

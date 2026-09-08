@@ -1,0 +1,80 @@
+{
+  "checked": "2026-09-07",
+  "complete": false,
+  "interiorCoverage": "No verified complete interior collection available.",
+  "note": "Original official public district images; no claim of open licensing, HD upgrades or exhaustive location coverage.",
+  "images": [
+    {
+      "id": "city-center",
+      "file": "assets/locations/city-center.jpg",
+      "source": "https://www.nightcity.love/build/images/districts/city-center-92fa18a6.jpg",
+      "page": "https://www.nightcity.love/en/",
+      "creator": "CD PROJEKT RED",
+      "kind": "district-reference",
+      "interior": false,
+      "width": 960,
+      "height": 540,
+      "sha256": "1bb9f598d02e1bbe18a2755db05fc61e2c0d49439a32168c45f10b6430d93f4c"
+    },
+    {
+      "id": "watson",
+      "file": "assets/locations/watson.jpg",
+      "source": "https://www.nightcity.love/build/images/districts/watson-790e35e2.jpg",
+      "page": "https://www.nightcity.love/en/",
+      "creator": "CD PROJEKT RED",
+      "kind": "district-reference",
+      "interior": false,
+      "width": 960,
+      "height": 540,
+      "sha256": "c89a3189a5d3c3a96b91d6dfbca64307ceed62901ffbb87e9150f656ad69ad87"
+    },
+    {
+      "id": "heywood",
+      "file": "assets/locations/heywood.jpg",
+      "source": "https://www.nightcity.love/build/images/districts/heywood-083e3909.jpg",
+      "page": "https://www.nightcity.love/en/",
+      "creator": "CD PROJEKT RED",
+      "kind": "district-reference",
+      "interior": false,
+      "width": 960,
+      "height": 540,
+      "sha256": "7a6f3b37a5f6f34b0e45156ede44235fe56902053e51d38f4242cc589beaeaf3"
+    },
+    {
+      "id": "westbrook",
+      "file": "assets/locations/westbrook.jpg",
+      "source": "https://www.nightcity.love/build/images/districts/westbrook-f5cc7f59.jpg",
+      "page": "https://www.nightcity.love/en/",
+      "creator": "CD PROJEKT RED",
+      "kind": "district-reference",
+      "interior": false,
+      "width": 960,
+      "height": 540,
+      "sha256": "b1588a3b2666512d79696fda994634acc9bcbb004b9ab7a82ba7edcf3e538c37"
+    },
+    {
+      "id": "santo-domingo",
+      "file": "assets/locations/santo-domingo.jpg",
+      "source": "https://www.nightcity.love/build/images/districts/santo-domingo-03e66181.jpg",
+      "page": "https://www.nightcity.love/en/",
+      "creator": "CD PROJEKT RED",
+      "kind": "district-reference",
+      "interior": false,
+      "width": 960,
+      "height": 540,
+      "sha256": "cef582401ed2375643c1b006163d8ea9228e352bb4a262b3c1874942add49621"
+    },
+    {
+      "id": "pacifica",
+      "file": "assets/locations/pacifica.jpg",
+      "source": "https://www.nightcity.love/build/images/districts/pacifica2-485e579d.jpg",
+      "page": "https://www.nightcity.love/en/",
+      "creator": "CD PROJEKT RED",
+      "kind": "district-reference",
+      "interior": false,
+      "width": 960,
+      "height": 540,
+      "sha256": "9ac4d74b4e8fac3bbf5b589db59a29bdea0031a9d4c215465b697d0bb41643f9"
+    }
+  ]
+}

@@ -6,10 +6,11 @@ globalThis.CyberpunkSystemsFactory = api => {
   const tr=(en,th)=>api.settings?.()?.language==='th'?th:en;
   let panel=null, breach=null, timer=null, actorName='user', tab='status', popup=null, mapCleanup=null;
   const noticeTimers=new Map();
-  const tags='MAIL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
+  const tags='SCENE|MAIL|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|SKILL|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL';
   const buttons=(label,action,extra='')=>`<button type="button" class="cps-button" data-rpg="${E(action)}" ${extra}>${E(label)}</button>`;
   const note=v=>`<p class="cps-rpg-note">${E(v)}</p>`;
   const mail=globalThis.CyberpunkMailFactory({...api,state,actor,dialog,event,notify,prompt,openGig:()=>open('user','quests')});
+  const scene=globalThis.CyberpunkSceneFactory?.({...api,state});
   function state(){
     const b=api.chatBucket();
     if(!b.rpg||typeof b.rpg!=='object')b.rpg={};const s=b.rpg;
@@ -73,7 +74,7 @@ globalThis.CyberpunkSystemsFactory = api => {
   }
   function dialog(title,body,cls=''){
     const d=document.createElement('dialog');d.className=`cps-ui cps-rpg-dialog ${cls}`;d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.0.6')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.1.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
   }
   function detail(title,content){api.removeUiDialog(popup);popup=dialog(title,`<div class="cps-rpg-detail">${E(content)}</div>`);}
@@ -448,7 +449,7 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='mail'
     return `<section class="cps-chat-block cps-chat-skill ${info.rejected?'rejected':''}"><div class="cps-chat-kicker">${icon('quickhack')}<span>${E(displayName)}</span><small>${E(info.rejected?tr('NOT ACTIVATED','ไม่ได้ใช้งาน'):tr('SKILL ACTIVATED','ใช้งานสกิล'))}</small></div><div class="cps-chat-skill-heading"><div><small>${E(String(info.category||'ABILITY').toUpperCase())}${number(info.level)?` / LV.${E(info.level)}`:''}</small><strong>${E(skill)}</strong></div>${info.rank?`<span class="cps-chat-skill-rank"><small>${E(tr('RANK','แรงก์'))}</small><b>${E(info.rank)}</b></span>`:''}</div>${(description||info.description)?note(description||info.description):''}${stats?`<dl class="cps-chat-skill-specs">${stats}</dl>`:''}${progress===null?'':`<div class="cps-chat-mastery"><div><span>${E(tr('MASTERY','ความชำนาญ'))}</span><b>${E(info.progress)} / ${E(info.maximum)}</b></div><div class="cps-progress" role="progressbar" aria-label="${E(tr('Mastery','ความชำนาญ'))}" aria-valuemin="0" aria-valuemax="${E(info.maximum)}" aria-valuenow="${C.cap(info.progress,0,info.maximum)}" style="--cps-progress:${progress}%"><i></i></div></div>`}${info.rejected?note(info.rejected):''}</section>`;
   }
   function localSkill(name,skill,description,itemRecord=null){const s=state(),index=(api.context()?.chat?.length||0)-1;s.skillCards??=[];s.skillCards.push({id:C.uid(),index,name,skill,description,info:skillReading(name,skill,{description},itemRecord)});s.skillCards=s.skillCards.slice(-100);save();document.querySelectorAll('.mes_text').forEach(decorate);}
-  function decorate(element){const index=Number(element.closest('[mesid]')?.getAttribute('mesid'));if(!element.closest('[mesid]')||!Number.isInteger(index))return;for(const card of state().skillCards||[]){if(card.index!==index||[...element.querySelectorAll('[data-local-skill]')].some(n=>n.dataset.localSkill===card.id))continue;const block=document.createElement('div');block.dataset.localSkill=card.id;block.innerHTML=skillHtml(card.name,card.skill,card.description,card.info);element.append(block);}}
+  function decorate(element){scene?.decorate(element);const index=Number(element.closest('[mesid]')?.getAttribute('mesid'));if(!element.closest('[mesid]')||!Number.isInteger(index))return;for(const card of state().skillCards||[]){if(card.index!==index||[...element.querySelectorAll('[data-local-skill]')].some(n=>n.dataset.localSkill===card.id))continue;const block=document.createElement('div');block.dataset.localSkill=card.id;block.innerHTML=skillHtml(card.name,card.skill,card.description,card.info);element.append(block);}}
   function recordedSkill(data){const info=api.chatBucket?.()?.rpg?.skillReadings?.find(x=>x.key===skillKey(data))?.info;return skillHtml(data.actor||'user',data.name||'Ability',data.description||'',info||skillReading(data.actor||'user',data.name,{description:data.description,cost:data.cost,resource:data.resource,cooldown:data.cooldown}));}
   function decode(value){const n=document.createElement('div');n.innerHTML=value;return n.textContent||'';}
   function transform(value, markHidden=false){const hidden=markHidden?'<!--cps-hidden-record-->':'';let out=String(value||'').replace(/\[CP_SKILL\|([^\]|]+)\|([^\]]+)\]([\s\S]*?)\[\/CP_SKILL\]/gi,(_,name,skill,desc)=>recordedSkill({actor:decode(name),name:decode(skill),description:decode(desc)}));
@@ -476,6 +477,14 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='mail'
         if(type==='ITEM'){
           const a=actor(data.actor||'user');
           const it=a.inventory.find(x=>x.id===data.itemId||x.catalogId===data.itemId);
+          if(data.operation==='ammo') {
+            if(!it||it.category!=='weapons')throw Error('Owned weapon required');
+            const next={};
+            if(data.weaponType!==undefined){if(!['firearm','melee'].includes(data.weaponType))throw Error('Invalid weapon type');next.weaponType=data.weaponType;}
+            for(const k of ['ammo','magazines'])if(data[k]!==undefined){if(!Number.isSafeInteger(data[k])||data[k]<0||data[k]>99999)throw Error('Invalid ammunition count');next[k]=data[k];}
+            if((next.weaponType||it.weaponType)==='melee'){next.ammo=null;next.magazines=null;}
+            Object.assign(it,next);event('ammunition',it.name);continue;
+          }
           if(data.operation==='remove') {if(!it)throw Error('Item missing');it.quantity-=Math.max(1,Math.round(C.cap(data.quantity??1,1,9999)));a.inventory=a.inventory.filter(x=>x.quantity>0);}
           else if(['equip','unequip'].includes(data.operation)) {if(!it)throw Error('Item missing');if(data.operation==='equip'&&!it.equipped)C.equip(a,it.id);else if(data.operation==='unequip'){if(it.category==='quickhack'){const slot=a.quickhackSlots.indexOf(it.id);if(slot>=0)C.setQuickhackSlot(a,slot,null);}else it.equipped=false;}}
           else if(data.operation==='use') {if(!it)throw Error('Item missing');C.use(a,it.id,s.turn);localSkill(data.actor||'user',it.name,it.effect,it);}
@@ -518,9 +527,9 @@ function open(name='user',nextTab='status',returnRoute=null){if(nextTab==='mail'
     if(s.bd.status==='stopped'&&!s.bd.rendering&&!api.chatBucket().braindanceMessages?.includes(key))s.bd.returnPending=false;
     s.processed=[...new Set([...s.processed,...claimed])].slice(-3000);save();render();
   }
-  function prompt(){if(!api.settings().enabled)return '';const s=state();const a=s.player;const summary=x=>({progression:x.progression,balance:x.balance,hp:x.hp,maxHp:x.maxHp,stamina:x.stamina,maxStamina:x.maxStamina,ram:x.ram,maxRam:x.maxRam,capacity:x.capacity,implantUnlocks:x.implantUnlocks,location:x.location,stress:x.stress,cyberpsychosis:x.cyberpsychosis,inventory:[...x.inventory.filter(it=>it.category==='quickhack'),...x.inventory.filter(it=>it.category!=='quickhack')].slice(0,60).map(it=>({id:it.id,name:it.name,quantity:it.quantity,equipped:it.equipped,category:it.category,slot:it.slot,capacity:it.capacity,level:it.level,ramCost:it.ramCost,cooldown:it.cooldown,effect:it.effect})),skills:x.skills.slice(0,15),relic:x.relic,blackwall:x.blackwall});
+  function prompt(){if(!api.settings().enabled)return '';const s=state();const a=s.player;const summary=x=>({progression:x.progression,balance:x.balance,hp:x.hp,maxHp:x.maxHp,stamina:x.stamina,maxStamina:x.maxStamina,ram:x.ram,maxRam:x.maxRam,capacity:x.capacity,implantUnlocks:x.implantUnlocks,location:x.location,stress:x.stress,cyberpsychosis:x.cyberpsychosis,inventory:[...x.inventory.filter(it=>it.category==='quickhack'),...x.inventory.filter(it=>it.category!=='quickhack')].slice(0,60).map(it=>({id:it.id,name:it.name,quantity:it.quantity,equipped:it.equipped,weaponType:it.weaponType,ammo:it.ammo,magazines:it.magazines,category:it.category,slot:it.slot,capacity:it.capacity,level:it.level,ramCost:it.ramCost,cooldown:it.cooldown,effect:it.effect})),skills:x.skills.slice(0,15),relic:x.relic,blackwall:x.blackwall});
     const active=s.puzzle&&['ready','running'].includes(s.puzzle.status);
-    return mail.prompt()+`\n[Cyberware role-play state and event protocol]
+    return (scene?.prompt()||'')+mail.prompt()+`\n[Cyberware role-play state and event protocol]
 This is fictional simulation only. Values are extension rules, not exact game balance. State is private narrator context; NPCs do not automatically know the player's balance, equipment, thoughts, location, hidden missions or other NPCs' information. No unearned powers or forced plot. Never simulate puzzle success: the user connects and plays it; only the extension may bypass it for an existing hacking/netrunning skill level of at least 50.
 Evaluate status, equipment, skills, missions and location changes after every normal main-chat reply. Emit all relevant updates in that same response; no extra API request is needed. Emit complete JSON records only for events that actually happen. Each record needs an id unique to that event; reuse that id if restating the same event. Do not print examples unless that event occurs. JSON strings must escape newlines and quotes. Never include closing tag text inside a JSON string.
 - Show every actual ability use by USER or NPC with [CP_SKILL]{"id":"event-id","actor":"user or exact NPC name","name":"skill","description":"observable effect","resource":"ram or stamina","cost":2,"cooldown":1}[/CP_SKILL]. Do not invent user actions. Existing skill costs/cooldowns are authoritative. No repeated skill record for one action.
@@ -569,6 +578,6 @@ Recent authoritative outcomes (do not replay records for these): ${JSON.stringif
   }
 
   function onChatChanged(){mail.onChatChanged();if(bdGenerating)api.context()?.stopGeneration?.();closeExperience();bdResizeCleanup?.();bdResizeCleanup=null;document.getElementById('cps-bd-float')?.remove();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);closePanel();stopBreach();api.removeUiDialog(popup);popup=null;noticeTimers.forEach(clearTimeout);noticeTimers.clear();document.getElementById('cps-immersion')?.remove();minimized();bdButton();}
-  return Object.freeze({open,openMail:mail.open,mailBusy:mail.busy,mail,process,prompt,transform,decorate,ensureWand,callToolbar,attachment,userText,onChatChanged,beginBreach,state:()=>JSON.parse(JSON.stringify(state())),transfer,share,addContact,icon,quickhack});
+  return Object.freeze({captureScene:(m,i)=>scene?.capture(m,i),open,openMail:mail.open,mailBusy:mail.busy,mail,process,prompt,transform,decorate,ensureWand,callToolbar,attachment,userText,onChatChanged,beginBreach,state:()=>JSON.parse(JSON.stringify(state())),transfer,share,addContact,icon,quickhack});
 };
 })();
