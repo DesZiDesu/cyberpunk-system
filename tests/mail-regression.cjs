@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.1.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.1.1','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-mail.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -74,6 +74,10 @@ let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=ap
  test('Archive moves document out of inbox while preserving pin and read status',()=>{assert.ok(row());assert.equal(find('swipe').archived,true);assert.equal(find('swipe').pinned,true);});
  mail.receive(mailData('unread-delete'));mail.receive(mailData('unread-keep'));click('[data-mail="folder:inbox"]');q('[data-mail-id=unread-delete] .cps-mail-edit-actions [data-mail=delete]').click();mail.clearRead();
  test('Unread documents can be deleted; Clear all read preserves unread and sent mail',()=>{assert.equal(find('unread-delete'),undefined);assert.ok(find('unread-keep'));assert.equal(find('swipe'),undefined);assert.ok(find('sent-transfer'));assert.ok(b().offers.gig);assert.equal(mail.receive(mailData('unread-delete')),false);});
+ click('[data-mail-id=unread-keep] .cps-mail-row-open');
+ test('Reader has no duplicate Back below the header',()=>assert.equal(d.querySelector('.cps-mail-reader [data-mail=back]'),null));
+ click('.cps-mail-window [data-ui-back]');
+ test('Header Back returns from a document to its mailbox',()=>assert.equal(q('.cps-mail-window').dataset.mailDetail,'false'));
  click('[data-mail-id=unread-keep] .cps-mail-row-open');quietReply=record('MAIL',{...mailData('ai-reply'),body:'Here are the details.'});
  test('Mailbox Back is text-only beside Close without a separate header row',()=>{const back=q('.cps-mail-window [data-ui-back]');assert.equal(back.textContent,'Back');assert.ok(back.parentElement.matches('.cps-mail-window-actions'));assert.ok(back.nextElementSibling.matches('[data-rpg=close]'));});
  events.get('started')('normal',{},true);click('[data-mail=request]');await wait();

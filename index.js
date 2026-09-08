@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.1.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.1.1';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -31,6 +31,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       signalDecrypt: true,
       loreEnabled: false,
       sceneTracker: true,
+      sceneImages: true,
       areaCards: true,
       loreEntries: {},
       customPrompt: '',
@@ -323,7 +324,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
             if(route)route();else if(parent?.isConnected&&parent.open)parent.querySelector('[data-ui-back],button')?.focus();else if(!node.matches('.cps-rpg-main'))openManager();
           };
           const close=header.querySelector('[data-rpg="close"], [data-action="close-manager"]');
-          if (header.matches('.cps-rpg-top') && close) {
+          if (close) {
             const actions=document.createElement('div');actions.className='cps-window-actions cps-mail-window-actions';
             header.append(actions);actions.append(back,close);
           } else header.append(back);
@@ -1510,7 +1511,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const paletteMarkup = Object.entries(PALETTES).map(([key, palette]) => `<button class="cps-palette" type="button" data-palette="${key}" aria-pressed="${colorKeys.every(color => s[color] === palette[color])}"><span class="cps-palette-swatches" aria-hidden="true">${[palette.surface, palette.accent, palette.danger].map(color => `<i style="background:${color}"></i>`).join('')}</span><span>${palette.name}</span>${uiIcon('check')}</button>`).join('');
       const colors = colorKeys.map(key => configField(t(key === 'text' ? 'textColor' : key), `<span class="cps-color-control"><input name="${key}" type="color" value="${htmlEscape(s[key])}"><output data-color-output="${key}">${htmlEscape(s[key])}</output></span>`, 'cps-config-color')).join('');
       const appearance = `<fieldset class="cps-palette-field wide"><legend>${htmlEscape(t('palette'))}</legend><div class="cps-palette-grid">${paletteMarkup}</div></fieldset><div class="cps-theme-preview wide"><span class="cps-eyebrow">${htmlEscape(t('livePreview'))}</span><div class="cps-preview-identity">${uiIcon('signal')}<strong>NEURAL LINK</strong><span class="cps-status-tag">${htmlEscape(t('signalReady'))}</span></div><p>${htmlEscape(t('previewLine'))}</p></div>${colors}<div class="wide"><button class="cps-button" type="button" data-reset-appearance>${htmlEscape(t('resetAppearance'))}</button></div>`;
-      const layout = `${configToggle(s.language==='th'?'Scene Tracker บนคำตอบ AI':'Scene Tracker on AI replies','sceneTracker',s.sceneTracker)}${configToggle(s.language==='th'?'ภาพเมื่อเข้าสู่พื้นที่':'Area arrival cards','areaCards',s.areaCards)}${configRange(t('uiScale'), 'uiScale', 80, 120, 2, s.uiScale, '%')}${configField(t('density'), configSelect('density', s.density, ['comfortable','compact'].map(key => [key, t(key)])))}${configRange(t('callOpacity'), 'callOpacity', 20, 90, 5, s.callOpacity, '%')}${configRange(t('callBlur'), 'callBlur', 0, 24, 1, s.callBlur, 'px')}${configField(t('animationSpeed'), configSelect('animationSpeed', s.animationSpeed, ['off','slow','normal','fast'].map(key => [key, t(key)])))}${configField(t('headerPosition'), configSelect('headerPosition', s.headerPosition, ['left','center','right'].map(key => [key, t(key)])))}${configToggle(t('scanlines'), 'scanlines', s.scanlines)}${configToggle(t('ambientMotion'), 'ambientMotion', s.ambientMotion)}${configToggle(t('signalDecrypt'), 'signalDecrypt', s.signalDecrypt)}`;
+      const layout = `${configToggle(s.language==='th'?'Scene Tracker บนคำตอบ AI':'Scene Tracker on AI replies','sceneTracker',s.sceneTracker)}${configToggle(s.language==='th'?'การ์ดแจ้งเข้าสู่พื้นที่':'Area arrival cards','areaCards',s.areaCards)}${configToggle(s.language==='th'?'ภาพประกอบฉาก':'Scene images','sceneImages',s.sceneImages)}${configRange(t('uiScale'), 'uiScale', 80, 120, 2, s.uiScale, '%')}${configField(t('density'), configSelect('density', s.density, ['comfortable','compact'].map(key => [key, t(key)])))}${configRange(t('callOpacity'), 'callOpacity', 20, 90, 5, s.callOpacity, '%')}${configRange(t('callBlur'), 'callBlur', 0, 24, 1, s.callBlur, 'px')}${configField(t('animationSpeed'), configSelect('animationSpeed', s.animationSpeed, ['off','slow','normal','fast'].map(key => [key, t(key)])))}${configField(t('headerPosition'), configSelect('headerPosition', s.headerPosition, ['left','center','right'].map(key => [key, t(key)])))}${configToggle(t('scanlines'), 'scanlines', s.scanlines)}${configToggle(t('ambientMotion'), 'ambientMotion', s.ambientMotion)}${configToggle(t('signalDecrypt'), 'signalDecrypt', s.signalDecrypt)}`;
       const behavior = `${[['enableSystem','enabled'],['showWand','showWand'],['autoProfiles','autoProfiles'],['hackingTracking','hackingEnabled']].map(([label,key]) => configToggle(t(label), key, s[key])).join('')}${configField(t('language'), configSelect('language', s.language, [['en','English'],['th','ไทย']]))}${configField(t('defaultScope'), configSelect('defaultScope', s.defaultScope, ['chat','character'].map(key => [key,t(key)])))}${configField(t('callHistory'), `<input name="callHistoryLimit" type="number" min="20" max="300" step="10" inputmode="numeric" value="${htmlEscape(s.callHistoryLimit)}">`)}`;
       const protocol = `${configToggle(t('teachAi'), 'injectPrompt', s.injectPrompt)}${configToggle(t('callSignals'), 'callMainSignals', s.callMainSignals)}<p class="cps-inline-note wide">${uiIcon('shield')}${htmlEscape(t('quotaNote'))}</p><label class="cps-config-field wide"><span>${htmlEscape(t('customInstructions'))}</span><textarea name="customPrompt" rows="5" maxlength="6000">${htmlEscape(s.customPrompt)}</textarea></label><details class="cps-tag-reference wide"><summary>${htmlEscape(t('tagReference'))}</summary><pre>[CP_HEADER|Name|role|status][/CP_HEADER]
 [CP_DIALOGUE|Name]Spoken words[/CP_DIALOGUE]
@@ -1575,7 +1576,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (switchState) switchState.textContent = t(target.checked ? 'on' : 'off');
         save();
         if (target.name === 'loreEnabled') form.querySelector('[data-lore-list]').disabled = !s.loreEnabled;
-        if (['sceneTracker','areaCards','language'].includes(target.name)) document.querySelectorAll('.mes_text').forEach(el=>renderMessageElement(el,true));
+        if (['sceneTracker','areaCards','sceneImages','language'].includes(target.name)) document.querySelectorAll('.mes_text').forEach(el=>renderMessageElement(el,true));
         if (target.name === 'language') {
           const scroll = body.scrollTop;
           renderManager();

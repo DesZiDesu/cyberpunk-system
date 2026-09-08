@@ -44,6 +44,12 @@ let n=0;function test(name,fn){fn();console.log('PASS '+name);n++;}
  const bd=await reply(record('LOCATION',{id:'bd-location',district:'westbrook',area:'Recording room'})+record('SCENE',{date:'2020-01-01',weather:'Sunny'}));
  test('Braindance HUD separates simulated location and hides physical wallet/equipment',()=>{assert.equal(JSON.stringify(state().map),physical);assert.equal(bd.message.extra.cpsScene.location.district,'westbrook');assert.equal(bd.message.extra.cpsScene.balance,null);assert.equal(bd.message.extra.cpsScene.weapons.length,0);});
  state().bd.status='stopped';
+ ctx.extensionSettings.cyberpunk_system.sceneImages=false;systems.decorate(scene.el);
+ test('Images can be hidden independently while retaining arrival text and tracker',()=>{assert.equal(scene.el.querySelector('img'),null);assert.ok(scene.el.querySelector('.cps-area-arrival'));assert.ok(scene.el.querySelector('.cps-scene-tracker'));});
+ ctx.extensionSettings.cyberpunk_system.sceneImages=true;ctx.extensionSettings.cyberpunk_system.sceneTracker=false;systems.decorate(scene.el);
+ test('Tracker can be hidden while keeping the arrival image',()=>{assert.equal(scene.el.querySelector('.cps-scene-tracker'),null);assert.ok(scene.el.querySelector('.cps-area-arrival img'));});
+ ctx.extensionSettings.cyberpunk_system.sceneTracker=true;ctx.extensionSettings.cyberpunk_system.areaCards=false;systems.decorate(scene.el);
+ test('Arrival cards can be hidden while retaining the tracker',()=>{assert.equal(scene.el.querySelector('.cps-area-arrival'),null);assert.ok(scene.el.querySelector('.cps-scene-tracker'));});
  ctx.extensionSettings.cyberpunk_system.sceneTracker=false;ctx.extensionSettings.cyberpunk_system.areaCards=false;systems.decorate(scene.el);
  test('Both display switches remove the HUD without changing saved readings',()=>{assert.equal(scene.el.querySelector('.cps-scene-stack'),null);assert.equal(scene.message.extra.cpsScene.balance,1200);});
  w.CyberpunkSystem.openCyberware();const p=q('.cps-rpg-main');

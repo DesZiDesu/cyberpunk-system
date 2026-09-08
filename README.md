@@ -1,5 +1,11 @@
 # Cyberpunk System
 
+## v3.1.1 — Consistent Back controls and independent scene display switches
+
+Shared window headers place text-only Back beside Close. The Mailbox reader no longer adds a second Back row: header Back returns to the mailbox before exiting to its parent. Draft preservation and Cyberware section history remain intact.
+
+Config → Layout provides independent Scene Tracker, Area arrival cards and Scene images switches. Disabling images retains arrival text; disabling arrival cards retains the tracker. Changes apply immediately to visible messages without deleting saved scene readings or changing RPG state.
+
 ## v3.1.0 — Scene readings, area arrivals and compact workspace navigation
 
 Every normal AI reply now has a compact two-column mobile Scene Tracker: fictional Gregorian date/weekday/time, weather and Celsius temperature, location/zone/interior/floor, persona, settled eddies, equipped weapons, loaded rounds/spare magazines for confirmed firearms, HP and RAM. Unconfirmed fields stay unconfirmed. Blade names do not get ammunition counters. Use Config → layout to toggle the tracker and area arrivals independently. CP_SCENE supplies fictional environment readings in the same response; no additional AI call is made. Wallet/equipment readings come from real extension state, not arbitrary scene payloads. CP_ITEM operation ammo updates an owned weapon with validated nonnegative counts; repeated event IDs do not spend anything again.
