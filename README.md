@@ -1,5 +1,57 @@
 # Cyberpunk System
 
+## v3.3.0 — Connected assets, recovery and interface polish
+
+This release connects the existing systems without adding relationship or reputation mechanics. Update the extension, reload SillyTavern and confirm **3.3.0**. Existing saved NPCs, portraits, mail, inventories, themes and assets are retained. New fields initialize when needed; no chat history is scanned for invented retroactive rewards.
+
+### Where to find the new controls
+
+| Workspace | Entry | What is connected |
+| --- | --- | --- |
+| System / Recovery | Wand → System / Recovery, or Cyberware section selector | Record inspector, request monitor, local checkpoints, JSON export/import |
+| Home dossier | Cyberware → Properties → Open dossier | Stash, workshop, living recovery, private notes and service log |
+| Vehicle dossier | Cyberware → Vehicles → Open dossier | Cargo, fuel, condition, odometer, engine/armor upgrades and home garage |
+| Mail recovery | Mailbox → Trash; any message → Version history | Restore deleted text, confirm permanent deletion, restore previous text versions |
+
+### Story records and AI requests
+
+- A rejected complete `CP_` record retains its raw text, error, original event ID and attempt count in the **Story record inspector**. A failure rolls back that record's RPG changes, including partially created actor accounts. Other successful records in the same response stay applied.
+- Open **Review & retry**, correct the failed payload and confirm. The type and event ID cannot change, a checkpoint is saved first, and retry does not advance the story turn. Successful records cannot be replayed. Persistent success/failure receipts remain separate from the short render cache and the latest 500 detailed inspection entries. Failures recorded by older extension versions cannot be reconstructed automatically.
+- Calls, Mailbox replies, NPC creation and private neural AI share a request lifecycle with explicit cancellation, a default **120-second timeout**, and no automatic retry. Set 15–600 seconds in System / Recovery. The monitor retains the latest 50 transport request statuses and durations, not prompts, model output or credentials. The originating interface displays response-validation errors and retains its draft or old message when a response cannot be applied.
+- The NPC creator now has its own Cancel generation button. Closing its editor cancels a pending request. Cancellation and chat changes reject late results even if the host/provider cannot stop its network transport immediately. Provider billing cannot be undone by this extension. Braindance continues to use the normal main-chat generation lifecycle, not the private-request watchdog.
+
+### Homes: storage, workshop and recovery
+
+**Actions** retains purchase, enter, upgrade and agreed-price resale controls. **Open dossier** contains details, Stash, Workshop and Service log. Names, descriptions and private notes can be edited without another purchase. Service actions enter the story context as already settled so the narrator is instructed not to charge or grant them again.
+
+- **Stash:** 20 item stacks plus 20 per Stash level. Deposit and withdraw an exact quantity; loadout equipment must first be unequipped/unloaded. Transfers preserve item stats and cooldowns. Copies whose stats changed while separated remain separate instead of overwriting one another. Empty the stash before selling the home.
+- **Workshop:** requires Workshop level 1. Three starter recipes use carried, unequipped `component` items: Field medkit (3 components + €$50), Ping (5 + €$150), Short Circuit (8 + €$250). Medkits restore 25 HP through the existing consumable system; quickhacks enter inventory unloaded and use the existing deck. These are explicit local RP recipes, not the game's crafting catalog.
+- **Equipment upgrade:** an owned weapon or quickhack gains one level. Cost is current level × €$100 plus `2 + floor(level / 5)` components. Maximum level is `min(60, Workshop level × 10)`. Weapons gain 1 power, capped at 100; quickhack RAM costs do not automatically decrease. Insufficient money or materials changes neither account nor inventory.
+- **Living:** enter the home first and install Living level 1+. Rest once per story turn across all homes. Each level restores 10 HP, 20 stamina and 1 RAM, and removes 5 stress, within existing resource caps. No automatic time skip or continuous healing loop. Security upgrades remain narrative amenities; there is no hidden theft simulation.
+- **Garage:** each home accommodates one vehicle plus one per Garage level. Assigned vehicles must be reassigned before selling the home. Its dossier shows used/available allocations.
+
+### Vehicles: usable telemetry and cargo
+
+New and existing vehicles default to a full fuel tank until a trip is recorded. Cargo holds 4 stacks plus 4 per Cargo level. Deposit/withdraw follows the same item-preservation rules as the home stash. Engine, Armor and Cargo upgrades have five levels; the next upgrade costs `€$1000 × next level`.
+
+Summon a working vehicle using **Actions**, then enter the distance of an established trip in **Vehicle systems**. This explicitly applies `ceil(km / (5 + Engine level))` fuel and `ceil(km / (20 + 5 × Armor level))` condition wear. The odometer records distance. Refilling costs €$2 per missing fuel point. Insufficient fuel rejects the trip; reaching zero condition marks the vehicle destroyed and clears the active vehicle until repaired. Repair retains the existing explicit agreed-price workflow. No GPS, autonomous travel, physical driving simulation or automatic real-time fuel drain is added.
+
+### Mail recovery and backups
+
+Delete message and Clear all read now move the selected text to **Trash**. Restore returns its original thread identity and flags. Permanent deletion asks for confirmation and removes the trashed text; offer, transfer and replay receipts remain so settlement cannot repeat. A reply can still inherit the thread of a trashed parent. This is recoverability, not a financial undo operation.
+
+Editing and successful NPC regeneration save the previous subject/body automatically. **Version history** restores text only and first saves the current version. Retention is 20 versions per message. User-authored text remains manually editable; NPC-authored text can be regenerated. Original messages and replies use the same controls.
+
+**Recovery vault** keeps up to five local checkpoints within an approximately 12 MB serialized UTF-16 budget, removing the oldest points first. Checkpoints exclude the recovery subtree to avoid recursive growth. Oversized local checkpoints are rejected; download important backups. Exported JSON includes the current extension chat state and character-scoped NPC/skill data, so treat it as private chat data. It does not include provider credentials or global theme settings.
+
+Import validates format and unsafe keys, then displays a review before replacement. Restore is blocked during generation and makes a pre-restore checkpoint; a current state too large for that checkpoint cannot be restored over through this workflow. Restoring character-scoped data is a separate, unchecked option because it affects other chats for the same character. Restore closes stale workspaces and returns call/Braindance/request playback states to idle. **SillyTavern messages and historical scene HUD snapshots are not rewound.** Only the current extension timeline is restored; subsequent story updates continue from it.
+
+### Polish and verification
+
+Asset dossiers now use original home/vehicle line drawings, clear status metrics, themed terminal panels, compact information hierarchy, sticky detail tabs and short entrance transitions. New controls use 44px touch targets, readable inputs, keyboard focus states and responsive layouts. All new colors derive from the saved palette; reduced-motion and animation-off settings remain respected. Research references and RP-rule distinctions are in [SOURCES.md](SOURCES.md).
+
+JavaScript syntax, CSS parsing and **418 simulated regression checks** cover the existing features plus 67 new recovery/asset/request/dependency checks. Corrupted dependency version strings from earlier release-number edits were restored to their original lockfile identities, with a regression guard comparing installed package metadata. A clean offline install could not complete because the environment lacks cached package archives; existing installed dependencies were used for the tests. No live model or native iPhone Safari test was performed. The browser preview was blocked by this environment, so rendered layout, keyboard behavior and photo-picker stability still need device validation using [the release checklist](tests/IOS-CHECKLIST.md).
+
 ## v3.2.1 — Holographic AI / Blackwall terminal
 
 Cyberware → AI / Blackwall now opens a two-sided neural conversation: AI messages on the left and user messages on the right. A CSS holographic sphere with orbital rings sits above the conversation. Blackwall uses a dark core and red energy; other AIs inherit the saved accent and surface colors. The signal bars respond to pending generation.

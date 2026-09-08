@@ -1,0 +1,35 @@
+# v3.3.0 device release checklist
+
+Status: automated host/DOM tests passed; these device checks are **not yet executed**. The local browser preview was blocked in the authoring environment. Use a copy of a chat and export a backup before destructive/restore tests. Never use a paid model merely to run the automated suite.
+
+## iPhone Safari
+
+- [ ] Update and reload; confirm 3.3.0 in the settings drawer and newly opened windows.
+- [ ] Enter each workspace from Wand and from Cyberware; Back returns to its parent/previous section, and Close remains reachable in portrait/landscape.
+- [ ] Switch saved accent/background colors; check Mailbox, house/car cards, dossiers, support monitor and recovery dialogs match.
+- [ ] With a keyboard open, verify text fields do not force an unwanted page zoom and Send/Save/Cancel remain reachable. Test at 320–430 CSS px widths and with larger text settings.
+- [ ] In the NPC editor, select a large photo, cancel the picker, select again, crop/zoom and save. Confirm Safari does not reload or lose the current chat. Try a HEIC photo exported to a supported format if necessary.
+- [ ] Reduce Motion and extension animation Off stop ambient/detail animation. Normal motion stays smooth during scrolling and the device does not become unusually hot.
+- [ ] Swipe mail rightward for Read/Delete and leftward for Archive/Pin; vertical scrolling must not trigger either action. Trash restores a message into the original thread.
+- [ ] Edit an original and a reply, regenerate an NPC message, restore an earlier text version and confirm no attached money/items are paid twice.
+- [ ] Start one mail reply with a configured model. Check thread and main-chat generation indicators, cancel, and confirm a late response is ignored. Test offline/timeout recovery and retry explicitly.
+- [ ] Start NPC generation, cancel and close; reopen the editor and verify no late fields are saved. Repeat for call and neural AI with separate drafts.
+
+## Connected data and recovery
+
+- [ ] Buy/enter an established home; upgrade Stash, Workshop, Living and Garage. Deposit/withdraw quantities, craft a program, load it into the existing deck and use a crafted medkit.
+- [ ] Split a stack, change one copy's stats and withdraw the other; verify both stats remain intact. Insufficient funds/materials must not consume either.
+- [ ] Rest once, try resting again in the same story turn, then advance the story and retry. Resource caps remain intact.
+- [ ] Buy/summon a vehicle, record a trip and check displayed fuel/wear. Refuel, upgrade Cargo/Engine/Armor, assign a home garage and check capacity.
+- [ ] Try selling a home/car with cargo or assigned vehicles. The operation must reject without changing money or ownership.
+- [ ] Inspect a deliberately malformed complete story record in a test chat, correct its payload and retry once. Rerendering the original message must not apply it again.
+- [ ] Export a checkpoint, change extension inventory, review/import and restore. The old extension state returns; ordinary SillyTavern text and historical HUDs intentionally do not rewind.
+- [ ] Change chats during a pending request/import preview. No old result or restore may affect the new chat.
+
+## Desktop
+
+- [ ] Repeat Back/Close and keyboard-only tab navigation, especially sticky dossier tabs and confirmation dialogs.
+- [ ] Use Mailbox Edit mode for selection/deletion without touch swipes.
+- [ ] Confirm JSON download/import works and exported backups are stored privately.
+
+Record device, iOS/browser and SillyTavern versions with failures. Do not paste private prompts, API keys or full backups into public issues.

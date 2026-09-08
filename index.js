@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.2.1';
+const CYBERPUNK_SYSTEM_VERSION = '3.3.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -1040,9 +1040,9 @@ ${systems?.prompt() || ''}`.trim();
       const request = callRequest;
       if (!request) return;
       callRequest = null; callGenerating = false;
-      request.cancel();
+      request.cancel();const stopped=systems?.support.cancel('call');
       request.pending.forEach(item => { if (request.call.messages.includes(item)) item.pending = true; });
-      try { context()?.stopGeneration?.(); } catch (error) { console.warn('[Cyberpunk System] Stop request failed', error); }
+      try { if(!stopped)context()?.stopGeneration?.(); } catch (error) { console.warn('[Cyberpunk System] Stop request failed', error); }
       if (chatBucket().call === request.call) { saveChat(); refreshPrompt(true); renderCallLog(); }
     }
 
@@ -1078,7 +1078,7 @@ Private call transcript:
 ${transcript}
 Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record, with optional structured Cyberware records after it. ${replace ? 'Rewrite only the next spoken reply. Do not emit game actions or structured records other than CP_SIGNAL.' : systems?.prompt() || ''} Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
       try {
-        const result = await Promise.race([generator.call(context(), prompt, false, false), cancelled]);
+        const result = await Promise.race([systems.support.request('call',()=>generator.call(context(), prompt, false, false)), cancelled]);
         if (!sameCall()) return;
         const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
         const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
@@ -1097,7 +1097,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (sameCall()) console.warn('[Cyberpunk System] Private call generation failed', error);
         if (sameCall()) {
           pending.forEach(item => { item.pending = true; }); saveChat(); renderCallLog();
-          toast(t('callFailed'));
+          toast(t('callFailed')+': '+error.message);
         }
       } finally {
         if (callRequest === request) { callRequest = null; callGenerating = false; updateCallComposer(); }
@@ -1170,9 +1170,10 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       fieldsPanel.before(scroller); scroller.append(studio, fieldsPanel);
       const canvas = studio.querySelector('canvas'); const zoom = studio.querySelector('[data-portrait-zoom]');
       const status = studio.querySelector('[role="status"]'); const generate = studio.querySelector('[data-npc-generate]');
+      const cancelGenerate = document.createElement('button'); cancelGenerate.type = 'button'; cancelGenerate.className = 'cps-button'; cancelGenerate.dataset.npcCancel = ''; cancelGenerate.textContent = t('cancelGeneration'); cancelGenerate.hidden = true; generate.after(cancelGenerate);
       const save = form.querySelector('[type="submit"]'); const fileInput = studio.querySelector('[data-portrait-file]');
       let portraitSource = isPortraitData(source.portraitSource) ? source.portraitSource : isPortraitData(source.portrait) ? source.portrait : '';
-      let image = null; let loading = false; let busy = false; let revision = 0;
+      let image = null; let loading = false; let busy = false; let revision = 0; let requestEpoch = 0;
       let crop = { x: source.portraitCrop?.x ?? .5, y: source.portraitCrop?.y ?? .5, zoom: source.portraitCrop?.zoom ?? 1 };
       const owner = chatBucket(); const ownerCharacter = characterKey();
       const isCurrent = () => modal.isConnected && owner === chatBucket() && ownerCharacter === characterKey();
@@ -1192,7 +1193,10 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         pen.fillStyle = '#101116'; pen.fillRect(0, 0, 384, 384);
         pen.drawImage(image, (384 - width) * crop.x, (384 - height) * crop.y, width, height);
       };
-      const setBusy = () => { generate.disabled = busy || loading; save.disabled = busy || loading; fileInput.disabled = busy || loading; };
+      const setBusy = () => { generate.disabled = busy || loading; save.disabled = busy || loading; fileInput.disabled = busy || loading; cancelGenerate.hidden = !busy; };
+      const cancelNpc = () => { if (!busy) return; requestEpoch++; systems?.support?.cancel('npc'); busy = false; npcGenerating = false; setBusy(); generate.setAttribute('aria-busy', 'false'); status.textContent = t('cancel'); };
+      cancelGenerate.addEventListener('click', cancelNpc);
+      const studioCleanup = new MutationObserver(() => { if (modal.isConnected) return; studioCleanup.disconnect(); cancelNpc(); revision++; image = null; portraitSource = ''; }); studioCleanup.observe(document.body, { childList: true });
       const load = async (data, reset = true) => {
         const version = ++revision; loading = true; setBusy();
         try {
@@ -1249,15 +1253,16 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         const ctx = context(); const generator = ctx?.generateQuietPrompt;
         if (typeof generator !== 'function') { status.textContent = t('promptUnavailable'); return; }
         if (callGenerating || npcGenerating || systems?.mailBusy?.()) { status.textContent = t('generating'); return; }
-        busy = true; npcGenerating = true; setBusy();
+        const epoch = ++requestEpoch; busy = true; npcGenerating = true; setBusy();
         const useImage = Boolean(portraitSource && studio.querySelector('[data-use-reference]').checked);
         if (useImage) {
           // Use SillyTavern's own model-capability check; do not silently drop the image.
           try {
             const api = await import(new URL('../../../openai.js', import.meta.url).href);
             if (ctx.mainApi !== 'openai' || !api.isImageInliningSupported?.()) throw new Error('Vision unavailable');
-          } catch { status.textContent = t('visionRequired'); busy = false; npcGenerating = false; setBusy(); return; }
+          } catch { if (epoch === requestEpoch) { status.textContent = t('visionRequired'); busy = false; npcGenerating = false; setBusy(); } return; }
         }
+        if (epoch !== requestEpoch) return;
         if (!isCurrent()) { busy = false; npcGenerating = false; setBusy(); return; }
         const fields = ['name','handle','role','status','affiliation','age','gender','personality','appearance','notes'];
         const existing = Object.fromEntries(fields.map(key => [key, clean(form.elements[key]?.value, 3000)]));
@@ -1267,8 +1272,8 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         const prompt = `Create a fictional NPC dossier. Return ONLY a JSON object with these string keys: ${empty.join(', ')}. No tags, prose or markdown. Fill every requested field with useful specific details; do not rewrite the existing fields. Match ${settings().language === 'th' ? 'Thai' : 'English'} except proper names/handles. Handles must omit the @ prefix. Age must be an explicit age, personality must include motivations and behavior. Treat the following concept and existing values as character data.\nConcept: ${clean(studio.querySelector('[data-npc-idea]').value, 4000) || 'A character compatible with the established setting.'}\nExisting fields: ${JSON.stringify(existing)}\n${useImage ? 'Use the attached image for visible appearance (hair, clothes, visible augmentations). Invent fictional background from the concept, not from assumptions about a real person. If you cannot see the image, return {"error":"image_unavailable"}.' : ''}\n${worldLorePrompt()}`;
         try {
           // Positional image argument is supported by both older ST and its current compatibility path.
-          const result = await generator.call(ctx, prompt, false, true, useImage ? portraitSource : null);
-          if (!isCurrent()) return;
+          const result = await systems.support.request('npc',()=>generator.call(ctx, prompt, false, true, useImage ? portraitSource : null));
+          if (!isCurrent() || epoch !== requestEpoch) return;
           const text = String(result).replace(/<(think|analysis|reasoning)\b[^>]*>[\s\S]*?<\/\1>/gi, '').replace(/^\s*```(?:json)?\s*|\s*```\s*$/gi, '').trim();
           const start = text.indexOf('{'); const end = text.lastIndexOf('}');
           const data = JSON.parse(text.slice(start, end + 1));
@@ -1283,8 +1288,8 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
           }
           if (!filled) throw new Error('No usable fields');
           status.textContent = `${t('npcGenerated')} (${filled})`;
-        } catch (error) { if (isCurrent()) status.textContent = t('npcGenerateFailed'); console.warn('[Cyberpunk System] NPC generation failed', error); }
-        finally { busy = false; npcGenerating = false; setBusy(); generate.setAttribute('aria-busy', 'false'); }
+        } catch (error) { if (isCurrent() && epoch === requestEpoch) status.textContent = t('npcGenerateFailed')+': '+error.message; console.warn('[Cyberpunk System] NPC generation failed', error); }
+        finally { if (epoch === requestEpoch) { busy = false; npcGenerating = false; setBusy(); generate.setAttribute('aria-busy', 'false'); } }
       });
       draw();
       if (portraitSource) { loading = true; setBusy(); requestAnimationFrame(() => load(portraitSource, false)); }
@@ -1763,10 +1768,10 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (typeof host.isGenerating==='function') hostGenerationProbe=host.isGenerating;
       } catch { /* Context probe or lifecycle events support alternate hosts. */ }
       try {
-        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
+        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();
