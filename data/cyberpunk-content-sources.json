@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "local-game-tweakdb",
+      "kind": "authoritative-local-export",
+      "priority": 100,
+      "scope": ["items", "vehicles", "locations"],
+      "note": "Preferred source. Export or dump records from the same installed Cyberpunk 2077 build that BLACK targets."
+    },
+    {
+      "id": "local-wolvenkit-icons",
+      "kind": "authoritative-local-export",
+      "priority": 100,
+      "scope": ["item-icons", "weapon-icons"],
+      "note": "Export XBM/UI icon resources to PNG locally. Do not treat the public repository as a bulk texture mirror."
+    },
+    {
+      "id": "cp77-entspawner-record-index",
+      "kind": "supplementary-public-index",
+      "priority": 60,
+      "scope": ["vehicles", "entities"],
+      "repository": "justarandomguyintheinternet/CP77_entSpawner",
+      "ref": "d9680f4d7caaaf001c214e4614cc6d68cceeb0d3",
+      "path": "data/spawnables/entity/records/records.txt",
+      "observedCommitDate": "2026-07-01",
+      "redistribution": "reference-only",
+      "note": "Current public technical-record index discovered during implementation. It includes many Vehicle.* records for traffic, player cars, AVs, military vehicles, rail, quest vehicles and hidden variants. No repository license was found at the root during this review, so BLACK references it but does not vendor/copy the list. Local TweakDB remains authoritative."
+    },
+    {
+      "id": "cdpr-modding-docs",
+      "kind": "documentation",
+      "priority": 40,
+      "scope": ["vehicles", "modding"],
+      "repository": "CDPR-Modding-Documentation/Cyberpunk-Modding-Docs",
+      "note": "Technical modding documentation and vehicle references."
+    },
+    {
+      "id": "nc-zoning-board",
+      "kind": "geographic-data",
+      "priority": 80,
+      "scope": ["districts", "subdistricts", "map-geometry"],
+      "note": "Already imported by rpg-map-data.js under its existing attribution/license handling."
+    }
+  ]
+}
