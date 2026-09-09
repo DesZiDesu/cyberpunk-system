@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.7.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.7.1';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -519,7 +519,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
 
     function aiProtocol() {
       const s = settings();
-      if (!s.enabled || !s.injectPrompt) return '';
+      if (!s.enabled || !s.injectPrompt || systems?.support?.privateActive()) return '';
       const npcs = effectiveRecords('npcs').slice(0, 28).map(npc => `${npc.name}${npc.handle ? ` (@${cleanHandle(npc.handle)})` : ''}${npc.role ? ` — ${npc.role}` : ''}${npc.personality ? `; personality: ${clean(npc.personality, 300)}` : ''}${npc.appearance ? `; appearance: ${clean(npc.appearance, 300)}` : ''}`).join('; ');
       const skills = effectiveRecords('skills').slice(0, 20).map(skill => `${skill.name} ${skill.level}/${skill.max}`).join('; ');
       const call = chatBucket().call;
@@ -547,7 +547,7 @@ ${systems?.prompt() || ''}`.trim();
       const apply = () => {
         const ctx = context();
         if (typeof ctx?.setExtensionPrompt !== 'function') return;
-        try { ctx.setExtensionPrompt(CYBERPUNK_PROMPT_KEY, aiProtocol(), 1, 0, false, 0); }
+        try { const prompt=aiProtocol();systems?.support?.recordPrompt(prompt.length);ctx.setExtensionPrompt(CYBERPUNK_PROMPT_KEY, prompt, 1, 0, false, 0); }
         catch (error) { console.warn('[Cyberpunk System] Prompt update failed', error); }
       };
       if (immediate) apply();
@@ -1068,7 +1068,7 @@ ${systems?.prompt() || ''}`.trim();
       callGenerating = true;
       updateCallComposer();
       const profile = findEffectiveNpc(call.peer.name);
-      const transcript = (replace ? call.messages.slice(0, call.messages.indexOf(replace)) : call.messages).slice(-30).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer.name : 'SYSTEM'}: ${item.text}`).join('\n');
+      const transcript = (replace ? call.messages.slice(0, call.messages.indexOf(replace)) : call.messages).slice(-12).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer.name : 'SYSTEM'}: ${clean(item.text,1200)}`).join('\n');
       const prompt = `You are continuing a private cyberpunk call as ${call.peer.name}${call.peer.handle ? `, network handle @${cleanHandle(call.peer.handle)}` : ''}.
 NPC dossier: ${profile ? JSON.stringify({ role: profile.role, status: profile.status, affiliation: profile.affiliation, personality: profile.personality, appearance: profile.appearance, notes: profile.notes }) : 'Use the established main-chat characterization.'}
 Recent main-chat context (context only; do not continue it as public dialogue):
@@ -1076,9 +1076,9 @@ ${recentMainChat()}
 ${worldLorePrompt()}
 Private call transcript:
 ${transcript}
-Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record, with optional structured Cyberware records after it. ${replace ? 'Rewrite only the next spoken reply. Do not emit game actions or structured records other than CP_SIGNAL.' : systems?.prompt() || ''} Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
+Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record, with optional structured Cyberware records after it. ${replace ? 'Rewrite only the next spoken reply. Do not emit game actions or structured records other than CP_SIGNAL.' : systems?.channelPrompt('call',peer.name) || ''} Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
       try {
-        const result = await Promise.race([systems.support.request('call',()=>generator.call(context(), prompt, false, false)), cancelled]);
+        const result = await Promise.race([systems.support.generate('call',prompt), cancelled]);
         if (!sameCall()) return;
         const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
         const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
@@ -1271,7 +1271,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (!isCurrent()) { status.textContent = t('npcContextChanged'); return; }
         const ctx = context(); const generator = ctx?.generateQuietPrompt;
         if (typeof generator !== 'function') { status.textContent = t('promptUnavailable'); return; }
-        if (callGenerating || npcGenerating || systems?.mailBusy?.()) { status.textContent = t('generating'); return; }
+        if (callGenerating || npcGenerating || hostGenerationBusy() || systems?.mailBusy?.()) { status.textContent = t('generating'); return; }
         const epoch = ++requestEpoch; busy = true; npcGenerating = true; setBusy();
         const useImage = Boolean(portraitSource && studio.querySelector('[data-use-reference]').checked);
         if (useImage) {
@@ -1291,7 +1291,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         const prompt = `Create a fictional NPC dossier. Return ONLY a JSON object with these string keys: ${empty.join(', ')}. No tags, prose or markdown. Fill every requested field with useful specific details; do not rewrite the existing fields. Match ${settings().language === 'th' ? 'Thai' : 'English'} except proper names/handles. Handles must omit the @ prefix. Age must be an explicit age, personality must include motivations and behavior. Treat the following concept and existing values as character data.\nConcept: ${clean(studio.querySelector('[data-npc-idea]').value, 4000) || 'A character compatible with the established setting.'}\nExisting fields: ${JSON.stringify(existing)}\n${useImage ? 'Use the attached image for visible appearance (hair, clothes, visible augmentations). Invent fictional background from the concept, not from assumptions about a real person. If you cannot see the image, return {"error":"image_unavailable"}.' : ''}\n${worldLorePrompt()}`;
         try {
           // Positional image argument is supported by both older ST and its current compatibility path.
-          const result = await systems.support.request('npc',()=>generator.call(ctx, prompt, false, true, useImage ? portraitSource : null));
+          const result = await systems.support.generate('npc',prompt,{image:useImage?portraitSource:null});
           if (!isCurrent() || epoch !== requestEpoch) return;
           const text = String(result).replace(/<(think|analysis|reasoning)\b[^>]*>[\s\S]*?<\/\1>/gi, '').replace(/^\s*```(?:json)?\s*|\s*```\s*$/gi, '').trim();
           const start = text.indexOf('{'); const end = text.lastIndexOf('}');

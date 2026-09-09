@@ -2,6 +2,11 @@
 
 Reviewed through 2026-09-06. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols are original code. The v2.4 map uses attributed NC Zoning Board geometry and remotely loaded map tiles, described below.
 
+## v3.7.1 private transport (2026-09-09)
+
+- [SillyTavern main runtime](https://github.com/SillyTavern/SillyTavern/blob/release/public/script.js): reviewed `generateRaw`, `generateRawData`, `generateQuietPrompt`, `TempResponseLength`, and send-button lifecycle. Raw builds from the supplied prompt and uses configured host providers; quiet uses normal chat assembly. The raw transport's stop-event hook supports cancellation; neither cancellation nor local character counts establish provider billing.
+- [SillyTavern context](https://github.com/SillyTavern/SillyTavern/blob/release/public/scripts/st-context.js): verified raw generation and send-button APIs are exposed. No separate credentials or model account is configured by this update.
+
 ## v3.7.0 host integration (2026-09-09)
 
 - [SillyTavern context exports](https://github.com/SillyTavern/SillyTavern/blob/release/public/scripts/st-context.js): checked the public context exports for `generate`, `saveChat`, `stopGeneration`, chat identity and metadata access.

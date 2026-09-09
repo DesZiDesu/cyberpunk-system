@@ -1,4 +1,13 @@
-# v3.7.0 native acceptance checks — pending
+# v3.7.1 native acceptance checks — pending
+
+- [ ] Confirm version 3.7.1. On the reported closed store, review both addresses, confirm only if actually at that counter, and verify stock/wallet/till do not change. Leaving the counter still disables checkout.
+- [ ] Reopen a closed pending Device Breach; it resumes the existing console. Try another device; Resume existing and Cancel-and-switch both work without AI or RAM spend. A successful actual puzzle is still required for secured access.
+- [ ] Mixed unknown device actions display a warning but retain supported operations. Exact-name inline ID mismatches do not add duplicate UNRECORDED rows. Local confirmation of an existing same-name/type device creates no new registry entry.
+- [ ] Send one mail/call/neural/NPC-text request. Recovery reports isolated raw on a supported host, no duplicate request, the chosen output cap, and character count. Compare provider Usage separately; do not infer currency cost from these counts.
+- [ ] Main Send/Stop state restores after raw completion, cancellation, provider error and chat switch; private request controls remain cancellable. Test with a real configured provider, including a reasoning model if used.
+- [ ] Vision and older-host requests show quiet compatibility; review their actual context size in host/provider diagnostics. Cancellation must not trigger an automatic retry.
+
+## v3.7.0 acceptance checks
 
 - [ ] Update/reload and confirm 3.7.0; retain an old-chat backup. Existing Device Hacking configuration and current story remain unchanged.
 - [ ] Blank first-message card and empty chat: one six-step registration panel appears in Main Chat. A real greeting, alternate greeting, existing story or group chat is not replaced.
