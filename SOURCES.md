@@ -2,6 +2,11 @@
 
 Reviewed through 2026-09-06. This is an unofficial SillyTavern role-play extension. No game screenshots, proprietary map tiles, game UI code, or ripped inventory textures are bundled. SVG symbols are original code. The v2.4 map uses attributed NC Zoning Board geometry and remotely loaded map tiles, described below.
 
+## v3.7.0 host integration (2026-09-09)
+
+- [SillyTavern context exports](https://github.com/SillyTavern/SillyTavern/blob/release/public/scripts/st-context.js): checked the public context exports for `generate`, `saveChat`, `stopGeneration`, chat identity and metadata access.
+- [SillyTavern main runtime](https://github.com/SillyTavern/SillyTavern/blob/release/public/script.js): reviewed `Generate`, `getChatResult`, and `getFirstMessage`. Registration uses normal generation with `automatic_trigger: true`, not regenerate or quiet-generation output manually appended to history. Because the normal path can clear the composer, a nonempty composer is explicitly guarded. Existing/alternate greetings remain host-owned. These are implementation references, not a claim of native-provider testing.
+
 ## v3.6.0 visual and performance references (2026-09-08)
 
 - [Adam Blumert — Cyberpunk 2077 UI/UX & ADS Showreel](https://vimeo.com/641291345): primary motion-designer portfolio, including loading screens and quest UI animation. Informed the original staged console, circuit geometry, quiet motion and terminal hierarchy. No game assets or component code were copied.

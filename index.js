@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.6.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.7.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -750,7 +750,7 @@ ${systems?.prompt() || ''}`.trim();
     }
 
     function renderMessageElement(element, force = false) {
-      if (!(element instanceof HTMLElement) || !settings().enabled) return;
+      if (!(element instanceof HTMLElement) || !settings().enabled || element.querySelector('.cps-onboarding')) return;
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
@@ -1487,7 +1487,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       body.querySelector('[data-no-results]').hidden=matches.length>0||!records.length;
       body.querySelectorAll('[data-filter-scope]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.filterScope===state.scope)));
       const pager=body.querySelector('[data-npc-pages]');pager.hidden=pages===1;
-      pager.innerHTML=`<button type="button" data-npc-page="-1" aria-label="Previous page" ${state.page===0?'disabled':''}>←</button><span role="status">${state.page+1} / ${pages}</span><button type="button" data-npc-page="1" aria-label="Next page" ${state.page===pages-1?'disabled':''}>→</button>`;
+      pager.innerHTML=`<button type="button" data-npc-page="-1" aria-label="Previous page" ${state.page===0?'disabled':''}>${globalThis.CyberpunkRpgCore.arrow('left')}</button><span role="status">${state.page+1} / ${pages}</span><button type="button" data-npc-page="1" aria-label="Next page" ${state.page===pages-1?'disabled':''}>${globalThis.CyberpunkRpgCore.arrow('right')}</button>`;
       pager.querySelectorAll('button').forEach(el=>el.onclick=()=>{state.page+=Number(el.dataset.npcPage);draw();body.scrollTop=0;pager.querySelector('[data-npc-page="'+el.dataset.npcPage+'"]').focus();});
       };
       body.querySelector('[data-record-add]').onclick=()=>openNpcEditor();
@@ -1500,7 +1500,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
     function renderHacking(body) {
       const records = effectiveRecords('skills');
       const average = records.length ? Math.round(records.reduce((sum, record) => sum + clamp(Number(record.level) / Math.max(1, Number(record.max)) * 100, 0, 100), 0) / records.length) : 0;
-      body.innerHTML = `<button type="button" class="cps-button primary" data-open-quickhacks>Quickhack Deck ↗</button>${sectionHeading('02', 'skillsTitle', 'skillsHint', metric(records.length.toString().padStart(2, '0'), 'protocols'))}<div class="cps-deck-summary">${uiIcon('chip')}<span>${htmlEscape(t('mastery'))}</span><strong>${average}%</strong><div class="cps-progress" style="--cps-progress:${average}%" aria-hidden="true"><i></i></div></div>${recordToolbar('hacking', 'addSkill', 'searchSkills')}<div class="cps-card-grid"></div>${noResultsMarkup()}`;
+      body.innerHTML = `<button type="button" class="cps-button primary" data-open-quickhacks>Quickhack Deck ${globalThis.CyberpunkRpgCore.arrow('up-right')}</button>${sectionHeading('02', 'skillsTitle', 'skillsHint', metric(records.length.toString().padStart(2, '0'), 'protocols'))}<div class="cps-deck-summary">${uiIcon('chip')}<span>${htmlEscape(t('mastery'))}</span><strong>${average}%</strong><div class="cps-progress" style="--cps-progress:${average}%" aria-hidden="true"><i></i></div></div>${recordToolbar('hacking', 'addSkill', 'searchSkills')}<div class="cps-card-grid"></div>${noResultsMarkup()}`;
       const grid = body.querySelector('.cps-card-grid');
       if (!records.length) grid.innerHTML = emptyState('hacking', 'noSkills', 'emptySkillHint');
       records.forEach(record => {
@@ -1782,6 +1782,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         version: CYBERPUNK_SYSTEM_VERSION,
         open: openManager,
         openCyberware: (name = 'user') => systems?.open(name),
+        openCampaign: () => systems?.campaign.openVault(),
         getRpgState: () => systems?.state(),
         startBreach: data => systems?.beginBreach(data),
         startCall: (name, handle = '') => startCall({ name, handle }, false),
@@ -1802,7 +1803,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (typeof host.isGenerating==='function') hostGenerationProbe=host.isGenerating;
       } catch { /* Context probe or lifecycle events support alternate hosts. */ }
       try {
-        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-shops.js', 'CyberpunkShopsFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
+        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-shops.js', 'CyberpunkShopsFactory'], ['rpg-campaign.js', 'CyberpunkCampaignFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
         systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });

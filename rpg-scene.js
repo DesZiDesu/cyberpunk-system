@@ -38,7 +38,7 @@
       const live=index===chat.length-1;
       // An edited historical message must not acquire today's wallet/equipment.
       const a=live?s.player:null,location=live&&!simulated?copy(s.map.location):copy(old?.location||previous?.location||{});
-      let base=old||previous||{};
+      let base=old||previous||api.chatBucket().campaign?.lastScene||{};
       if(Boolean(base.simulated)!==Boolean(simulated))base={};
       if(simulated){
         for(const m of message.mes.matchAll(/\[CP_LOCATION\]([\s\S]*?)\[\/CP_LOCATION\]/gi))try{
@@ -48,7 +48,7 @@
       const scene=reading(message.mes,base);
       const weapons=a?a.inventory.filter(it=>it.equipped&&it.category==='weapons').map(it=>({name:text(it.name),weaponType:text(it.weaponType),ammo:count(it.ammo),magazines:count(it.magazines)})):old?.weapons||[];
       message.extra.cpsScene={fingerprint,date:scene.date||'',time:scene.time||'',weather:scene.weather||'',temperature:scene.temperature??null,
-        location,simulated:Boolean(simulated),persona:text(api.context()?.name1),balance:simulated?null:a?.balance??old?.balance??null,
+        location,simulated:Boolean(simulated),persona:text(s.player.profile?.name||api.context()?.name1),balance:simulated?null:a?.balance??old?.balance??null,
         hp:simulated?null:a?.hp??old?.hp??null,maxHp:a?.maxHp??old?.maxHp??null,ram:simulated?null:a?.ram??old?.ram??null,
         weapons:simulated?[]:weapons,entered:old?.entered===true||Boolean(location.district&&address(location)!==address(previous?.location))};
       api.saveChat();

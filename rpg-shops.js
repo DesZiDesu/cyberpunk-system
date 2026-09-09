@@ -25,7 +25,7 @@ globalThis.CyberpunkShopsFactory = api => {
   const catalog=()=>DB.curated.filter(x=>x.id!=='cps:erebus');
   const categoryFor=item=>({clothing:'clothing',weapons:'weapons',consumable:'medicine',cyberware:'cyberware',quickhack:'quickhack',mod:'equipment',component:'equipment',data:'other',braindance:'other'})[item.category]||'essentials';
   let windowNode=null,windowOwner=null,windowShop=null,windowVisit=null,mode='buy',filter='all',search='',selected=null,page=0,renderSignature='';
-  const button=(action,title,extra='')=>'<button type="button" class="cps-button" data-shop="'+E(action)+'" '+extra+'>'+E(title)+'</button>';
+  const button=(action,title,extra='')=>'<button type="button" class="cps-button" data-shop="'+E(action)+'" '+extra+'>'+C.arrowLabel(title,E)+'</button>';
 
   function stockRow(value){
     const sku=id(value.sku),quantity=integer(value.quantity),price=C.money(value.price);

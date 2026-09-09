@@ -1,4 +1,17 @@
-# v3.6.0 native acceptance checks — pending
+# v3.7.0 native acceptance checks — pending
+
+- [ ] Update/reload and confirm 3.7.0; retain an old-chat backup. Existing Device Hacking configuration and current story remain unchanged.
+- [ ] Blank first-message card and empty chat: one six-step registration panel appears in Main Chat. A real greeting, alternate greeting, existing story or group chat is not replaced.
+- [ ] Complete all steps at 320–430 CSS pixels, enlarged text and landscape. Thai inputs do not zoom unexpectedly, keyboard does not trap the final controls, and theme colors match.
+- [ ] Reload mid-form: draft remains. Invalid level/name/custom path/opening cannot mutate starting assets. Review and confirm; one normal main-chat reply streams, generation status and cancellation are visible, and UI disappears only after success.
+- [ ] Offline/empty API response retains draft with retry error. Cancel mid-stream; review any partial host message before retry. Double taps and switching chat during generation do not duplicate or apply old character data in the new chat.
+- [ ] A nonempty composer draft is preserved and blocks opening generation.
+- [ ] Export a populated world with portraits, mail offers, completed payments, NPC actors, property storage, vehicle cargo, equipped Quickhacks, shop stock and device programs. Review continuity notes; verify downloaded JSON remains below 25 MB.
+- [ ] In a new empty single-card chat import, review and confirm. Existing story blocks import. Verify all balances/quantities/IDs, inactive calls and puzzles, preserved transaction receipts, and no repeated old notification popups. No AI call occurs before Continue is confirmed.
+- [ ] Generate continuation: previous identity, location/date/time and reviewed story notes are present, no starting assets are awarded twice, and the old chat is unchanged. Revisit shops/devices through new story observations.
+- [ ] Shop entrance, device rows and pagination arrows render as monochrome SVG, not emoji.
+
+## Previous release checks still applicable
 
 - [ ] Update/reload and confirm 3.6.0. Preserve the current chat and Device Hacking configuration.
 - [ ] AI estimates 3 seconds for an easy link and 20 seconds for a harder one. Confirm the estimate/reason before Connect, different durations, and unchanged puzzle timer.
