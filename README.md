@@ -1,5 +1,42 @@
 # Cyberpunk System
 
+## v3.9.0 — Neural suppression, Trauma Team and medical packages
+
+Open **Cyberware → Cyberpsycho / Medical Link** from Status or Cyberware. The player always controls their character. The old random episode roll is replaced by deterministic effective neural load: installed capacity load + stress + legacy episode burden + toxicity contribution, scaled by the chat preference, minus active suppression. Thresholds are 70 (near limit), 90 (critical) and 100 (episode); these are extension-original fictional rules. Existing episode saves migrate to a recoverable burden once. No forced dialogue, violence, personality changes or Crisis Choice interruption.
+
+The redesigned medical window has an angular biomonitor header, segmented load scale, base/stress/suppression/toxicity breakdown, medication inventory, package comparison, dispatch status and pending RP requests. Decorative chromatic edge separation, signal fragments and corner diagnostics are confined to the Main Chat rectangle. They never capture taps or keyboard input. Effects default to reduced/static; select **Full motion**, **Reduced** or **Off** inside Medical Link. OS reduced-motion and the extension animation-off setting are respected. Braindance and disabled extension states remove the overlay.
+
+### Suppression and recovery
+
+Purchase oral suppressants (€$120, strength 22, six story turns) or injectors (€$240, strength 35, four story turns) in Medical Link, or acquire items with the exact `catalogId` `neural-suppressant-tablet` / `neural-suppressant-injector` and category `consumable` in the story. UI use and RP use both require an owned item and explicit confirmation. One dose consumes one item; all suppressants share a three-turn cooldown. Repeated doses replace rather than stack and lose potency with accumulated toxicity. The toxicity cap blocks unsafe fictional dosing; each dose costs five stamina, does not heal HP and does not remove installed load. Toxicity decreases by three per story turn.
+
+`[CP_MEDICAL]{"id":"dose-event-1","operation":"use","itemId":"owned-inventory-id"}[/CP_MEDICAL]` queues a request and renders a clickable Medical Link card. `operation:"call"` requests a Trauma Team call. The player reviews or declines in Medical Link. Existing `CP_ITEM operation:"use"` requests for player suppressants take the same confirmation path. AI narration cannot grant suppression merely by saying it happened. The ordinary reply carries the protocol; medical actions make **zero extra AI requests**.
+
+Durations advance with distinct non-Braindance story replies or explicit recovery turns. Rendering, retries, regenerations of the same message and real-world time do not consume additional turns. Rest lowers stress; a confirmed €$300 recovery session costs one turn, reduces stress by 20, toxicity by 20 and legacy burden by 15. Persistent implant overload requires unequipping implants or legitimately increasing capacity.
+
+### Trauma Team and packages
+
+All prices and durations below are extension campaign presets, **not a canon 2077 price table**. Each term is 60 RP turns. Renewals are explicit, use the existing balance/ledger, and preserve the remaining term; no real-time or automatic billing.
+
+| Plan | Premium | Arrival estimate | Copay | Coverage |
+| --- | ---: | ---: | ---: | --- |
+| Silver | €$500 | 3 RP turns | €$250 | Known Night City districts outside marked danger zones |
+| Executive | €$1,000 | 2 RP turns | €$100 | Known Night City districts including marked danger zones |
+| Platinum | €$2,500 | 1 RP turn | €$0 | Known Night City districts including marked danger zones |
+
+Manual calls verify the active contract, established district, danger coverage and outstanding bills. Auto-dispatch requires explicit opt-in, an online biochip and HP at or below 20%. Cyberpsychosis alone does not trigger it. Dispatch progresses to arrival on story turns; the team waits for the player's explicit stabilization/extraction consent. Consent transfers the player to a receiving clinic, stabilizes health to at least 35% and records the copay as a bill. No automatic resurrection, full healing or combat companion. Changed district/coverage requires a new dispatch. Cancellation preserves player health and location. A latch prevents repeated auto-dispatch for one critical-health episode.
+
+Policy documents, extraction reports and paid bills are readable inventory Shards. Unpaid bills remain until payment succeeds. Confirmations are bound to the current chat, reject stale actions, and cannot double-spend after confirmation. State is saved per chat and uses the existing campaign snapshot/recovery mechanisms.
+
+### Design references and verification
+
+- [Vladimír Vilimovský — Cyberpunk 2077 UI portfolio](https://www.behance.net/gallery/133185623/Cyberpunk-2077User-Interface-%28Part-2%29): angular hierarchy, technical labeling and restrained color accents; no portfolio assets copied.
+- [Zach Bohn — Cyberpunk 2077 UI design](https://zachgamedev.com/cyberpunk-2077/): clarity and consistent hierarchy guide the medical controls.
+- [CDPR — Trauma Team](https://www.cyberpunk.net/en/news/22136/cyberpunk-2077-e3-2018-trailer-frame-by-frame-ep12-trauma-team): biochip alert, stabilization and extraction inform the service flow.
+- [W3C — Pause, Stop, Hide](https://www.w3.org/WAI/WCAG21/Understanding/pause-stop-hide.html): reduced/off controls and nonblocking decoration.
+
+Run `npm run check` and `npm test` for the entire regression suite, including `tests/medical-regression.cjs`. The medical fixture covers migration, load boundaries, drug inventory/cooldowns/duration, bills, package expiry/renewal, coverage, consent, replay, overlay cleanup and chat switching. `tests/preview.html` includes a **Cyberpsycho / Medical** fixture button. Automated DOM checks are not a physical iPhone Safari acceptance test; use the iOS checklist for that final device check.
+
 ## v3.8.0 — Complete NPC dossiers, readable shards and role-play mission offers
 
 New NPCs are no longer saved from Header/Dialogue labels alone. A new recurring speaker must arrive with a complete `CP_NPC_PROFILE` record containing a personal name or established alias plus handle, role, status, affiliation, age, gender, personality, appearance and notes. Generic labels such as “Clouds Receptionist” can still appear in narration/UI but are rejected as contact names. Existing contacts are never overwritten by the profile record, and fleeting unnamed extras do not pollute the NPC list.

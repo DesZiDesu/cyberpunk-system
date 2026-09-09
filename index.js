@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.8.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.9.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -770,14 +770,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|MEDICAL|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|MEDICAL|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;

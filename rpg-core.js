@@ -207,6 +207,7 @@
   function use(a, id, turn) {
     const it=a.inventory.find(x=>x.id===id);if(!it)throw Error('Item missing');
     if (Number(it.cooldownUntil)>turn) throw Error('Recharging');
+    if(medical.medicine(it))return medical.dose(a,id,turn);
     if (it.category==='consumable') { if(it.quantity<1)throw Error('Empty stack');it.quantity--;a.hp=cap(a.hp+it.power,0,a.maxHp);a.stress=cap(a.stress-10,0,100);if(!it.quantity)a.inventory=a.inventory.filter(x=>x!==it); }
     else if(it.category==='quickhack') {if(it.quantity<1||!a.quickhackSlots?.includes(id))throw Error('Load this quickhack into the deck first');const cost=Math.max(0,Math.round(it.ramCost??it.power/10));if(a.ram<cost)throw Error('Insufficient RAM');a.ram-=cost;}
     else if (!it.equipped) throw Error('Equip first');
@@ -226,7 +227,7 @@
   }
   function tick(a, random = Math.random, scale = 1) {
     a.ram=cap(a.ram+1,0,a.maxRam); a.stamina=cap(a.stamina+3,0,a.maxStamina);
-    const probability=risk(a,scale); if(!a.cyberpsychosis&&probability>0&&random()*100<probability)a.cyberpsychosis=true;
+    const probability=risk(a,scale);
     if(load(a)<=a.capacity)a.stress=cap(a.stress-1,0,100);
     return probability;
   }
@@ -252,5 +253,110 @@
     return true;
   }
   function finish(p,now=Date.now()){if(!['running','ready'].includes(p.status))return;p.status=p.daemons[0].done&&remaining(p,now)>0?'success':'failed';pause(p,now);p.minimized=false;}
-  globalThis.CyberpunkRpgCore = Object.freeze({arrow,arrowLabel,cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,itemCategory,syncDeck,setQuickhackSlot,resolveItem,unlockBlackwall,blackwallFeedback,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
+  // Medical tuning is extension-original RP balance, not a real medical model or 2077 price table.
+  const medical=(()=>{
+    const medicines=Object.freeze({
+      'neural-suppressant-tablet':Object.freeze({name:'Neural Suppressant / Oral',route:'oral',potency:22,duration:6,cooldown:3,toxicity:12,price:120}),
+      'neural-suppressant-injector':Object.freeze({name:'Neural Suppressant / Injector',route:'inject',potency:35,duration:4,cooldown:3,toxicity:24,price:240})
+    });
+    const plans=Object.freeze({
+      silver:Object.freeze({name:'Silver',price:500,term:60,eta:3,copay:250,danger:false}),
+      executive:Object.freeze({name:'Executive',price:1000,term:60,eta:2,copay:100,danger:true}),
+      platinum:Object.freeze({name:'Platinum',price:2500,term:60,eta:1,copay:0,danger:true})
+    });
+    function neural(a){
+      if(!a.neural||typeof a.neural!=='object'||Array.isArray(a.neural))a.neural={burden:a.cyberpsychosis?25:0};
+      const n=a.neural;for(const k of ['burden','toxicity','until','potency','readyTurn'])n[k]=cap(n[k],0,k==='until'||k==='readyTurn'?1e9:100);
+      return n;
+    }
+    function store(s){
+      if(!s.medical||typeof s.medical!=='object'||Array.isArray(s.medical))s.medical={};const m=s.medical;
+      for(const k of ['requests','receipts','history'])if(!Array.isArray(m[k]))m[k]=[];
+      m.debt=cap(m.debt,0,1e12);m.autoDispatch=m.autoDispatch===true;m.biochip=m.biochip!==false;
+      if(!['full','reduced','off'].includes(m.effects))m.effects='reduced';
+      if(!Number.isInteger(m.lastTurn))m.lastTurn=s.turn||0;
+      return m;
+    }
+    function assess(a,turn=0,scale=1){
+      const n=neural(a),base=cap(load(a)/Math.max(1,a.capacity)*70+n.burden,0,130),stress=cap(a.stress,0,100)*.35;
+      const suppression=n.until>turn?n.potency:0,effective=scale<=0?0:cap((base+stress+n.toxicity*.15)*scale-suppression,0,150);
+      return {base:Math.round(base),stress:Math.round(stress),toxicity:n.toxicity,suppression,remaining:Math.max(0,n.until-turn),effective:Math.round(effective),level:effective>=100?'episode':effective>=90?'critical':effective>=70?'near':'normal'};
+    }
+    const medicine=it=>it?.category==='consumable'&&Object.hasOwn(medicines,it.catalogId)?medicines[it.catalogId]:null;
+    function dose(a,id,turn){
+      const it=a.inventory.find(x=>x.id===id),drug=medicine(it),n=neural(a);
+      if(!drug||it.quantity<1)throw Error('Owned suppressant required');
+      if(n.readyTurn>turn||Number(it.cooldownUntil)>turn)throw Error('Suppressant cooldown: '+Math.max(n.readyTurn,Number(it.cooldownUntil)||0)+' RP turn');
+      if(n.toxicity+drug.toxicity>75)throw Error('Toxicity limit: recover or seek treatment first');
+      const potency=Math.round(drug.potency*(1-n.toxicity/150));
+      it.quantity--;a.inventory=a.inventory.filter(x=>x.quantity>0);
+      Object.assign(n,{potency,until:turn+drug.duration,readyTurn:turn+drug.cooldown,toxicity:n.toxicity+drug.toxicity});
+      a.stamina=cap(a.stamina-5,0,a.maxStamina);return it;
+    }
+    function debit(s,amount,reason){
+      amount=money(amount);if(s.player.balance<amount)throw Error('Insufficient eddies');s.player.balance-=amount;
+      s.player.ledger.push({id:uid(),turn:s.turn,amount,delta:-amount,reason,at:new Date().toISOString()});s.player.ledger=s.player.ledger.slice(-300);
+    }
+    function receipt(s,title,body){
+      const m=store(s),id='medical:'+uid(),doc={id,title,from:'Trauma Team / Medical Network',preview:'Contract / receipt · RP rules',content:body,sections:[],read:false,acquired:true};
+      s.shards??=[];s.shards.push(doc);s.player.inventory.push(item({id,shardId:id,name:title,category:'data'}));
+      m.history.push({id,title,turn:s.turn});m.history=m.history.slice(-60);return doc;
+    }
+    function purchase(s,kind){
+      const d=Object.hasOwn(medicines,kind)?medicines[kind]:null;if(!d)throw Error('Unknown medicine');debit(s,d.price,d.name);
+      const it=item({catalogId:kind,name:d.name,category:'consumable',power:0,cooldown:d.cooldown,effect:`${d.potency} suppression / ${d.duration} RP turns / toxicity +${d.toxicity}`});s.player.inventory.push(it);return it;
+    }
+    function subscribe(s,key){
+      const p=Object.hasOwn(plans,key)?plans[key]:null,m=store(s);if(!p)throw Error('Unknown plan');
+      if(m.incident&&!['closed','cancelled'].includes(m.incident.phase))throw Error('Resolve active dispatch before changing plan');
+      if(m.contract&&m.contract.expires>s.turn&&m.contract.plan!==key)throw Error('Wait for expiry before switching plans');
+      debit(s,p.price,'Trauma Team '+p.name);m.contract={id:uid(),plan:key,holder:text(s.player.profile?.name||'Player',180),expires:Math.max(s.turn,m.contract?.expires||0)+p.term};
+      receipt(s,'Trauma Team / '+p.name+' policy',`${p.name} · Extension RP preset, not canon pricing.\nPremium €$${p.price} / ${p.term} story turns. Expires at turn ${m.contract.expires}.\nETA ${p.eta} turns. Incident copay €$${p.copay}.\nCoverage: known Night City districts${p.danger?', including marked danger zones':', excluding marked danger zones'}. Biochip signal required for automatic dispatch.\nStabilization and extraction only; no combat assistance or automatic resurrection. Hospital follow-up and upgrades excluded. No automatic renewal.`);
+      return m.contract;
+    }
+    function eligibility(s){
+      const m=store(s),c=m.contract,p=Object.hasOwn(plans,c?.plan)?plans[c.plan]:null;if(!p||c.expires<=s.turn)return 'No active contract';
+      if(!s.map?.location?.district)return 'Set an established location first';
+      if(!['watson','westbrook','city-center','heywood','santo-domingo','pacifica','dogtown'].includes(s.map.location.district))return 'Outside Night City service coverage';
+      if(s.map.location.danger&&!p.danger)return 'Danger zone excluded by this plan';
+      if(s.player.hp<=0)return 'No automatic resurrection; resolve survival in the story';
+      return '';
+    }
+    function dispatch(s){
+      const m=store(s);if(m.incident&&!['closed','cancelled'].includes(m.incident.phase))return m.incident;
+      const reason=eligibility(s);if(reason)throw Error(reason);if(m.debt>0)throw Error('Settle the outstanding medical bill first');
+      const p=plans[m.contract.plan];m.incident={id:uid(),phase:'dispatch',next:s.turn+p.eta,eta:p.eta,copay:p.copay,plan:m.contract.plan,location:JSON.parse(JSON.stringify(s.map.location)),started:s.turn};return m.incident;
+    }
+    function advance(s){
+      const m=store(s),elapsed=Math.max(0,s.turn-m.lastTurn);m.lastTurn=s.turn;
+      for(const a of [s.player,...Object.values(s.actors||{})]){const n=neural(a);n.toxicity=cap(n.toxicity-elapsed*3,0,100);a.cyberpsychosis=assess(a,s.turn,s.settings?.riskScale??1).level==='episode';}
+      const i=m.incident;
+      if(i&&s.turn>=i.next&&i.phase==='dispatch'){i.phase='arrival';i.next=s.turn+1;}
+      if(m.autoDispatch&&m.biochip&&s.player.hp>0&&s.player.hp<=s.player.maxHp*.2&&!eligibility(s)&&!m.debt){
+        // A completed rescue cannot repeatedly dispatch against the same critical-health episode.
+        if(!m.criticalLatch){dispatch(s);m.criticalLatch=true;}
+      }
+      if(s.player.hp>s.player.maxHp*.2)m.criticalLatch=false;
+    }
+    function rescue(s){
+      const m=store(s),i=m.incident;if(!i||i.phase!=='arrival')throw Error('Wait for team arrival');
+      if(s.player.hp<=0)throw Error('Resolve survival in the story; rescue cannot resurrect');
+      if(s.map.location.district!==i.location.district||s.map.location.danger&&!plans[i.plan].danger)throw Error('Location or coverage changed; cancel and request a new dispatch');
+      i.phase='closed';i.finished=s.turn;m.debt+=i.copay;s.player.hp=Math.max(s.player.hp,Math.round(s.player.maxHp*.35));
+      s.player.stress=cap(s.player.stress-15,0,100);neural(s.player).burden=cap(neural(s.player).burden-10,0,100);
+      s.map.location={district:i.location.district,building:'Trauma Team receiving clinic',area:'Recovery ward',danger:false};
+      receipt(s,'Trauma Team / extraction report',`Dispatch ${i.id}. Player consented to stabilization and extraction at turn ${s.turn}.\nTransferred to receiving clinic in ${i.location.district}. Minimum stabilized health 35%; not full healing.\nCopay €$${i.copay}. Outstanding bill €$${m.debt}. Cyberware load remains; follow-up treatment is separate.`);return i;
+    }
+    function settle(s){const m=store(s);if(!m.debt)throw Error('No outstanding bill');const amount=m.debt;debit(s,amount,'Medical bill');m.debt=0;receipt(s,'Trauma Team / bill paid',`Paid €$${amount}. Outstanding balance €$0.`);}
+    function therapy(s){debit(s,300,'Neural recovery session');s.turn+=1;const n=neural(s.player);n.burden=cap(n.burden-15,0,100);n.toxicity=cap(n.toxicity-20,0,100);s.player.stress=cap(s.player.stress-20,0,100);advance(s);receipt(s,'Neural recovery / session receipt','€$300 · one RP turn. Stress −20, legacy burden −15, toxicity −20. Implant load unchanged. Fictional treatment rules.');}
+    function request(s,data,id){
+      const m=store(s);if(!text(id,160))throw Error('Medical request ID required');if(m.requests.some(r=>r.id===id))return;
+      if(!['use','call'].includes(data.operation))throw Error('Medical requests allow use or call only');
+      const it=data.operation==='use'?resolveItem(s.player,data):null;
+      if(data.operation==='use'&&!medicine(it))throw Error('Owned suppressant required; no medicine created from narration');
+      m.requests.push({id,operation:data.operation,itemId:it?.id,status:'pending',turn:s.turn});
+    }
+    return Object.freeze({medicines,plans,neural,store,assess,medicine,dose,purchase,subscribe,eligibility,dispatch,advance,rescue,settle,therapy,request});
+  })();
+  globalThis.CyberpunkRpgCore = Object.freeze({medical,arrow,arrowLabel,cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,itemCategory,syncDeck,setQuickhackSlot,resolveItem,unlockBlackwall,blackwallFeedback,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
 })();

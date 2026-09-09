@@ -105,3 +105,12 @@ Record device, iOS/browser and SillyTavern versions with failures. Do not paste 
 - [ ] Custom lifepath has one editor. Custom player-agency text reaches the opening prompt.
 - [ ] Select/deselect multiple assets and None. No inventory change or AI request occurs before confirmation.
 - [ ] Review defaults to 5 minutes and supports 10. Start one opening, observe host generation, cancel, and verify no automatic retry. Test a slow provider manually; already processed tokens may be charged.
+## 3.9.0 Medical Link — physical-device acceptance pending
+
+- Open Cyberware → Cyberpsycho / Medical Link at iPhone 13 portrait width. Scroll all medication, plan, dispatch and request controls; verify no horizontal clipping.
+- Use Reduced, Full motion and Off. Check Main Chat typing, scrolling, text selection and surrounding extensions remain usable. Enable OS Reduce Motion; animation should stop while warnings remain readable.
+- Buy one suppressant, open Inventory and use it; cancel first, then confirm. Check quantity, shared cooldown, temporary duration and Balance history.
+- Narrate an owned injector use. Confirm the medical request is pending until reviewed; replay/regenerate must not consume another dose or turn.
+- Subscribe, read the policy Shard, call with an established location, advance replies to arrival and explicitly accept extraction. Read report, pay bill and reopen receipt.
+- Check excluded danger zones, expired contract, offline biochip, insufficient funds and zero HP: no free rescue or resurrection.
+- Switch chats with a confirmation open; old controls must not alter the new chat. Disable the extension and start Braindance; the neural overlay must disappear.
