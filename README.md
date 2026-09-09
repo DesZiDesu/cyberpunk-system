@@ -1,5 +1,13 @@
 # Cyberpunk System
 
+## v3.7.2 — Character registration presets and opening wait controls
+
+All six registration pages use the same full-width shell. Themed, keyboard-accessible option cards cover identity, biography, lifepath, attributes, starting possessions and opening preferences. Each preset field has a **Preset / Custom input** switch; typed custom values are retained when switching back. Asset cards toggle multiple starting items, one unit each; **None** clears that field. Suggestions are optional RP starting choices, not enforced game balance. Existing drafts are not replaced just by opening a page. Clothing/home/vehicle suggestions are generic custom possessions; equipment suggestions use the existing curated catalog. No suggestion calls AI, charges currency, or awards possessions before confirmation.
+
+The opening scene previously inherited the extension's 120-second request deadline. It now has its own **5-minute default / optional 10-minute** wait limit on Review, with visible generation status and cancellation. Other channels keep their existing timeout setting. Timeout diagnostics report the actual request deadline. There is still only one main-chat generation per confirmation and **no automatic retry**. Longer waits do not fix provider/network errors or guarantee completion, and cancellation cannot refund already processed tokens. Drafts remain after failure; review any partial main-chat response before retrying.
+
+Validation includes preset/custom round trips, a unique custom lifepath editor, multi-item selection without AI/state mutation, custom agency validation, equal-width CSS, both opening budgets and accurate timeout diagnostics. Native iPhone layout and live provider responses still need device acceptance; tests use simulated host/DOM and no paid API.
+
 ## v3.7.1 — Bounded private AI requests and local interaction repair
 
 Private text channels (calls, mail, neural AI and NPC text creation) now prefer SillyTavern's `generateRaw`: only their explicit task/history/dossier is supplied, without automatically assembling the whole main chat. The extension's registered main prompt is temporarily suppressed during private generation and restored on success, error or cancellation. No second request or fallback is attempted after a transport failure. Hosts without `generateRaw`, and NPC vision requests, use labeled **quiet compatibility** with `skipWIAN` and an explicit response limit; that path may still include host chat/card context. Other extensions can also modify host requests. This is not a guarantee of a particular provider bill.

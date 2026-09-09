@@ -90,3 +90,11 @@ Record device, iOS/browser and SillyTavern versions with failures. Do not paste 
 - [ ] Close, cancel and reopen. Ready logs persist, cancelled links never open protected data.
 - [ ] A shop containing an unknown catalog row still opens; that row is not purchasable. Verify recovery of an earlier failed opening at the same counter.
 - [ ] Device metadata without inline tags creates a control. Thai look/scan narration without tags exposes Inspect device. Confirming a scene device still requires Breach before commands.
+## 3.7.2 registration — native checks pending
+
+- [ ] On iPhone portrait/landscape, all six steps retain the same full available width without horizontal scrolling or composer overlap at the bottom.
+- [ ] Preset cards follow the selected theme; tap targets and keyboard focus are clear. Reduced motion disables transitions.
+- [ ] Type a custom value, switch to Preset and choose a card, then switch back: the typed value returns. Navigate away/back and reload to verify draft persistence.
+- [ ] Custom lifepath has one editor. Custom player-agency text reaches the opening prompt.
+- [ ] Select/deselect multiple assets and None. No inventory change or AI request occurs before confirmation.
+- [ ] Review defaults to 5 minutes and supports 10. Start one opening, observe host generation, cancel, and verify no automatic retry. Test a slow provider manually; already processed tokens may be charged.

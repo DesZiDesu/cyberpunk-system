@@ -12,6 +12,33 @@
    ['Starting assets','ทรัพย์สินเริ่มต้น',[['weapons','Weapons / อาวุธ · รายการละบรรทัด','textarea',3000],['clothing','Clothing / เสื้อผ้า · รายการละบรรทัด','textarea',3000],['consumables','Supplies / ของใช้ · รายการละบรรทัด','textarea',3000],['cyberware','Cyberware · รายการละบรรทัด','textarea',3000],['quickhacks','Quickhack software · รายการละบรรทัด','textarea',3000],['skills','Skills / ความสามารถที่มีแล้ว · รายการละบรรทัด','textarea',3000],['homes','Owned homes / บ้านที่เป็นเจ้าของ · รายการละบรรทัด','textarea',3000],['vehicles','Owned vehicles / รถที่เป็นเจ้าของ · รายการละบรรทัด','textarea',3000]]],
    ['Opening scene','ฉากเปิดเรื่อง',[['year','Year / ปีที่เริ่ม','text',100],['district','District / เขต','text',180],['building','Building / อาคารหรือสถานที่','text',180],['floor','Floor / ชั้น','text',100],['area','Area / จุดเริ่มต้น','text',180],['time','Time / เวลาและอากาศ','text',300],['situation','Opening situation / อยากเริ่มอย่างไร','textarea',8000],['tone','Tone / อารมณ์และแนวเรื่อง','textarea',2000],['pacing','Pacing / จังหวะเรื่อง','text',300],['perspective','Narration / มุมมองและภาษา','text',300],['boundaries','Boundaries / สิ่งที่ไม่ต้องการและข้อจำกัด','textarea',4000],['agency','Player agency / การบรรยายการกระทำของผู้เล่น','select',['Do not act or speak for me / ไม่ตัดสินใจหรือพูดแทน','Describe minor transitions only / บรรยายเฉพาะการเคลื่อนไหวเล็กน้อย']]]],
   ];
+  // Local choices only: never generate suggestions or apply assets before confirmation.
+  const presets={
+   handle:['Ghost','Switch','Neon','Echo','Cipher','Chrome'],
+   clothing:['','เสื้อแจ็กเก็ตใช้งาน','เสื้อยืดสีเข้ม','กางเกงคาร์โก','รองเท้าบูต','ชุดสูท','เสื้อคลุมกันฝุ่น','แว่นกันแดด'],
+   gender:['ชาย','หญิง','Non-binary','ไม่ระบุ'],pronouns:['ผม / เขา','ฉัน / เธอ','เรา / เขา','They / them'],
+   appearance:['เสื้อแจ็กเก็ตเก่า รอยแผลเล็กน้อย แต่งตัวใช้งานจริง','สูทเรียบหรู ออปติกสีเข้ม ท่าทีสุขุม','ผมสีสด เสื้อผ้านีออน ไซเบอร์แวร์มองเห็นได้','เสื้อคลุมกันฝุ่น รองเท้าบูต อุปกรณ์เดินทาง'],
+   personality:['สุขุม ช่างสังเกต ระมัดระวังการไว้ใจคน','พูดตรง อารมณ์ขันแห้ง รักพวกพ้อง','ทะเยอทะยาน เจรจาเก่ง คิดก่อนลงมือ','ขี้สงสัย รักอิสระ ชอบทดลองเทคโนโลยี'],
+   background:['โตมากับถนนในเมือง รับงานเล็กเพื่อเลี้ยงตัวเอง','อดีตพนักงานบริษัทที่ต้องเริ่มต้นใหม่','เดินทางกับครอบครัวเร่ร่อน ก่อนแยกตัวเข้าเมือง','ช่างอิสระที่เพิ่งก้าวเข้าสู่วงการงานเสี่ยง'],
+   occupation:['Solo / Mercenary','Netrunner','Techie','Fixer','Medtech','Courier','Investigator','Rockerboy'],
+   affiliation:['อิสระ / Freelance','อดีตพนักงานบริษัท','กลุ่ม Nomad ขนาดเล็ก','ชุมชนในละแวกบ้าน'],homeOrigin:['Night City','Badlands','Heywood','Watson','Westbrook','นอก Night City'],
+   motivation:['หาเงินปลดหนี้และสร้างชีวิตที่มั่นคง','ตามหาคนที่หายไป','สร้างชื่อในฐานะผู้รับงานอิสระ','ปกป้องคนใกล้ตัวและรักษาอิสรภาพ'],connections:['ยังไม่มีคนรู้จักในเมือง','รู้จักช่างในละแวกบ้าน แต่ยังไม่สนิท','มีเพื่อนเก่าหนึ่งคน ชื่อและรายละเอียดจะกำหนดในเนื้อเรื่อง'],secret:['ไม่มีความลับเพิ่มเติม','ใช้ชื่อใหม่เพื่อหลบอดีต','ซ่อนหลักฐานสำคัญที่ยังไม่มีใครรู้'],
+   year:['2077','2076','2075','2045'],district:['watson','westbrook','heywood','city-center','santo-domingo','pacifica','badlands'],
+   building:['Megabuilding H10','อพาร์ตเมนต์เช่าขนาดเล็ก','ร้านอาหารริมถนน','อู่ซ่อมรถ','คลินิก','ด่านเข้าเมือง'],floor:['ชั้นล่าง','ชั้น 1','ชั้น 10','ดาดฟ้า','ชั้นใต้ดิน'],area:['ห้องพัก','หน้าร้าน','เคาน์เตอร์','ตรอกข้างอาคาร','ลานจอดรถ'],
+   time:['เช้าตรู่ อากาศเย็น','กลางวัน ท้องฟ้าครึ้ม','หัวค่ำ ฝนตกและแสงนีออน','หลังเที่ยงคืน ถนนเงียบ'],
+   situation:['ตื่นขึ้นในห้องพักและเตรียมออกไปรับงานแรก ให้ฉันตัดสินใจว่าจะไปที่ไหน','เพิ่งเดินทางถึงเมือง มีสัมภาระติดตัวและต้องหาที่พัก','กำลังนั่งรอผู้ว่าจ้างในร้านอาหาร ให้เริ่มจากบทสนทนา','กำลังซ่อมอุปกรณ์ในอู่ เมื่อมีคนมาขอความช่วยเหลือ'],
+   tone:['Noir / ลึกลับ กดดัน เน้นบทสนทนา','Street survival / ชีวิตประจำวันและการเอาตัวรอด','High-tech thriller / สืบสวนและเทคโนโลยี','Action / งานเสี่ยงและการตัดสินใจ','Slice of life / ค่อย ๆ สร้างชีวิต'],pacing:['ช้า ละเอียด ให้เวลาสำรวจ','สมดุล สลับบทสนทนากับเหตุการณ์','กระชับ เดินเรื่องเร็ว'],perspective:['ภาษาไทย มุมมองบุคคลที่สอง','ภาษาไทย มุมมองบุคคลที่สาม','English, second person','English, third person'],boundaries:['ไม่บรรยายการตัดสินใจหรือคำพูดแทนผู้เล่น','หลีกเลี่ยงความรุนแรงแบบละเอียด','เน้นการผจญภัย ไม่มีฉากทางเพศ'],
+   skills:['การเจรจา\nการสังเกต','การซ่อมแซม\nอิเล็กทรอนิกส์','การลอบเร้น\nการขับรถ'],homes:['','ห้องพักขนาดเล็ก','อพาร์ตเมนต์','บ้านพักนอกเมือง'],vehicles:['','รถยนต์ใช้งานเก่า','มอเตอร์ไซค์','รถตู้ขนสัมภาระ']
+  };
+  function choices(f){
+   const [key,,type,a,b]=f;
+   if(type==='select')return a;
+   if(presets[key])return presets[key];
+   const categories={weapons:'weapons',clothing:'clothing',consumables:'consumable',cyberware:'cyberware',quickhacks:'quickhack'};
+   if(categories[key])return ['',...globalThis.CyberpunkCatalog.curated.filter(x=>x.category===categories[key]).slice(0,30).map(x=>x.name)];
+   if(type==='number')return [...new Set((key==='age'?[18,21,25,30,40,60]:key==='level'?[1,5,10,20,40,60]:key==='balance'?[0,500,1000,5000,10000,50000]:['body','reflexes','technical','intelligence','cool'].includes(key)?[3,6,9,12,15,20]:[a,5,8,10,20,50,100,200]).filter(n=>n>=a&&n<=b))].map(String);
+   return [];
+  }
   const save=()=>{api.saveChat();api.refreshPrompt(true);};
   const session=()=>{const b=api.chatBucket();b.campaign??={phase:'draft',profile:null,draft:null};return b.campaign;};
   const ownerKey=()=>{const x=api.context();return [api.chatBucket(),x?.chat,x?.chatId??x?.getCurrentChatId?.(),x?.characterId,x?.groupId];};
@@ -26,7 +53,7 @@
   }
   function defaults(){return {name:api.context()?.name1||'',handle:'',age:21,gender:'',pronouns:'',appearance:'',personality:'',background:'',lifepath:'Street Kid',customPath:'',occupation:'',affiliation:'',homeOrigin:'',motivation:'',connections:'',secret:'',level:1,xp:0,points:0,body:3,reflexes:3,technical:3,intelligence:3,cool:3,hp:100,stamina:100,ram:8,capacity:100,balance:0,weapons:'',clothing:'',consumables:'',cyberware:'',quickhacks:'',skills:'',homes:'',vehicles:'',year:'2077',district:'watson',building:'',floor:'',area:'',time:'',situation:'',tone:'',pacing:'',perspective:api.settings().language==='th'?'ภาษาไทย':'English',boundaries:'',agency:fields[4][2].at(-1)[3][0]};}
   function validated(input){
-   const out={};for(const [, ,list]of fields)for(const [key,,type,a,b]of list){const value=input[key]??defaults()[key];if(type==='number'){const n=Number(value);if(!Number.isSafeInteger(n)||n<a||n>b)throw Error(key+': '+a+'–'+b);out[key]=n;}else if(type==='select'){if(!a.includes(value))throw Error('Invalid '+key);out[key]=value;}else out[key]=C.text(value,a);}
+   const out={};for(const [, ,list]of fields)for(const [key,,type,a,b]of list){const value=input[key]??defaults()[key];if(type==='number'){const n=Number(value);if(!Number.isSafeInteger(n)||n<a||n>b)throw Error(key+': '+a+'–'+b);out[key]=n;}else if(type==='select'){if(key==='agency'){out[key]=C.text(value,1000);if(!out[key].trim())throw Error('Invalid agency');}else{if(!a.includes(value))throw Error('Invalid '+key);out[key]=value;}}else out[key]=C.text(value,a);}
    if(!out.name.trim())throw Error(tr('Enter a character name','กรุณาระบุชื่อตัวละคร'));
    if(!out.situation.trim())throw Error(tr('Describe your opening scene','กรุณาระบุว่าอยากเริ่มเรื่องอย่างไร'));
    if(out.lifepath.startsWith('Other')&&!out.customPath)throw Error(tr('Describe your custom lifepath','กรุณาระบุเส้นทางชีวิตที่กำหนดเอง'));
@@ -67,7 +94,7 @@
    const ticket=++epoch;working=true;c.phase='generating';c.error='';save();drawCard();
    try{
     await ctx.saveChat?.();if(!same(key)||ticket!==epoch)throw Error('Chat changed before generation');
-    await api.support.request('campaign-opening',()=>ctx.generate('normal',{automatic_trigger:true}));
+    await api.support.request('campaign-opening',()=>ctx.generate('normal',{automatic_trigger:true}),{timeoutMs:Math.max(300,Math.min(600,Number(c.openingTimeout)||300))*1000});
     if(!same(key)||ticket!==epoch)return false;
     const reply=(ctx.chat||[]).find(m=>!m.is_user&&!m.is_system&&String(m.mes||'').trim());
     if(!reply)throw Error(tr('No opening message was produced. Check your connection and retry.','ยังไม่มีข้อความเปิดเรื่อง ตรวจการเชื่อมต่อแล้วลองใหม่'));
@@ -91,6 +118,27 @@
    (emptyNode||host).append(card);drawCard();
   }
   function inputMarkup(f,p){const [key,label,type,a,b]=f,v=p[key]??'';return `<label><span>${E(label)}</span>${type==='textarea'?`<textarea name="${key}" rows="3" maxlength="${a}">${E(v)}</textarea>`:type==='select'?`<select name="${key}">${a.map(x=>`<option ${v===x?'selected':''}>${E(x)}</option>`).join('')}</select>`:`<input name="${key}" type="${type}" value="${E(v)}" ${type==='number'?`min="${a}" max="${b}" step="1"`:`maxlength="${a}"`} ${key==='name'?'required':''}>`}</label>`;}
+  function decoratePresets(form,c){
+   c.inputModes??={};c.customValues??={};
+   for(const f of fields[step]?.[2]||[]){
+    const [key,label,type]=f,options=choices(f),input=form.elements.namedItem(key);if(!input||!options.length)continue;
+    const wrapper=document.createElement('div');wrapper.className='cps-preset-field';input.parentElement.before(wrapper);wrapper.append(input.parentElement);
+    const modes=document.createElement('div');modes.className='cps-preset-modes';modes.setAttribute('aria-label',label);
+    const custom=c.inputModes[key]==='custom'||(c.inputModes[key]===undefined&&!options.includes(String(c.draft[key]??'')));
+    for(const [mode,title]of [['preset','Preset'],['custom',tr('Custom input','พิมพ์เอง')]]){const b=document.createElement('button');b.type='button';b.className='cps-button';b.textContent=title;b.disabled=working;b.setAttribute('aria-pressed',String(custom===(mode==='custom')));b.onclick=()=>{if(custom)c.customValues[key]=c.draft[key];c.inputModes[key]=mode;if(mode==='custom'&&Object.hasOwn(c.customValues,key))c.draft[key]=c.customValues[key];api.saveChat();drawCard();};modes.append(b);}wrapper.prepend(modes);
+    // Lifepath keeps the existing Other + customPath schema for save compatibility.
+    if(custom&&type==='select'){
+     if(key==='lifepath')form.elements.namedItem('customPath')?.parentElement.remove();
+     const text=document.createElement('input');text.type='text';text.name=key==='lifepath'?'customPath':key;text.maxLength=key==='lifepath'?180:1000;text.value=key==='lifepath'?(c.draft.customPath||(!c.draft.lifepath.startsWith('Other')?c.draft.lifepath:'')):c.draft[key];text.disabled=working;
+     if(key==='lifepath'){c.draft.lifepath='Other / กำหนดเอง';c.draft.customPath=text.value;api.saveChat();}input.replaceWith(text);
+    }else input.hidden=!custom;
+    if(!custom){const list=document.createElement('div');list.className='cps-preset-options';list.setAttribute('role','group');list.setAttribute('aria-label',label);
+     const multiple=fields[3][2].some(f=>f[0]===key);
+     options.forEach(value=>{const b=document.createElement('button');b.type='button';b.className='cps-preset-option';b.textContent=value||tr('None','ไม่มี');b.disabled=working;const selected=multiple&&value?lines(value).every(x=>lines(c.draft[key]).includes(x)):String(c.draft[key]??'')===value;b.setAttribute('aria-pressed',String(selected));b.onclick=()=>{const previous=lines(c.draft[key]),items=lines(value);c.draft[key]=multiple&&value?(selected?previous.filter(x=>!items.includes(x)):[...new Set([...previous,...items])]).join('\n'):value;c.inputModes[key]='preset';api.saveChat();drawCard();};list.append(b);});wrapper.append(list);
+     const selected=document.createElement('p');selected.className='cps-preset-current';selected.textContent=tr('Current: ','ค่าปัจจุบัน: ')+(c.draft[key]||tr('None','ไม่มี'));wrapper.append(selected);
+    }
+   }
+  }
   function drawCard(){
    if(!card||cardOwner!==api.chatBucket())return;const c=session();c.draft??=defaults();const p=c.draft;
    card.innerHTML=`<header class="cps-campaign-hero"><small>NEURAL REGISTRATION / ${c.imported?'CONTINUE CAMPAIGN':'NEW IDENTITY'}</small><h2>${E(c.imported?tr('Continue your story','เล่นเนื้อเรื่องต่อ'):tr('Build your beginning','สร้างจุดเริ่มต้นของคุณ'))}</h2><p>${E(tr('Chat-local registration. No API request until you confirm.','ข้อมูลเฉพาะแชตนี้ ยังไม่เรียก AI จนกว่าคุณจะยืนยัน'))}</p></header>`;
@@ -98,7 +146,7 @@
     const nav=document.createElement('nav');nav.className='cps-campaign-steps';nav.setAttribute('aria-label',tr('Registration steps','ขั้นตอนลงทะเบียน'));
     [...fields.map(f=>tr(f[0],f[1])),tr('Review','ตรวจทาน')].forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.className='cps-button';b.textContent=String(i+1).padStart(2,'0')+' / '+name;b.setAttribute('aria-current',i===step?'step':'false');b.disabled=working;b.onclick=()=>{step=i;drawCard();};nav.append(b);});card.append(nav);
     const form=document.createElement('form');form.className='cps-campaign-form';form.innerHTML=step<5?fields[step][2].map(f=>inputMarkup(f,p)).join(''):`<div class="cps-campaign-review"><h3>${E(p.name||tr('Unnamed','ยังไม่ระบุชื่อ'))}</h3><p>${E(p.lifepath)} · LV.${E(p.level)} · €$${E(p.balance)}</p><p>${E([p.district,p.building,p.area].filter(Boolean).join(' / '))}</p><p>${E(p.situation||tr('Opening scene required','กรุณาระบุฉากเปิดเรื่อง'))}</p><p>${E(tr('Custom starting assets are one unit per line and are not automatically equipped. Named connections are background notes, not newly invented NPC records. No stat budget is enforced in this custom RP setup.','ทรัพย์สินเริ่มต้นรายการละ 1 ชิ้น ไม่สวมใส่ให้อัตโนมัติ คนรู้จักเป็นบันทึกประวัติ ไม่สร้าง NPC เอง การตั้งค่า RP แบบกำหนดเองนี้ไม่บังคับงบแต้ม'))}</p></div>`;
-    form.onsubmit=e=>e.preventDefault();form.oninput=e=>{if(e.target.name){c.draft[e.target.name]=e.target.value;api.saveChat();}};form.onchange=form.oninput;for(const el of form.querySelectorAll('input,select,textarea'))el.disabled=working;card.append(form);
+    form.onsubmit=e=>e.preventDefault();form.oninput=e=>{if(e.target.name){c.draft[e.target.name]=e.target.value;if(c.inputModes?.[e.target.name]==='custom')c.customValues[e.target.name]=e.target.value;api.saveChat();}};form.onchange=form.oninput;for(const el of form.querySelectorAll('input,select,textarea'))el.disabled=working;decoratePresets(form,c);card.append(form);
    }else{const notes=document.createElement('p');notes.className='cps-campaign-review';notes.textContent=C.text(c.continuity,16000);card.append(notes);}
    const actions=document.createElement('div');actions.className='cps-rpg-actions';
    const add=(label,fn,disabled=false)=>{const b=document.createElement('button');b.type='button';b.className='cps-button';b.textContent=label;b.disabled=disabled;b.onclick=fn;actions.append(b);};
@@ -109,7 +157,8 @@
     else add(tr('Save and generate opening','บันทึกและเจนข้อความเปิดเรื่อง'),()=>generateOpening(!!c.imported).catch(e=>{c.error=e.message;drawCard();}),hasStory());
     add(tr('Import campaign','นำเข้าเซฟ'),openVault);
    }
-   card.append(actions);const status=document.createElement('p');status.className='cps-campaign-status';status.setAttribute('role',c.error?'alert':'status');status.textContent=working?tr('Generating in main chat…','กำลังเจนใน Main Chat…'):c.error||tr('Draft saved with this chat.','เก็บแบบร่างไว้ในแชตนี้');card.append(status);
+   if(step===5||c.imported){const wait=document.createElement('div');wait.className='cps-opening-wait';wait.textContent=tr('Opening wait limit (no automatic retry): ','รอข้อความเปิดเรื่องสูงสุด (ไม่ส่งซ้ำอัตโนมัติ): ');for(const seconds of [300,600]){const b=document.createElement('button');b.type='button';b.className='cps-button';b.textContent=(seconds/60)+tr(' min',' นาที');b.disabled=working;b.setAttribute('aria-pressed',String((Number(c.openingTimeout)||300)===seconds));b.onclick=()=>{c.openingTimeout=seconds;api.saveChat();drawCard();};wait.append(b);}card.append(wait);}
+   card.append(actions);const status=document.createElement('p');status.className='cps-campaign-status';status.setAttribute('role',c.error?'alert':'status');status.textContent=working?tr('Generating in main chat. Waiting for the provider; cancel anytime. No automatic retry.','กำลังเจนใน Main Chat รอการตอบจากผู้ให้บริการ ยกเลิกได้ตลอด ไม่มีการส่งซ้ำอัตโนมัติ'):c.error||tr('Draft saved with this chat. Presets are local and free of AI requests.','เก็บแบบร่างไว้ในแชตนี้ การเลือก Preset ไม่เรียก AI');card.append(status);
   }
   function recentNotes(){return (api.context()?.chat||[]).filter(m=>!m.is_system&&m.mes).slice(-6).map(m=>(m.is_user?'USER':'NARRATOR')+': '+C.text(m.mes,2000).replace(/\[CP_[\s\S]*?\[\/CP_[^\]]+\]/g,'')).join('\n\n').slice(-12000);}
   function exportCampaign(notes){

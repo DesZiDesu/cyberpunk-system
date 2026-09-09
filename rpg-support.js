@@ -61,7 +61,8 @@ globalThis.CyberpunkSupportFactory=api=>{
     let rejectAbort,clock;const aborted=new Promise((_,reject)=>{rejectAbort=reject;});
     const fail=(status,message)=>{if(!jobs.has(kind)||row.status!=='running')return;row.status=status;row.error=message;try{ctx?.stopGeneration?.();}catch{}rejectAbort(Error(message));};
     jobs.set(kind,{row,cancel:()=>fail('cancelled','Cancelled; your draft is retained')});
-    clock=setTimeout(()=>fail('timeout',`Request timed out after ${seconds}s. Retry explicitly; no automatic duplicate request was sent.`),options.timeoutMs??seconds*1000);
+    const timeoutMs=Number.isFinite(options.timeoutMs)&&options.timeoutMs>0?options.timeoutMs:seconds*1000;
+    clock=setTimeout(()=>fail('timeout',`Request timed out after ${Math.ceil(timeoutMs/1000)}s. Retry explicitly; no automatic duplicate request was sent.`),timeoutMs);
     let transport;try{transport=execute();}catch(e){transport=Promise.reject(e);}
     return Promise.race([transport,aborted]).then(value=>{if(owner!==api.chatBucket())throw Error('Chat changed; result ignored');row.status='completed';return value;}).catch(e=>{if(row.status==='running'){row.status='failed';row.error=C.text(e.message,600);}throw e;}).finally(()=>{clearTimeout(clock);row.ended=Date.now();jobs.delete(kind);if(owner===api.chatBucket())api.saveChat();});
   }
