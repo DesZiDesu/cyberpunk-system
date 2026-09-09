@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Build a Cyberpunk 2077 content registry from the extension's seed data and local game exports.
+"""Build a Cyberpunk 2077 content registry from seed data and local/current record exports.
 
 The repository deliberately does not redistribute CD PROJEKT RED texture binaries. For patch-complete
 item IDs and exact game icons, export/dump data from a legally installed copy of Cyberpunk 2077 and run
-this script locally.
+this script locally. Plain-text record lists from tooling can also be merged as supplementary indexes.
 
 Examples:
   python scripts/import-cyberpunk-content.py
   python scripts/import-cyberpunk-content.py --tweakdb-json C:/cp2077-export/tweakdb.json
+  python scripts/import-cyberpunk-content.py --record-list C:/cp2077-export/records.txt
   python scripts/import-cyberpunk-content.py --icons-dir C:/cp2077-export/icons --tweakdb-json C:/cp2077-export/tweakdb.json
 """
 from __future__ import annotations
@@ -77,19 +78,6 @@ def extract_map_locations(map_path: Path) -> list[dict[str, Any]]:
     return [entry for entry in output if entry.get("id") and entry.get("name")]
 
 
-def walk_json(value: Any, path: str = "") -> Iterable[tuple[str, Any]]:
-    if isinstance(value, dict):
-        for key, child in value.items():
-            child_path = f"{path}.{key}" if path else str(key)
-            yield child_path, child
-            yield from walk_json(child, child_path)
-    elif isinstance(value, list):
-        for index, child in enumerate(value):
-            child_path = f"{path}[{index}]"
-            yield child_path, child
-            yield from walk_json(child, child_path)
-
-
 def strings_from_json(value: Any) -> Iterable[str]:
     if isinstance(value, str):
         yield value
@@ -102,18 +90,35 @@ def strings_from_json(value: Any) -> Iterable[str]:
             yield from strings_from_json(child)
 
 
+def split_records(strings: Iterable[str]) -> tuple[list[str], list[str], list[str]]:
+    materialized = [value.strip() for value in strings if isinstance(value, str) and value.strip()]
+    items = unique_sorted(match.group(0) for value in materialized for match in ITEM_RE.finditer(value))
+    vehicles = unique_sorted(match.group(0) for value in materialized for match in VEHICLE_RE.finditer(value))
+    locations = unique_sorted(
+        value for value in materialized if value.startswith(LOCATION_PREFIXES)
+    )
+    return items, vehicles, locations
+
+
 def load_tweakdb(path: Path | None) -> tuple[list[str], list[str], list[str]]:
     if path is None:
         return [], [], []
     raw = json.loads(read_text(path))
-    strings = list(strings_from_json(raw))
-    items = unique_sorted(match.group(0) for s in strings for match in ITEM_RE.finditer(s))
-    vehicles = unique_sorted(match.group(0) for s in strings for match in VEHICLE_RE.finditer(s))
-    locations = unique_sorted(
-        s.strip() for s in strings
-        if isinstance(s, str) and s.strip().startswith(LOCATION_PREFIXES)
-    )
-    return items, vehicles, locations
+    return split_records(strings_from_json(raw))
+
+
+def load_record_lists(paths: list[Path]) -> tuple[list[str], list[str], list[str]]:
+    items: list[str] = []
+    vehicles: list[str] = []
+    locations: list[str] = []
+    for path in paths:
+        if not path.exists():
+            raise FileNotFoundError(f"Record list does not exist: {path}")
+        record_items, record_vehicles, record_locations = split_records(read_text(path).splitlines())
+        items.extend(record_items)
+        vehicles.extend(record_vehicles)
+        locations.extend(record_locations)
+    return unique_sorted(items), unique_sorted(vehicles), unique_sorted(locations)
 
 
 def normalize_token(value: str) -> str:
@@ -165,7 +170,10 @@ def load_vehicle_seed(path: Path) -> list[dict[str, Any]]:
 def build_registry(args: argparse.Namespace) -> dict[str, Any]:
     existing_items = extract_existing_items(args.catalog)
     tweak_items, tweak_vehicles, tweak_locations = load_tweakdb(args.tweakdb_json)
-    all_items = unique_sorted(existing_items + tweak_items)
+    list_items, list_vehicles, list_locations = load_record_lists(args.record_list)
+    all_items = unique_sorted(existing_items + tweak_items + list_items)
+    all_vehicle_records = unique_sorted(tweak_vehicles + list_vehicles)
+    all_location_records = unique_sorted(tweak_locations + list_locations)
     map_locations = extract_map_locations(args.map_data)
     vehicle_seed = load_vehicle_seed(args.vehicle_seed)
     icons = index_icons(args.icons_dir, all_items)
@@ -180,20 +188,21 @@ def build_registry(args: argparse.Namespace) -> dict[str, Any]:
             "mapData": str(args.map_data),
             "vehicleSeed": str(args.vehicle_seed),
             "tweakdbDump": str(args.tweakdb_json) if args.tweakdb_json else None,
+            "recordLists": [str(path) for path in args.record_list],
             "iconsDirectory": str(args.icons_dir) if args.icons_dir else None,
         },
         "counts": {
             "itemTechnicalIds": len(all_items),
             "vehicleSeedEntries": len(vehicle_seed),
-            "vehicleTechnicalIds": len(tweak_vehicles),
+            "vehicleTechnicalIds": len(all_vehicle_records),
             "mapDistrictAndSubdistrictEntries": len(map_locations),
-            "tweakdbLocationIds": len(tweak_locations),
+            "locationTechnicalIds": len(all_location_records),
             "iconFiles": len(icons["files"]),
             "iconsMatchedToItems": len(icons["itemMatches"]),
         },
         "items": {"technicalIds": all_items, "icons": icons["itemMatches"]},
-        "vehicles": {"seed": vehicle_seed, "technicalIds": tweak_vehicles},
-        "locations": {"map": map_locations, "technicalIds": tweak_locations},
+        "vehicles": {"seed": vehicle_seed, "technicalIds": all_vehicle_records},
+        "locations": {"map": map_locations, "technicalIds": all_location_records},
         "unmatchedIconFiles": [rel for rel in icons["files"] if rel not in set(icons["itemMatches"].values())],
     }
 
@@ -219,6 +228,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--map-data", type=Path, default=ROOT / "rpg-map-data.js")
     parser.add_argument("--vehicle-seed", type=Path, default=ROOT / "data" / "cyberpunk-vehicles.seed.json")
     parser.add_argument("--tweakdb-json", type=Path)
+    parser.add_argument(
+        "--record-list",
+        type=Path,
+        action="append",
+        default=[],
+        help="Plain-text record list; may be repeated. Items.*, Vehicle.* and location records are merged.",
+    )
     parser.add_argument("--icons-dir", type=Path)
     parser.add_argument("--output-json", type=Path, default=ROOT / "data" / "cyberpunk-content.generated.json")
     parser.add_argument("--output-js", type=Path, default=ROOT / "rpg-content.generated.js")
