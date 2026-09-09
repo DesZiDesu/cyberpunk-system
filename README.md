@@ -1,5 +1,15 @@
 # Cyberpunk System
 
+## v3.8.0 — Complete NPC dossiers, readable shards and role-play mission offers
+
+New NPCs are no longer saved from Header/Dialogue labels alone. A new recurring speaker must arrive with a complete `CP_NPC_PROFILE` record containing a personal name or established alias plus handle, role, status, affiliation, age, gender, personality, appearance and notes. Generic labels such as “Clouds Receptionist” can still appear in narration/UI but are rejected as contact names. Existing contacts are never overwritten by the profile record, and fleeting unnamed extras do not pollute the NPC list.
+
+Readable shards now use `CP_SHARD`. A received shard renders as a compact clickable box in Main Chat, opens a neural-link window, shows a staged 0–100% connection/decryption sequence, and reveals the complete plain-text document and sections only after connection. Closing after reading archives exactly one data item in Inventory; archived shards reopen without reconnecting. Shards with missing content are rejected instead of producing an empty reader. Protected access points still use Breach Protocol rather than this document flow.
+
+Face-to-face, holo, call and ordinary Main Chat mission offers now use `CP_QUEST_OFFER`; Mail is no longer the only acceptance path. The extension opens a decision window and keeps the same controls in the message/Journals. Accept creates one active quest with locked objectives/rewards. Decline creates no quest and retains a Reconsider option while the issuer keeps the offer available; a later event can withdraw it. The AI protocol is explicitly forbidden from treating an offer as accepted or paying rewards before the user's UI decision.
+
+Validation adds coverage for role-label rejection, complete profile creation, shard connection/reveal/archive/reopen, role-play offer decline and later acceptance, replay protection and existing systems. Automated fixtures simulate SillyTavern/DOM; native iPhone Safari still needs device acceptance.
+
 ## v3.7.2 — Character registration presets and opening wait controls
 
 All six registration pages use the same full-width shell. Themed, keyboard-accessible option cards cover identity, biography, lifepath, attributes, starting possessions and opening preferences. Each preset field has a **Preset / Custom input** switch; typed custom values are retained when switching back. Asset cards toggle multiple starting items, one unit each; **None** clears that field. Suggestions are optional RP starting choices, not enforced game balance. Existing drafts are not replaced just by opening a page. Clothing/home/vehicle suggestions are generic custom possessions; equipment suggestions use the existing curated catalog. No suggestion calls AI, charges currency, or awards possessions before confirmation.

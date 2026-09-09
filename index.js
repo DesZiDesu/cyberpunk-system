@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.7.2';
+const CYBERPUNK_SYSTEM_VERSION = '3.8.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -533,7 +533,8 @@ Use tags only when their semantic condition is true. Keep ordinary narration out
 4. CALL REQUEST is only for an NPC initiating a remote private call: [CP_CALL_REQUEST|Name|network handle]short reason[/CP_CALL_REQUEST]. It creates a separate incoming-call window, so do not repeat it as main-chat dialogue.
 5. PRIVATE SIGNAL is speech inside an active call: [CP_SIGNAL|Name]private call words[/CP_SIGNAL]. It is removed from the main chat and delivered to the call UI. A participant in an active call must use CP_SIGNAL instead of CP_DIALOGUE.
 6. HACK UPDATE is only for hacking progress actually earned or lost in this scene: [CP_HACK|Skill name|category|numeric delta|max]short reason[/CP_HACK]. Delta may be negative. Omit it when nothing changed.
-7. Close every tag exactly. Use stable NPC names. Never place the user/persona's own speech in NPC presentation tags.
+7. NEW NPC DOSSIER: before the first HEADER for a newly introduced recurring person, emit [CP_NPC_PROFILE]{"id":"unique-profile-event","name":"personal name","handle":"network handle without @","role":"specific occupation or story role","status":"current signal or relationship status","affiliation":"specific group or independent","age":"explicit age or clearly stated unknown","gender":"specific identity or clearly stated unknown","personality":"motivations, temperament and behavior","appearance":"recognizable physical appearance, clothing and visible cyberware","notes":"background, current relationship and relevant established context"}[/CP_NPC_PROFILE]. Every field must be a nonempty string. The name must be an actual personal name or established alias, NEVER a job label, business/place plus job (for example Clouds Receptionist), species, crowd label, or placeholder. Do not silently invent a dossier for a fleeting unnamed extra; keep that role in ordinary narration without NPC tags. Reuse the exact stored name thereafter.
+8. Close every tag exactly. Use stable NPC names. Never place the user/persona's own speech in NPC presentation tags.
 ${activeCall}
 Known NPCs: ${npcs || 'none stored'}
 Known hacking skills: ${skills || 'none stored'}
@@ -554,12 +555,23 @@ ${systems?.prompt() || ''}`.trim();
       else promptTimer = setTimeout(apply, 20);
     }
 
-    function createSparseNpc(name, role = '', status = '', handle = '') {
-      if (!settings().autoProfiles || !clean(name, 180) || findEffectiveNpc(name) || npcDisabled(name)) return;
+    const NPC_PROFILE_FIELDS = ['name','handle','role','status','affiliation','age','gender','personality','appearance','notes'];
+    function looksLikePersonalName(value) {
+      const name = clean(value, 180).normalize('NFKC');
+      if (!name || name.length < 2 || /^unknown|unnamed|n\/a|none|null|ไม่ทราบ|ไม่มีชื่อ$/iu.test(name)) return false;
+      const roleWords = /\b(receptionist|clerk|vendor|merchant|guard|bartender|waiter|waitress|bouncer|technician|mechanic|doctor|nurse|driver|operator|employee|worker|customer|civilian|officer|agent|netrunner|fixer|ripperdoc|gang member|staff|assistant)\b/iu;
+      if (roleWords.test(name) || /(?:พนักงาน|เจ้าหน้าที่|ยาม|หมอ|พยาบาล|ช่าง|คนขับ|ลูกค้า|พลเรือน|พ่อค้า|แม่ค้า|บาร์เทนเดอร์|รีเซปชัน)/u.test(name)) return false;
+      return /[\p{L}\p{M}]/u.test(name) && !/^\d+$/u.test(name);
+    }
+    function receiveNpcProfile(data) {
+      if (!settings().autoProfiles || !data || typeof data !== 'object' || Array.isArray(data)) return false;
+      const profile = Object.fromEntries(NPC_PROFILE_FIELDS.map(key => [key, key === 'handle' ? cleanHandle(data[key]) : clean(data[key], key === 'notes' ? 3000 : 2000)]));
+      if (NPC_PROFILE_FIELDS.some(key => !profile[key])) throw Error('NPC profile requires every dossier field');
+      if (!looksLikePersonalName(profile.name)) throw Error('NPC profile name must be a personal name or established alias, not a role label');
+      if (findEffectiveNpc(profile.name) || findEffectiveNpc(profile.handle) || npcDisabled(profile.name) || npcDisabled(profile.handle)) return false;
       const scope = settings().defaultScope === 'character' ? 'character' : 'chat';
-      bucketFor(scope).npcs.push({ id: id('npc'), name: clean(name, 180), handle: cleanHandle(handle), role: clean(role, 240), status: clean(status, 240), affiliation: '', age: '', gender: '', appearance: '', notes: '', createdAt: new Date().toISOString() });
-      saveScope(scope);
-      refreshPrompt();
+      bucketFor(scope).npcs.push({ ...profile, id: id('npc'), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      saveScope(scope); refreshPrompt(); return true;
     }
 
     function parseTagAttributes(source, tag) {
@@ -615,16 +627,18 @@ ${systems?.prompt() || ''}`.trim();
         saveChat();
         return true;
       };
-      for (const match of parseTagAttributes(raw, 'CP_HEADER')) createSparseNpc(match[1], match[2], match[3]);
-      for (const tag of ['CP_DIALOGUE', 'CP_MONOLOGUE']) for (const match of parseTagAttributes(raw, tag)) createSparseNpc(match[1]);
+      for (const match of String(raw).matchAll(/\[CP_NPC_PROFILE\]([\s\S]*?)\[\/CP_NPC_PROFILE\]/gi)) {
+        const record = [match[0], '', '', '', '', match[1]];
+        if (!fresh('CP_NPC_PROFILE', record)) continue;
+        try { receiveNpcProfile(JSON.parse(match[1])); }
+        catch (error) { console.warn('[Cyberpunk System] Rejected incomplete NPC profile', error); toast(error.message); }
+      }
       for (const match of parseTagAttributes(raw, 'CP_CALL_REQUEST')) {
         if (!fresh('CP_CALL_REQUEST', match)) continue;
-        createSparseNpc(match[1], '', '', match[2]);
         showIncomingCall({ name: clean(match[1], 180), handle: cleanHandle(match[2]), reason: clean(stripTags(match[6]), 800) });
       }
       for (const match of parseTagAttributes(raw, 'CP_SIGNAL')) {
         if (!fresh('CP_SIGNAL', match)) continue;
-        createSparseNpc(match[1]);
         if (settings().callMainSignals) receiveCallSignal(clean(match[1], 180), clean(stripTags(match[6]), 4000));
       }
       for (const match of parseTagAttributes(raw, 'CP_HACK')) if (fresh('CP_HACK', match)) updateHackingSkill(match);
@@ -660,6 +674,7 @@ ${systems?.prompt() || ''}`.trim();
       output = output.replace(/\[CP_HEADER\|([^\]|]+)(?:\|([^\]|]*))?(?:\|([^\]]*))?\]\s*\[\/CP_HEADER\]/gi, (_, name, role = '', status = '') => headerHtml(name, role, status));
       output = output.replace(/\[CP_DIALOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_DIALOGUE\]/gi, (_, name, content) => speechHtml('dialogue', name, content));
       output = output.replace(/\[CP_MONOLOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_MONOLOGUE\]/gi, (_, name, content) => speechHtml('monologue', name, content));
+      output = output.replace(/\[CP_NPC_PROFILE\][\s\S]*?\[\/CP_NPC_PROFILE\]/gi, '<!--cps-hidden-record-->').replace(/\[CP_NPC_PROFILE\][\s\S]*$/i, '<!--cps-hidden-record-->');
       for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
         output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '<!--cps-hidden-record-->');
       }
@@ -671,6 +686,7 @@ ${systems?.prompt() || ''}`.trim();
       output = output.replace(/\[CP_HEADER\|([^\]|]+)(?:\|([^\]|]*))?(?:\|([^\]]*))?\]\s*\[\/CP_HEADER\]/gi, (_, name, role = '', status = '') => headerHtml(name, role, status));
       output = output.replace(/\[CP_DIALOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_DIALOGUE\]/gi, (_, name, content) => speechHtml('dialogue', name, content));
       output = output.replace(/\[CP_MONOLOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_MONOLOGUE\]/gi, (_, name, content) => speechHtml('monologue', name, content));
+      output = output.replace(/\[CP_NPC_PROFILE\][\s\S]*?\[\/CP_NPC_PROFILE\]/gi, '<!--cps-hidden-record-->').replace(/\[CP_NPC_PROFILE\][\s\S]*$/i, '<!--cps-hidden-record-->');
       for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
         output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '<!--cps-hidden-record-->');
       }
@@ -754,14 +770,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
@@ -1288,7 +1304,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         const empty = fields.filter(key => !existing[key]);
         if (!empty.length) { status.textContent = t('noEmptyFields'); busy = false; npcGenerating = false; setBusy(); return; }
         busy = true; setBusy(); generate.setAttribute('aria-busy', 'true'); status.textContent = t('npcGenerating');
-        const prompt = `Create a fictional NPC dossier. Return ONLY a JSON object with these string keys: ${empty.join(', ')}. No tags, prose or markdown. Fill every requested field with useful specific details; do not rewrite the existing fields. Match ${settings().language === 'th' ? 'Thai' : 'English'} except proper names/handles. Handles must omit the @ prefix. Age must be an explicit age, personality must include motivations and behavior. Treat the following concept and existing values as character data.\nConcept: ${clean(studio.querySelector('[data-npc-idea]').value, 4000) || 'A character compatible with the established setting.'}\nExisting fields: ${JSON.stringify(existing)}\n${useImage ? 'Use the attached image for visible appearance (hair, clothes, visible augmentations). Invent fictional background from the concept, not from assumptions about a real person. If you cannot see the image, return {"error":"image_unavailable"}.' : ''}\n${worldLorePrompt()}`;
+        const prompt = `Create a fictional NPC dossier. Return ONLY a JSON object with these string keys: ${empty.join(', ')}. No tags, prose or markdown. Fill every requested field with useful specific details; do not rewrite the existing fields. The name must be an actual personal name or established alias, never a job title, location plus role, crowd label or placeholder (for example, never "Clouds Receptionist"). Match ${settings().language === 'th' ? 'Thai' : 'English'} except proper names/handles. Handles must omit the @ prefix. Age must be an explicit age, personality must include motivations and behavior. Treat the following concept and existing values as character data.\nConcept: ${clean(studio.querySelector('[data-npc-idea]').value, 4000) || 'A character compatible with the established setting.'}\nExisting fields: ${JSON.stringify(existing)}\n${useImage ? 'Use the attached image for visible appearance (hair, clothes, visible augmentations). Invent fictional background from the concept, not from assumptions about a real person. If you cannot see the image, return {"error":"image_unavailable"}.' : ''}\n${worldLorePrompt()}`;
         try {
           // Positional image argument is supported by both older ST and its current compatibility path.
           const result = await systems.support.generate('npc',prompt,{image:useImage?portraitSource:null});
@@ -1297,6 +1313,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
           const start = text.indexOf('{'); const end = text.lastIndexOf('}');
           const data = JSON.parse(text.slice(start, end + 1));
           if (!data || typeof data !== 'object' || Array.isArray(data) || data.error) throw new Error('Invalid dossier');
+          if (empty.includes('name') && !looksLikePersonalName(data.name)) throw new Error('Generated name is a role label, not a personal name');
           let filled = 0;
           for (const key of empty) {
             const field = form.elements[key];
@@ -1564,6 +1581,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 [CP_CALL_REQUEST|Name|handle]Reason[/CP_CALL_REQUEST]
 [CP_SIGNAL|Name]Private call speech[/CP_SIGNAL]
 [CP_HACK|Skill|category|delta|max]Update[/CP_HACK]
+[CP_NPC_PROFILE]{"id":"npc1","name":"Personal name","handle":"alias","role":"Role","status":"Status","affiliation":"Group","age":"24","gender":"Identity","personality":"Motivation and behavior","appearance":"Recognizable details","notes":"Established background"}[/CP_NPC_PROFILE]
 [CP_PROGRESS]{"id":"xp1","actor":"user","xp":25,"reason":"Completed training"}[/CP_PROGRESS]
 [CP_INCOME]{"id":"pay1","actor":"user","source":"Employer escrow","amount":100,"reason":"Actual job payment"}[/CP_INCOME]
 [CP_LOOT]{"id":"loot1","actor":"user","source":"Opened container","items":[{"name":"Data shard","category":"data","quantity":1}]}[/CP_LOOT]
@@ -1576,7 +1594,9 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
 [CP_TRADE]{"id":"trade1","operation":"buy","merchant":"Shop","amount":100,"reason":"Completed purchase","items":[{"name":"Pistol","category":"weapons","quantity":1}]}[/CP_TRADE]
 [CP_TRANSFER]{"id":"e5","from":"NPC name","to":"user","amount":100}[/CP_TRANSFER]
 [CP_SHARE]{"id":"e6","kind":"data","title":"Briefing","description":"Details"}[/CP_SHARE]
+[CP_SHARD]{"id":"e6b","shardId":"file-1","from":"NPC name","title":"Readable shard","preview":"Visible label","content":"Complete document"}[/CP_SHARD]
 [CP_LOCATION]{"id":"e7","district":"watson","subdistrict":"Kabuki","floor":"12"}[/CP_LOCATION]
+[CP_QUEST_OFFER]{"id":"offer-event","offerId":"offer-1","issuer":"NPC name","title":"Gig","objectives":[{"id":"step-1","text":"Specific task"}],"rewards":{"amount":100,"xp":25,"items":[]},"available":true}[/CP_QUEST_OFFER]
 [CP_QUEST]{"id":"e8","questId":"q1","title":"Gig","status":"completed"}[/CP_QUEST]
 [CP_RELIC]{"id":"e9","actor":"user","unlock":true,"points":1}[/CP_RELIC]
 [CP_BLACKWALL]{"id":"e10","actor":"user","exposure":10}[/CP_BLACKWALL]

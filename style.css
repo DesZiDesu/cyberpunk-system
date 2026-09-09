@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap');
-@import url('./device-style.css?v=3.7.2');
-@import url('./breach-style.css?v=3.7.2');
+@import url('./device-style.css?v=3.8.0');
+@import url('./breach-style.css?v=3.8.0');
 
 .cps-arrow{display:inline-block;width:1.1em;height:1.1em;flex:none;vertical-align:-.15em;pointer-events:none}
 /* In-chat identity registration and full-world continuity. */
@@ -839,6 +839,10 @@ html[data-cps-ambient=on][data-cps-motion=on] .cps-body-scan .cps-scan-neural {a
 .cps-attachment .cps-item-image {width:44px;height:44px;}
 .cps-attachment small {display:block;font-size:10px;color:var(--cps-accent);margin-bottom:7px;}
 .cps-attachment p {max-height:180px;overflow:auto;}
+.cps-chat-shard{display:grid;width:min(100%,680px);margin:10px 0;padding:13px 15px;text-align:left;color:var(--cps-text);font:inherit;background:linear-gradient(100deg,color-mix(in srgb,var(--cps-accent) 8%,#090b10),#090b10 70%);border:1px solid color-mix(in srgb,var(--cps-accent) 62%,transparent);border-left:3px solid var(--cps-accent);cursor:pointer;box-shadow:inset 0 0 24px color-mix(in srgb,var(--cps-accent) 4%,transparent);transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.cps-chat-shard:hover,.cps-chat-shard:focus-visible{transform:translateY(-1px);border-color:var(--cps-accent);outline:none;background:linear-gradient(100deg,color-mix(in srgb,var(--cps-accent) 13%,#090b10),#090b10 70%)}
+.cps-chat-shard>span{display:flex;align-items:center;gap:8px;color:var(--cps-accent);font-size:9px;letter-spacing:.12em}.cps-chat-shard .cps-rpg-icon{width:18px;height:18px}.cps-chat-shard strong{display:block;margin:5px 0 2px;font-size:inherit;line-height:1.35}.cps-chat-shard em{font-style:normal;color:var(--cps-muted);font-size:.9em;line-height:1.45}.cps-chat-shard.read{border-left-color:#62f5c8}
+.cps-quest-offer{margin:14px 0;padding:18px;border:1px solid color-mix(in srgb,var(--cps-accent) 48%,transparent);border-left:3px solid var(--cps-accent);background:linear-gradient(135deg,color-mix(in srgb,var(--cps-accent) 7%,#0b0d12),#0b0d12)}.cps-quest-offer h3{margin:11px 0 5px;font-size:20px}.cps-quest-offer-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 8px}.cps-offer-status{display:block;color:var(--cps-muted);font-size:9px;letter-spacing:.08em}.cps-quest-offer.declined{border-left-color:var(--cps-danger)}.cps-quest-offer.accepted{border-left-color:#62f5c8}.cps-quest-offer.withdrawn{opacity:.65}
 .cps-chat-skill {border:1px solid var(--cps-line);border-left:3px solid var(--cps-accent);padding:14px 18px;background:linear-gradient(110deg,color-mix(in srgb,var(--cps-accent) 7%,transparent),transparent);}
 .cps-chat-skill .cps-item-image {width:22px;height:22px;}
 .cps-chat-skill > strong {display:block;margin-top:10px;color:var(--cps-accent);font-size:18px;}
@@ -1215,6 +1219,7 @@ dialog[data-cps-breach-suspended] .cps-environment * {animation-play-state:pause
 .cps-ui .cps-data-reader dl>div{display:grid;grid-template-columns:minmax(90px,1fr) minmax(0,2fr);gap:16px;padding:12px 0;border-bottom:1px solid #343840}
 .cps-ui .cps-data-reader dt{color:#aeb7c2;text-transform:uppercase;font-size:.75rem}
 .cps-ui .cps-data-reader dd{margin:0;white-space:pre-wrap}
+.cps-shard-window{width:min(92vw,820px)}.cps-ui .cps-shard-reader{display:grid;gap:18px}.cps-ui .cps-shard-reader>header{position:relative;padding:18px;border:1px solid var(--cps-line);border-left:3px solid var(--cps-accent);background:linear-gradient(120deg,color-mix(in srgb,var(--cps-accent) 8%,transparent),transparent)}.cps-ui .cps-shard-reader>header small{color:var(--cps-accent);font-size:9px;letter-spacing:.12em}.cps-ui .cps-shard-reader>header h3{margin:10px 0 6px;font-size:clamp(20px,4vw,30px)}.cps-ui .cps-shard-reader>header p{margin:0;color:var(--cps-muted)}.cps-ui .cps-shard-link{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:18px;border:1px solid var(--cps-line);background:#07090d}.cps-ui .cps-shard-link small{grid-column:1/-1;color:var(--cps-accent);font-size:9px;letter-spacing:.13em}.cps-ui .cps-shard-link output{font-variant-numeric:tabular-nums;color:var(--cps-accent);font-weight:700}.cps-ui .cps-shard-progress{height:10px;border:1px solid color-mix(in srgb,var(--cps-accent) 50%,transparent);padding:2px;overflow:hidden}.cps-ui .cps-shard-progress i{display:block;width:var(--cps-shard-progress);height:100%;background:var(--cps-accent);box-shadow:0 0 14px var(--cps-accent);transition:width .08s linear}.cps-ui .cps-shard-link.complete{border-color:#62f5c8}.cps-ui .cps-shard-content{max-height:min(52vh,520px);overflow:auto;padding:18px;border:1px solid var(--cps-line);white-space:pre-wrap;animation:cps-page-in .32s ease both}.cps-ui .cps-shard-content section{padding:14px 0;border-bottom:1px solid var(--cps-line)}.cps-ui .cps-shard-content h4{color:var(--cps-accent);margin:0 0 8px}.cps-ui .cps-shard-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .cps-ui .cps-quest-objectives>div{display:grid;grid-template-columns:24px 1fr;gap:8px;border-bottom:1px solid #343840;padding:12px 0}
 .cps-ui .cps-quest-objectives p{margin:0;white-space:pre-wrap}
 .cps-ui .cps-quest-objectives b{grid-column:2;font-size:.65rem;color:var(--cps-accent,#f8ef24)}

@@ -90,6 +90,13 @@ Record device, iOS/browser and SillyTavern versions with failures. Do not paste 
 - [ ] Close, cancel and reopen. Ready logs persist, cancelled links never open protected data.
 - [ ] A shop containing an unknown catalog row still opens; that row is not purchasable. Verify recovery of an earlier failed opening at the same counter.
 - [ ] Device metadata without inline tags creates a control. Thai look/scan narration without tags exposes Inspect device. Confirming a scene device still requires Breach before commands.
+## 3.8.0 NPC, shard and mission offer — native checks pending
+
+- Introduce a named NPC and a generic role label in the same response. Confirm only the complete personal dossier enters NPC List.
+- Tap a shard box in Main Chat on iPhone, connect through 100%, scroll long Thai/English content, close, then reopen it from Inventory.
+- Receive a face-to-face mission offer, decline it, reopen Missions and accept it later. Confirm one active quest and no early reward.
+- Rotate/resume Safari during shard loading; confirm no duplicate item, frozen overlay or page scroll lock remains.
+
 ## 3.7.2 registration — native checks pending
 
 - [ ] On iPhone portrait/landscape, all six steps retain the same full available width without horizontal scrolling or composer overlap at the bottom.
