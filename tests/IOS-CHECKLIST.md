@@ -1,4 +1,23 @@
-# v3.10.3 native acceptance checks — pending
+# v3.11.1 B / SHARD native acceptance checks — pending
+
+- [ ] At 320, 375, 390 and 430 CSS pixels, the B header, solid-accent labels and raised All systems button fit with no clipped text. Check Thai and English, UI scale 80–120%, large OS text, portrait and landscape.
+- [ ] Character / World / All systems open the section router above a stationary dock. Scroll to all 16 links; selecting a link restores content. Close, Back and Escape first dismiss the router; Back then returns to the previous section.
+- [ ] Keyboard-open Settings keeps the focused form control visible and the dock reachable; opening and closing the router keeps unsaved form text. Home-indicator safe-area space is retained.
+- [ ] Status shows actual HP, stamina, RAM, capacity and neural assessment. Anatomy, biography, attributes, training and starting values remain available in disclosures. Switching menus does not spend resources, consume turns or request AI.
+- [ ] Mailbox, equipment dossiers, garage, house, skills, AI, Recovery and nested edit/confirmation windows retain their original actions under the B shell. Test NPC Cyberware and chat switches with an open router.
+- [ ] Document / Shard, Medical / Trauma Team and plan review retain their approved 3.10.1–3.10.2 styling and behavior. Field Journal 3.10.3 content remains unchanged inside the new navigation shell. Main Chat overlays and call/NPC interfaces are not restyled.
+- [ ] Existing custom colors and animation settings persist. Dark primary accent uses light label text; bright primary accent uses dark text. No added looping effect.
+
+## v3.11.1 Personal Messages device acceptance — pending
+
+- [ ] On iPhone, Enter/Return inserts a newline without generating, including Thai IME composition; only Send starts a DM request.
+- [ ] Press Test sound directly below the composer; hear the bundled message clip. Verify mute, zero volume, fresh reload, blocked autoplay and a later incoming reply. Spoken phone dialogue does not trigger the text tone.
+- [ ] Send, tap minus, continue using the host, and restore from the floating contact. The reply/attachments appear once in the original thread; the waiting/unread indicator updates.
+- [ ] Switch contact while waiting, then cancel/retry and switch chats. No late text appears in the wrong contact/chat, and chat switching removes the floating message button.
+- [ ] Check keyboard-open portrait/landscape at 320–430 px: square composer, SVG send/minimize controls, sound control and scrollable history remain accessible.
+- [ ] Record actual app-switch/lock-screen behavior separately from in-page minimize. Safari suspension is controlled by iOS and is not guaranteed background execution.
+
+## v3.10.3 Field Journal acceptance (retained)
 
 - [ ] At 320–430 CSS pixels, Field Journal A titles, counts and four category buttons fit. Long Thai/English titles wrap; actions remain reachable at enlarged text sizes.
 - [ ] Open one mission, then another: the first folds closed smoothly and hidden controls cannot receive keyboard focus or taps. Motion off / OS Reduce Motion removes the transitions.

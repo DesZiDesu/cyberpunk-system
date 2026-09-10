@@ -54,7 +54,7 @@ let n=0;function test(name,fn){fn();console.log('PASS '+name);n++;}
  test('Both display switches remove the HUD without changing saved readings',()=>{assert.equal(scene.el.querySelector('.cps-scene-stack'),null);assert.equal(scene.message.extra.cpsScene.balance,1200);});
  w.CyberpunkSystem.openCyberware();const p=q('.cps-rpg-main');
  test('Cyberware Back shares the Close action row',()=>assert.ok(p.querySelector('.cps-window-actions [data-ui-back]')));
- q('[data-section-picker]').value='weapons';q('[data-section-picker]').dispatchEvent(new w.Event('change'));q('.cps-rpg-main [data-ui-back]').click();
+ q('[data-shard-group=character]').click();q('[data-shard-section=weapons]').click();q('.cps-rpg-main [data-ui-back]').click();
  test('Mobile section Back returns to Status before leaving the workspace',()=>assert.equal(q('.cps-rpg-main').dataset.currentTab,'status'));
  q('.cps-rpg-main [data-ui-back]').click();
  test('Root Cyberware Back returns to main chat when opened directly',()=>{assert.equal(d.querySelector('.cps-rpg-main'),null);assert.equal(d.querySelector('.cps-overlay'),null);});

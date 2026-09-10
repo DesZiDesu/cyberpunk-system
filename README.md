@@ -1,5 +1,19 @@
 # Cyberpunk System
 
+## v3.11.1 — B / SHARD HUD and message controls
+
+Update the extension and reload once. This release builds on the complete v3.11.0 communication update.
+
+- Cyberware uses the approved angular B / SHARD shell, live status meters, and a mobile thumb dock for Character, World and All systems. All 16 sections remain reachable; Back/Escape dismiss the router before leaving the section. Anatomy, biography and progression remain available in expandable panels.
+- Document / Shard, Medical / Trauma Team and policy confirmation keep their 3.10.1–3.10.2 designs. Field Journal content, Private Signal, saved palettes and main-chat effects are preserved.
+- In **Personal Messages**, Enter inserts a newline (including mobile/IME input). Press the SVG **Send** button to request a reply. Calls retain their existing Enter behavior.
+- Use the **minus button** beside Close to minimize messages while a reply is being generated. The floating contact button shows waiting/new-message status and restores the conversation without another request. Replies and attachments remain bound to the original contact. Closing does not cancel a request; Cancel generation and changing chats do.
+- **Test sound / ทดสอบเสียง** is directly below the composer. It enables notification sounds and plays the bundled message clip; if volume was zero, it restores 55%. Sending also silently prepares that clip during the user gesture. A blocked playback shows guidance beside this control. Muted notifications stay muted unless Test sound is pressed. Notifications received while hidden are saved and one sound is deferred until the page is visible.
+- UI send, diagonal-arrow and recording-play glyphs render as inline SVG. The message composer has square corners.
+
+Validation: 887 passing checks across 17 regression suites, 15 runtime syntax checks, and four parsed stylesheets. Chromium checks at 320/390 px and a 390 × 360 short viewport found no horizontal overflow; Enter/send/minimize/restore completed one simulated request with no browser errors. Computed Medical styling matched the previous design with fonts loaded. Host generation and audio are simulated in regression tests; native iPhone sound/keyboard acceptance remains pending. In-page minimizing keeps the request alive, but iOS may suspend Safari when switching apps or locking the phone; this release does not provide a server-side background worker.
+
+
 ## v3.11.0 — Private Signal / Personal Messages B
 
 Update the extension and reload once. Both communication layouts use the approved B structure, Rajdhani / Noto Sans Thai fonts and the user's surface, text and accent settings. Incoming/outgoing calls and direct text messages are separate interfaces; opening messages never starts a call.

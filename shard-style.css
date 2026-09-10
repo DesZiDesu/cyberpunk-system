@@ -1,0 +1,127 @@
+/* B / SHARD. Presentation only: scoped opt-in, never a global .cps-ui reset.
+   Document / Shard, Medical / Trauma Team and Field Journal content stay untouched.
+   Colors inherit the user's palette; controls retain their existing behavior. */
+.cps-ui.cps-shard-shell {
+  --cps-shard-panel:color-mix(in srgb,var(--cps-surface) 93%,var(--cps-accent));
+  --cps-shard-raised:color-mix(in srgb,var(--cps-surface) 85%,var(--cps-accent));
+  border-radius:0;border-color:color-mix(in srgb,var(--cps-accent) 44%,var(--cps-surface));
+  border-top:3px solid var(--cps-accent);box-shadow:8px 8px 0 #0003;
+}
+.cps-ui.cps-shard-shell > .cps-rpg-top {
+  --cps-font-en:'Rajdhani','Noto Sans Thai',sans-serif;
+  --cps-font-th:'Noto Sans Thai','Rajdhani',sans-serif;
+  background:var(--cps-accent);color:var(--cps-shard-ink,#101510);
+  border:0;padding:14px 22px 16px;position:relative;isolation:isolate;
+}
+.cps-ui.cps-shard-shell > .cps-rpg-top::after {
+  content:'';position:absolute;bottom:-7px;left:0;width:66%;height:7px;background:var(--cps-accent);
+  clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);pointer-events:none;
+}
+.cps-ui.cps-shard-shell > .cps-rpg-top :is(h2,.cps-eyebrow) {color:inherit;-webkit-text-fill-color:currentColor;}
+.cps-ui.cps-shard-shell > .cps-rpg-top h2 {font:700 calc(31px * var(--cps-scale,1))/1.08 var(--cps-font-en);font-style:italic;letter-spacing:.01em;text-transform:uppercase;margin:0;}
+.cps-ui.cps-shard-shell > .cps-rpg-top .cps-eyebrow {font:600 11px/1.4 var(--cps-font-en);letter-spacing:.13em;}
+.cps-ui.cps-shard-shell > .cps-rpg-top .cps-window-actions {align-self:center;gap:4px;}
+.cps-ui.cps-shard-shell > .cps-rpg-top .cps-button {color:inherit;-webkit-text-fill-color:currentColor;background:transparent;border:1px solid currentColor;border-radius:0;clip-path:none;min-width:44px;min-height:44px;font:600 14px/1.2 var(--cps-font-th);padding:7px;}
+.cps-ui.cps-shard-shell > .cps-rpg-top [data-rpg=close] {font-size:24px;}
+.cps-ui.cps-shard-shell > .cps-rpg-top .cps-button:hover {background:color-mix(in srgb,var(--cps-shard-ink,#101510) 12%,transparent);}
+.cps-ui .cps-shard-surface,.cps-ui.cps-shard-shell .cps-rpg-tabs,.cps-ui .cps-shard-dock,.cps-ui .cps-shard-router {
+  --cps-font-en:'Rajdhani','Noto Sans Thai',sans-serif;
+  --cps-font-th:'Noto Sans Thai','Rajdhani',sans-serif;
+  font-family:var(--cps-font-th);color:var(--cps-text);
+}
+.cps-ui .cps-shard-surface {background:var(--cps-surface);padding-top:26px;}
+.cps-ui .cps-shard-surface :is(button,input,select,textarea,article,details,summary,.cps-state-pill,.cps-account-card,.cps-campaign-review) {border-radius:0;}
+.cps-ui .cps-shard-surface :is(h2,h3,h4) {font-family:var(--cps-font-en);letter-spacing:.025em;overflow-wrap:anywhere;}
+.cps-ui .cps-shard-surface .cps-section-heading h3 {font-size:calc(32px * var(--cps-scale,1));font-style:italic;font-weight:600;color:var(--cps-accent);}
+.cps-ui .cps-shard-surface .cps-section-heading small {font-size:11px;color:var(--cps-muted);}
+.cps-ui .cps-shard-surface .cps-section-count {white-space:normal;text-align:right;font-size:11px;}
+.cps-ui .cps-shard-surface .cps-button {border-radius:0;border:1px solid var(--cps-line);background:var(--cps-shard-raised);color:var(--cps-text);min-height:44px;clip-path:none;font-size:calc(13px * var(--cps-scale,1));}
+.cps-ui .cps-shard-surface .cps-button:is(.primary,[aria-pressed=true]) {color:var(--cps-shard-ink,#101510);background:var(--cps-accent);border-color:var(--cps-accent);}
+.cps-ui .cps-shard-surface .cps-button:hover:not(:disabled) {border-color:var(--cps-accent);}
+.cps-ui .cps-shard-surface .cps-button:disabled {opacity:.45;cursor:not-allowed;}
+.cps-ui .cps-shard-surface :is(input,select,textarea) {font-size:max(16px,1em);background:var(--cps-surface);color:var(--cps-text);}
+.cps-ui .cps-shard-surface :is(.cps-gear-card,.cps-ability-card,.cps-payment,.cps-neural-partition,.cps-account-card,.cps-breach-launcher,.cps-item-dossier) {background:var(--cps-shard-panel);border:1px solid var(--cps-line);border-top:2px solid var(--cps-accent);box-shadow:none;}
+.cps-ui .cps-shard-surface .cps-gear-visual {background:repeating-linear-gradient(90deg,transparent 0,transparent 27px,color-mix(in srgb,var(--cps-accent) 6%,transparent) 28px),var(--cps-surface);}
+.cps-ui .cps-shard-surface .cps-gear-topline {color:var(--cps-accent);background:var(--cps-shard-raised);font-size:11px;}
+.cps-ui .cps-shard-surface .cps-gear-copy h3 {font-size:calc(25px * var(--cps-scale,1));font-weight:600;}
+.cps-ui .cps-shard-surface .cps-rpg-note {font-size:calc(13px * var(--cps-scale,1));line-height:1.8;}
+.cps-ui .cps-shard-surface :is(.cps-rpg-advanced,.cps-shard-disclosure) {border:0;border-top:1px solid var(--cps-line);padding:0;margin-top:14px;background:transparent;}
+.cps-ui .cps-shard-surface :is(.cps-rpg-advanced,.cps-shard-disclosure)>summary {min-height:44px;padding:12px 0;cursor:pointer;font-size:calc(13px * var(--cps-scale,1));color:var(--cps-accent);}
+.cps-ui .cps-shard-surface .cps-shard-disclosure>.cps-body-scan {max-width:420px;margin:0 auto 16px;}
+.cps-ui .cps-shard-surface .cps-shard-disclosure .cps-body-scan svg {max-height:340px;}
+.cps-ui .cps-shard-identity {display:grid;grid-template-columns:68px minmax(0,1fr) auto;gap:14px;align-items:center;margin-bottom:22px;}
+.cps-ui .cps-shard-id-glyph {display:grid;place-items:center;height:74px;background:var(--cps-shard-raised);border-left:2px solid var(--cps-accent);clip-path:polygon(0 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);}
+.cps-ui .cps-shard-id-glyph .cps-item-image {width:34px;height:34px;color:var(--cps-accent);}
+.cps-ui .cps-shard-identity h3 {font:700 calc(32px * var(--cps-scale,1))/1.12 var(--cps-font-en);font-style:italic;color:var(--cps-accent);margin:4px 0;overflow-wrap:anywhere;}
+.cps-ui .cps-shard-identity small {font:600 11px/1.4 var(--cps-font-en);letter-spacing:.12em;color:var(--cps-muted);}
+.cps-ui .cps-shard-identity p {margin:0;font-size:12px;overflow-wrap:anywhere;}
+.cps-ui .cps-shard-id-state {font:600 11px/1.4 var(--cps-font-en);letter-spacing:.08em;color:var(--cps-accent);border-bottom:2px solid currentColor;padding-bottom:4px;}
+.cps-ui .cps-shard-surface .cps-status-overview {display:block;}
+.cps-ui .cps-shard-surface .cps-status-vitals {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;border-top:1px solid var(--cps-line);border-bottom:1px solid var(--cps-line);padding:18px 0;margin-bottom:12px;}
+.cps-ui .cps-shard-surface .cps-hud-meter {margin:0;min-width:0;}
+.cps-ui .cps-shard-surface .cps-hud-meter-head {align-items:baseline;flex-wrap:wrap;gap:4px;}
+.cps-ui .cps-shard-surface .cps-hud-meter-head>span {font-size:12px;letter-spacing:.06em;}
+.cps-ui .cps-shard-surface .cps-hud-meter-head b {font:600 calc(25px * var(--cps-scale,1))/1 var(--cps-font-en);}
+.cps-ui .cps-shard-surface .cps-hud-meter-head small {font-size:12px;}
+.cps-ui .cps-shard-surface .cps-hud-track {height:7px;border:0;border-radius:0;}
+.cps-ui .cps-shard-surface .cps-status-vitals .cps-hud-meter-foot {display:none;}
+.cps-ui .cps-shard-surface .cps-neural-assessment {border:1px solid var(--cps-line);border-left:3px solid var(--cps-accent);padding:15px;gap:15px;margin-top:16px;background:var(--cps-shard-panel);}
+.cps-ui .cps-shard-surface .cps-neural-assessment strong {font-family:var(--cps-font-en);font-size:32px;}
+.cps-ui.cps-shard-shell .cps-rpg-tabs {background:var(--cps-shard-panel);padding-top:20px;}
+.cps-ui.cps-shard-shell .cps-rpg-tabs .cps-button {border-radius:0;border-left:2px solid transparent;min-height:48px;}
+.cps-ui.cps-shard-shell .cps-rpg-tabs .cps-button[aria-pressed=true] {background:var(--cps-accent);color:var(--cps-shard-ink,#101510);border-left-color:var(--cps-accent);}
+.cps-ui.cps-shard-shell .cps-rpg-tabs .cps-button small {font-size:11px;opacity:.8;}
+/* The desktop sidebar stays available. Mobile gets a separate, non-scrolling dock. */
+.cps-ui .cps-shard-dock {display:none;}
+.cps-ui .cps-shard-router[hidden],.cps-ui .cps-rpg-body[hidden] {display:none!important;}
+.cps-ui .cps-shard-router {overflow:auto;overscroll-behavior:contain;min-height:0;flex:1;padding:16px;background:var(--cps-surface);}
+.cps-ui .cps-shard-router>header {display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--cps-accent);padding-bottom:10px;gap:12px;}
+.cps-ui .cps-shard-router>header>span {font:600 17px/1.2 var(--cps-font-en);letter-spacing:.08em;color:var(--cps-accent);}
+.cps-ui .cps-shard-router [data-shard-close] {width:44px;min-height:44px;border:1px solid var(--cps-line);background:var(--cps-shard-raised);color:var(--cps-text);font-size:24px;border-radius:0;cursor:pointer;}
+.cps-ui .cps-shard-router-groups h3 {font:600 15px/1.4 var(--cps-font-en);margin:18px 0 8px;color:var(--cps-accent);letter-spacing:.04em;}
+.cps-ui .cps-shard-router-groups section>div {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;}
+.cps-ui .cps-shard-router [data-shard-section] {display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:7px;align-items:center;text-align:left;min-height:56px;background:var(--cps-shard-raised);color:var(--cps-text);border:1px solid var(--cps-line);border-left:2px solid var(--cps-accent);border-radius:0;font:500 calc(13px * var(--cps-scale,1))/1.5 var(--cps-font-th);padding:10px;cursor:pointer;}
+.cps-ui .cps-shard-router [data-shard-section] span {overflow-wrap:anywhere;}
+.cps-ui .cps-shard-router [data-shard-section] .cps-item-image {width:20px;height:20px;}
+.cps-ui .cps-shard-router [data-shard-section] small {font:500 11px/1.2 var(--cps-font-en);}
+.cps-ui .cps-shard-router [data-shard-section][aria-pressed=true] {background:var(--cps-accent);color:var(--cps-shard-ink,#101510);}
+.cps-ui :is([data-shard-group],[data-shard-section],[data-shard-close]):focus-visible {outline:2px solid var(--cps-text);outline-offset:-4px;}
+@media(max-width:760px) {
+  .cps-ui.cps-shard-shell {box-shadow:none;}
+  .cps-ui.cps-shard-shell>.cps-rpg-top {padding:11px 14px 13px;}
+  .cps-ui.cps-shard-shell>.cps-rpg-top h2 {font-size:calc(27px * var(--cps-scale,1));}
+  .cps-ui.cps-shard-shell>.cps-rpg-top .cps-eyebrow {font-size:11px;letter-spacing:.07em;}
+  .cps-ui.cps-shard-shell>.cps-rpg-top .cps-ui-back {font-size:12px;}
+  .cps-ui .cps-shard-surface {padding:24px 16px 18px;}
+  .cps-ui.cps-shard-shell .cps-rpg-workspace {display:block;}
+  .cps-ui.cps-shard-shell .cps-rpg-main-column {height:100%;}
+  .cps-ui.cps-shard-shell .cps-rpg-tabs {display:none;}
+  .cps-ui .cps-shard-dock {display:block;flex:0 0 auto;padding:0 max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:var(--cps-surface);border-top:1px solid var(--cps-line);}
+  .cps-ui .cps-shard-dock-label {display:flex;justify-content:space-between;gap:12px;padding:8px 0;font:600 11px/1.3 var(--cps-font-en);letter-spacing:.08em;color:var(--cps-accent);}
+  .cps-ui .cps-shard-dock-label span:last-child {text-align:right;overflow-wrap:anywhere;}
+  .cps-ui .cps-shard-dock>nav {display:grid;grid-template-columns:1fr 1fr 1.2fr;align-items:end;gap:5px;}
+  .cps-ui [data-shard-group] {display:flex;position:relative;align-items:center;justify-content:center;flex-direction:column;gap:5px;min-height:65px;min-width:0;padding:17px 5px 8px;border:1px solid var(--cps-line);border-radius:0;background:var(--cps-shard-raised);color:var(--cps-text);font:500 calc(12px * var(--cps-scale,1))/1.3 var(--cps-font-th);cursor:pointer;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);}
+  .cps-ui [data-shard-group] small {position:absolute;top:3px;left:6px;font:600 10px/1.2 var(--cps-font-en);letter-spacing:.07em;}
+  .cps-ui [data-shard-group] .cps-item-image {width:21px;height:21px;color:inherit;}
+  .cps-ui [data-shard-group][aria-pressed=true] {border-color:var(--cps-accent);color:var(--cps-accent);}
+  .cps-ui [data-shard-group=all] {min-height:84px;background:var(--cps-accent);color:var(--cps-shard-ink,#101510)!important;border-color:var(--cps-accent);}
+  .cps-ui [data-shard-group=all] .cps-item-image {width:25px;height:25px;}
+  .cps-ui [data-shard-group][aria-expanded=true] {box-shadow:inset 0 -4px currentColor;}
+  .cps-ui .cps-shard-identity {grid-template-columns:54px minmax(0,1fr);gap:12px;}
+  .cps-ui .cps-shard-id-glyph {height:65px;}
+  .cps-ui .cps-shard-id-state {grid-column:2;justify-self:start;font-size:11px;margin-top:-5px;}
+  .cps-ui .cps-shard-identity h3 {font-size:calc(29px * var(--cps-scale,1));}
+  .cps-ui .cps-shard-surface .cps-status-vitals {gap:18px 14px;}
+  .cps-ui .cps-shard-surface .cps-hud-meter-head b {font-size:calc(23px * var(--cps-scale,1));}
+}
+@media(max-width:360px) {
+  .cps-ui .cps-shard-router {padding:12px;}
+  .cps-ui .cps-shard-router [data-shard-section] {grid-template-columns:18px minmax(0,1fr);padding:9px 6px;font-size:12px;}
+  .cps-ui .cps-shard-router [data-shard-section] small {display:none;}
+}
+@media(max-height:500px) and (max-width:760px) {
+  .cps-ui [data-shard-group] {min-height:48px;flex-direction:row;padding-top:14px;}
+  .cps-ui [data-shard-group=all] {min-height:54px;}
+  .cps-ui .cps-shard-dock-label {padding:4px 0;}
+  .cps-ui.cps-shard-shell>.cps-rpg-top {padding-top:6px;padding-bottom:8px;}
+}

@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.11.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.11.1';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -325,6 +325,7 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
           const back=document.createElement('button');back.type='button';back.className='cps-button cps-ui-back';back.dataset.uiBack='';back.textContent=settings().language==='th'?'ย้อนกลับ':'Back';
           back.onclick=()=>{
             if(!node.isConnected||bucket!==chatBucket())return;
+            if(node.cpsCloseRouter?.())return;
             if(node.cpsSectionBack){node.cpsSectionBack();return;}
             const route=node.cpsBack;
             const close=node.querySelector('[data-rpg="close"], [data-action="close-manager"]');
@@ -387,6 +388,11 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       root.style.setProperty('--cps-accent', s.accent);
       const rgb=/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(s.accent);
       root.style.setProperty('--cps-on-accent',rgb&&(.299*parseInt(rgb[1],16)+.587*parseInt(rgb[2],16)+.114*parseInt(rgb[3],16))>145?'#080b0d':'#f5f7fa');
+      // Contrast for solid B / SHARD headers, without changing the saved palette.
+      const accentHex=/^#[\da-f]{6}$/i.test(s.accent)?s.accent:'#fcee0a';
+      const shardRgb=accentHex.slice(1).match(/.{2}/g).map(v=>parseInt(v,16)/255);
+      const luminance=shardRgb.map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
+      root.style.setProperty('--cps-shard-ink',luminance>.179?'#000000':'#ffffff');
       root.style.setProperty('--cps-danger', s.danger);
       root.style.setProperty('--cps-surface', s.surface);
       root.style.setProperty('--cps-text', s.text);
@@ -1891,7 +1897,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
         systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, playPhoneSound:(...args)=>comms?.play(...args), messageDestination:name=>comms?.route(name), closeComms:()=>{comms?.changed();if(chatBucket().call.active)endCall();}, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating||comms?.busy(), context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
-        comms=globalThis.CyberpunkCommsFactory({settings,context,chatBucket,saveChat,findEffectiveNpc,npcDisabled,htmlEscape,toast,showUiDialog,removeUiDialog,avatar:avatarMarkup,contacts:()=>effectiveRecords('npcs'),assetUrl:path=>new URL(path,import.meta.url).href,systems:()=>systems,busy:()=>hostGenerationBusy()||callGenerating||npcGenerating||systems?.mailBusy(),parse:parseTagAttributes,strip:stripTags,contextPrompt:()=>recentMainChat()+'\n'+worldLorePrompt(),beforeOpen:()=>{if(callOverlay)minimizeCallWindow();closeManager();closeHostWand();}});
+        comms=globalThis.CyberpunkCommsFactory({settings,context,chatBucket,saveChat,saveSettings,findEffectiveNpc,npcDisabled,htmlEscape,toast,showUiDialog,removeUiDialog,avatar:avatarMarkup,contacts:()=>effectiveRecords('npcs'),assetUrl:path=>new URL(path,import.meta.url).href,systems:()=>systems,busy:()=>hostGenerationBusy()||callGenerating||npcGenerating||systems?.mailBusy(),parse:parseTagAttributes,strip:stripTags,contextPrompt:()=>recentMainChat()+'\n'+worldLorePrompt(),beforeOpen:()=>{if(callOverlay)minimizeCallWindow();closeManager();closeHostWand();}});
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

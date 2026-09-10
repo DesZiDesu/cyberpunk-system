@@ -5,10 +5,10 @@
   const cap = (n, lo, hi) => Math.min(hi, Math.max(lo, Number(n) || 0));
   const text = (v, n = 2000) => String(v ?? '').trim().slice(0, n);
   const arrow = direction => {
-    const paths = {left:'M19 12H5m6-6-6 6 6 6',right:'M5 12h14m-6-6 6 6-6 6','up-right':'M6 18 18 6M6 6h12v12'};
+    const paths = {minimize:'M5 18h14',play:'m8 5 11 7-11 7Z',left:'M19 12H5m6-6-6 6 6 6',right:'M5 12h14m-6-6 6 6-6 6','up-right':'M6 18 18 6M6 6h12v12'};
     return `<svg class="cps-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="${paths[direction]||paths.right}"/></svg>`;
   };
-  const arrowLabel = (value, escape) => escape(value).replace(/[↗←→]\uFE0F?/gu, glyph => arrow(glyph[0]==='↗'?'up-right':glyph[0]==='←'?'left':'right'));
+  const arrowLabel = (value, escape) => escape(value).replace(/[↗←→▶]\uFE0F?/gu, glyph => arrow(glyph[0]==='↗'?'up-right':glyph[0]==='←'?'left':glyph[0]==='▶'?'play':'right'));
   const handle = v => text(v, 180).replace(/^[@＠\s]+/u, '');
   const money = v => { const n = Number(v); if (!Number.isSafeInteger(n) || n < 0 || n > 1e12) throw Error('Invalid amount'); return n; };
   const uid = () => `rpg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
