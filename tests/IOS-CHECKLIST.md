@@ -1,4 +1,10 @@
-# v3.10.1 native acceptance checks — pending
+# v3.10.2 native acceptance checks — pending
+
+- [ ] Compare Document against Field Ops A with fonts loaded: compact toolbar, archive badge, numbered sections, readable copy and contrasting footer. Custom surface/text/danger colors remain applied; long TH/EN documents preserve every supplied paragraph.
+- [ ] Review dialog fills the phone width without a right gutter, in portrait and landscape. Package indices never overlap names or prices at 320–430 CSS pixels.
+- [ ] With active Platinum, select Silver/Executive freely; review and cancel preserves money and coverage. Confirm replacement: full premium, fresh term, no old-time rollover. Same-plan renewal extends the term. A live dispatch still blocks replacement.
+
+## v3.10.1 native acceptance checks — historical
 
 - [ ] Update/reload and confirm 3.10.1. In portrait and landscape, open long Thai/English documents: title appears once, text is complete, one content region scrolls and footer controls remain reachable.
 - [ ] Connect a new shard: progress completes, 100% becomes compact, Close & archive grants the shard once and reopening preserves its contents. Switching chats before closing must not grant it to the new chat.

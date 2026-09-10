@@ -328,11 +328,12 @@
       const d=Object.hasOwn(medicines,kind)?medicines[kind]:null;if(!d)throw Error('Unknown medicine');debit(s,d.price,d.name);
       const it=item({catalogId:kind,name:d.name,category:'consumable',power:0,cooldown:d.cooldown,effect:`${d.potency} suppression / ${d.duration} RP turns / toxicity +${d.toxicity}`});s.player.inventory.push(it);return it;
     }
-    function subscribe(s,key){
+    function subscribe(s,key,{replace=false}={}){
       const p=Object.hasOwn(plans,key)?plans[key]:null,m=store(s);if(!p)throw Error('Unknown plan');
       if(m.incident&&!['closed','cancelled'].includes(m.incident.phase))throw Error('Resolve active dispatch before changing plan');
-      if(m.contract&&m.contract.expires>s.turn&&m.contract.plan!==key)throw Error('Wait for expiry before switching plans');
-      debit(s,p.price,'Trauma Team '+p.name);m.contract={id:uid(),plan:key,holder:text(s.player.profile?.name||'Player',180),expires:Math.max(s.turn,m.contract?.expires||0)+p.term};
+      if(m.contract&&m.contract.expires>s.turn&&m.contract.plan!==key&&!replace)throw Error('Wait for expiry or explicitly confirm replacement before switching plans');
+      const renewal=m.contract?.plan===key;
+      debit(s,p.price,'Trauma Team '+p.name);m.contract={id:uid(),plan:key,holder:text(s.player.profile?.name||'Player',180),expires:Math.max(s.turn,renewal?m.contract.expires:0)+p.term};
       receipt(s,'Trauma Team / '+p.name+' policy',`${p.name} · Extension RP preset, not canon pricing.\nPremium €$${p.price} / ${p.term} story turns. Expires at turn ${m.contract.expires}.\nETA ${p.eta} turns. Incident copay €$${p.copay}.\nCoverage: known Night City districts${p.danger?', including marked danger zones':', excluding marked danger zones'}. Biochip signal required for automatic dispatch.\nStabilization and extraction only; no combat assistance or automatic resurrection. Hospital follow-up and upgrades excluded. No automatic renewal.`);
       return m.contract;
     }

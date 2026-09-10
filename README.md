@@ -1,5 +1,13 @@
 # Cyberpunk System
 
+## v3.10.2 — Package switching and Field Ops corrections
+
+Update the extension and reload once. Package cards remain selectable during active coverage. Selecting or cancelling changes nothing; explicit confirmation can replace the active policy at the full displayed price, starting a fresh term with no refund or carried-over time. Renewing the same package still extends its term. Active dispatches, insufficient funds, changed contracts and stale chat windows cannot bypass transaction checks.
+
+The mobile review dialog now fills the available width. Document typography uses the approved Field Ops A reference fonts (Rajdhani / Noto Sans Thai), with a compact toolbar, archive status, numbered content sections and a contrasting footer. Package indices no longer compete with wide display lettering. Surface/text/accent colors remain driven by extension settings. Supplied document text is preserved; missing structured dossier fields are not fabricated from the mockup.
+
+Validation: 809 checks pass across all 15 regression suites, plus runtime syntax and three-stylesheet parsing. Native iPhone visual acceptance remains pending; automated DOM checks do not emulate Safari rendering.
+
 ## v3.10.1 — Field Ops document and Trauma Team UI
 
 **Update the installed extension, then reload SillyTavern once.** This applies approved design A without changing existing prices, medical effects, contracts or quest rules.

@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap');
-@import url('./device-style.css?v=3.10.1');
-@import url('./breach-style.css?v=3.10.1');
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500&family=Noto+Sans+Thai:wght@400;500&display=swap');
+@import url('./device-style.css?v=3.10.2');
+@import url('./breach-style.css?v=3.10.2');
 
 .cps-arrow{display:inline-block;width:1.1em;height:1.1em;flex:none;vertical-align:-.15em;pointer-events:none}
 /* In-chat identity registration and full-world continuity. */
@@ -1627,6 +1627,7 @@ html[data-cps-motion=on] [data-ai-state=thinking] .cps-ai-equalizer i:nth-child(
 [data-cps-motion=off] .cps-item-dossier *{animation:none!important;transition:none!important;}
 
 /* Field Ops / approved design A. Scoped to documents and membership purchasing. */
+.cps-ui.cps-field-document,.cps-ui.cps-field-confirm,.cps-ui .cps-medical-packages {--cps-font-en:'Rajdhani','Noto Sans Thai',sans-serif;--cps-font-th:'Noto Sans Thai','Rajdhani',sans-serif;}
 .cps-ui.cps-field-document {width:min(94vw,760px);color:var(--cps-text);background:var(--cps-surface);border-top:3px solid var(--cps-danger);}
 .cps-ui.cps-field-document>.cps-rpg-top {display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 20px;background:var(--cps-surface);}
 .cps-ui.cps-field-document>.cps-rpg-top .cps-eyebrow {font:500 11px/1.5 var(--cps-font-en);color:var(--cps-danger);letter-spacing:.14em;flex:1;}
@@ -1691,7 +1692,7 @@ html[data-cps-motion=on] [data-ai-state=thinking] .cps-ai-equalizer i:nth-child(
 .cps-ui .cps-plan-total small {font:500 11px/1.7 var(--cps-font-en);letter-spacing:.08em;color:var(--cps-muted);}
 .cps-ui .cps-plan-total p {margin:5px 0 0;font:400 11px/1.8 var(--cps-font-th);color:var(--cps-muted);}
 .cps-ui .cps-plan-purchase>.cps-button {width:100%;margin:16px 0 0;min-height:48px;border-color:var(--cps-danger);background:var(--cps-danger);color:var(--cps-surface);font-size:13px;}
-.cps-ui.cps-field-confirm {max-width:min(94vw,560px);}
+.cps-ui.cps-field-confirm {max-width:min(94vw,560px);box-sizing:border-box;}
 .cps-ui.cps-field-confirm .cps-plan-total {padding-bottom:20px;border-bottom:1px solid var(--cps-line);margin-bottom:10px;}
 .cps-ui.cps-field-confirm .cps-rpg-actions {display:flex;flex-wrap:wrap;}
 .cps-ui.cps-field-confirm .cps-rpg-actions>.cps-button {min-height:48px;flex:1;}
@@ -1708,4 +1709,34 @@ html[data-cps-motion=on] [data-ai-state=thinking] .cps-ai-equalizer i:nth-child(
 }
 @media(prefers-reduced-motion:reduce){
  .cps-ui .cps-plan-choice,.cps-ui.cps-field-document .cps-shard-progress i,.cps-ui.cps-field-document .cps-shard-content {animation:none!important;transition:none!important;}
+}
+
+/* Field Ops A fidelity and small-screen dialog containment. */
+.cps-ui.cps-field-document>.cps-rpg-top h2 {display:none;}
+.cps-ui.cps-field-document>.cps-rpg-top .cps-window-actions {display:flex;align-items:center;flex:0 0 auto;}
+.cps-ui.cps-field-document>.cps-rpg-top .cps-ui-back {font-size:0;}
+.cps-ui.cps-field-document>.cps-rpg-top .cps-ui-back::before {content:'←';font:24px/1 var(--cps-font-en);}
+.cps-ui.cps-field-document>.cps-rpg-top [data-rpg=close] {border:0;background:transparent;}
+.cps-ui.cps-field-document .cps-document-heading h3 {font:500 36px/1.02 var(--cps-font-en);margin:0 0 10px;}
+.cps-ui.cps-field-document .cps-document-heading small {display:block;font-size:12px;margin:0 0 10px;}
+.cps-ui.cps-field-document .cps-document-heading p {font-size:12px;line-height:1.8;}
+.cps-ui.cps-field-document .cps-rpg-detail {font-size:14px;line-height:1.95;}
+.cps-ui.cps-field-document .cps-shard-link.complete {align-items:center;padding:0;margin:0 0 4px;gap:7px;flex-wrap:wrap;}
+.cps-ui.cps-field-document .cps-document-badge {display:inline-flex;align-items:center;gap:6px;padding:5px 8px;margin-right:auto;color:var(--cps-danger);background:color-mix(in srgb,var(--cps-danger) 10%,var(--cps-surface));font:500 11px/1.5 var(--cps-font-en);letter-spacing:.1em;}
+.cps-ui.cps-field-document .cps-document-badge::before {content:'▤';font-size:14px;}
+.cps-ui.cps-field-document .cps-shard-link.complete small::before {content:'✓ ';}
+.cps-ui.cps-field-document .cps-shard-content h4,.cps-ui.cps-field-document .cps-data-reader h4 {display:flex;gap:9px;font:500 12px/1.5 var(--cps-font-en);letter-spacing:.12em;color:var(--cps-muted);margin:0 0 10px;white-space:normal;}
+.cps-ui.cps-field-document .cps-document-section-index {color:var(--cps-danger);}
+.cps-ui.cps-field-document .cps-shard-actions {margin:0 -22px -22px;padding:16px 22px;background:color-mix(in srgb,var(--cps-surface) 96%,var(--cps-text));}
+.cps-ui.cps-field-document .cps-shard-archive-hint {flex:1 1 100px;font-size:12px;}
+.cps-ui.cps-field-document .cps-shard-actions .cps-button {flex:0 1 auto;}
+.cps-ui .cps-plan-choice {box-sizing:border-box;grid-template-columns:32px minmax(0,1fr) auto;}
+.cps-ui .cps-plan-identity {min-width:0;overflow-wrap:anywhere;}
+.cps-ui .cps-plan-identity strong {font-size:21px;}
+@media(max-width:640px){
+ dialog.cps-ui.cps-field-confirm,dialog.cps-ui.cps-field-document {width:100%;max-width:100%;margin:0;box-sizing:border-box;}
+ .cps-ui.cps-field-document>.cps-rpg-content {padding:22px;}
+ .cps-ui.cps-field-document .cps-shard-archive-hint {flex-basis:100px;}
+ .cps-ui.cps-field-document .cps-shard-actions .cps-button {flex:0 1 auto;}
+ .cps-ui.cps-field-confirm>.cps-rpg-content {min-width:0;overflow-x:hidden;}
 }
