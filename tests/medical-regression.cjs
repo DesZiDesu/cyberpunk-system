@@ -51,7 +51,7 @@ test('RP request only queues, deduplicates and requires owned medication',()=>{c
  w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};
  const ctx={name1:'V',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(k,f)=>events.set(k,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){prompt=p;},async generateQuietPrompt(){requests++;return '';}};
  w.SillyTavern={getContext:()=>ctx};
- for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+ for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
  await w.eval('(async()=>{'+fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/index.js'))+'\n})()');
  const wait=()=>new Promise(r=>setTimeout(r,40));await wait();
  const q=s=>{const el=d.querySelector(s);assert.ok(el,'Missing '+s);return el;};const click=s=>q(s).click();const s=()=>ctx.chatMetadata.cyberpunk_system.rpg;

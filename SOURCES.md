@@ -124,6 +124,14 @@ The mailbox uses original HTML/CSS and envelope icon geometry. No portfolio scre
 - [GamesAtlas vehicle index](https://www.gamesatlas.com/cyberpunk-2077/vehicles/) and [VULKK ownable-vehicle catalog](https://vulkk.com/2024/02/02/cyberpunk-2077-vehicles-complete-catalog-and-guide/) were located for future image coverage. No scraped image archive is bundled. The 24 named presets are a starter list, not all base-game/Phantom Liberty/patch variants.
 - House resale, five-level room upgrades, editable preset prices and vehicle repair payments are explicit extension RP rules. Blackwall Gateway plus Interface/Containment on unlock is the requested extension behavior, not the game’s canonical unlock package.
 
+## v3.10.0 item intelligence and artwork scope (research 2026-09-09)
+
+- [VULKK cyberware catalog](https://vulkk.com/2023/09/30/full-cyberware-catalog-for-cyberpunk-2077-update-2-0-and-phantom-liberty/): short qualitative Sandevistan comparisons only — critical-hit, defensive and airborne roles, plus Falcon/Apogee duration, cooldown and capacity trade-offs. This is a community guide with 2.x context, not a verified latest-patch tier-by-tier stat dump. The extension's preset numerical costs are independently authored RP tuning.
+- [CDPR Bullet-Time Ninja build breakdown](https://www.cyberpunk.net/en/news/50020/bullet-time-ninja-build-breakdown): Sandevistan/time-dilation and close-range build context. No copied tooltip text or images.
+- [CDPR fan-content guidelines](https://www.cdprojektred.com/en/fan-content): publicly available artwork is not a blanket redistribution license for a third-party product. Permission for a complete inventory-art bundle was not established, so no such archive is included or scraped. User-provided permitted raster images remain optional, attributed, chat-local and exact-ID matched; original symbols remain the fallback.
+- The 58 base-item briefs are original **roleplay-use guidance**, not verified manufacturer specifications. Weapons without model-specific research are explicitly marked unverified. Every technical-ID dossier is likewise marked unverified. Narrative metadata supplied by AI/user is not promoted to a trusted game source.
+- Home-upgrade quote prices, manual capacity sources, confirmed mission hand-ins, prepaid rescue and partial medical bills are extension-original workflows. No extra model call, live game API or external image request is introduced.
+
 ## v3.3.0 polish references and local mechanics
 
 - Revisited [Vladimír Vilimovský's Cyberpunk 2077 UI portfolio](https://www.behance.net/gallery/118663901/Cyberpunk-2077User-Interface-(Part-1)) for terminal hierarchy and the Neomilitarism design language. The user-provided graphic-design reference informed angular framing and expressive headings; the saved palette is not forced to yellow. House and vehicle silhouettes are original code-native SVG paths, not copied game or portfolio images.

@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap');
-@import url('./device-style.css?v=3.9.0');
-@import url('./breach-style.css?v=3.9.0');
+@import url('./device-style.css?v=3.10.0');
+@import url('./breach-style.css?v=3.10.0');
 
 .cps-arrow{display:inline-block;width:1.1em;height:1.1em;flex:none;vertical-align:-.15em;pointer-events:none}
 /* In-chat identity registration and full-world continuity. */
@@ -1582,3 +1582,46 @@ html[data-cps-motion=on] [data-ai-state=thinking] .cps-ai-equalizer i:nth-child(
 @media(max-width:640px){.cps-neural-hero{padding:18px 14px;gap:12px;}.cps-neural-hero h3{font-size:24px;}.cps-neural-hero p{font-size:12px;}.cps-neural-score strong{font-size:48px;}.cps-neural-breakdown{grid-template-columns:repeat(2,minmax(0,1fr));}.cps-medical-plans,.cps-medical-drugs{grid-template-columns:1fr;}.cps-medical-controls{align-items:stretch;flex-direction:column;}.cps-medical-controls select{width:100%;}.cps-neural-hero small{letter-spacing:.06em;}}
 @media(prefers-reduced-motion:reduce){#cps-neural-fx *, .cps-medical *, .cps-medical-launch *{animation:none!important;transition:none!important;}}
 [data-cps-motion=off] #cps-neural-fx *,[data-cps-motion=off] .cps-medical *{animation:none!important;transition:none!important;}
+
+/* Equipment intelligence and explicit action previews. All colors follow the user's theme. */
+.cps-item-window {width:min(1000px,calc(100vw - 24px));}
+.cps-item-dossier {min-width:0;--item-grid:color-mix(in srgb,var(--cps-accent) 8%,transparent);}
+.cps-item-dossier-hero {display:grid;grid-template-columns:140px minmax(0,1fr);gap:24px;padding:24px;border-block:1px solid var(--cps-accent);background:linear-gradient(125deg,var(--item-grid),transparent 70%);}
+.cps-item-dossier-hero>div {display:grid;place-items:center;aspect-ratio:1;border:1px solid var(--cps-line);background:repeating-linear-gradient(0deg,transparent 0 19px,var(--item-grid) 19px 20px),repeating-linear-gradient(90deg,transparent 0 19px,var(--item-grid) 19px 20px);}
+.cps-item-dossier-hero .cps-item-image {width:100%;height:auto;max-width:120px;aspect-ratio:1;object-fit:contain;}
+.cps-item-dossier small,.cps-item-dossier h4 {font-size:11px;letter-spacing:.09em;color:var(--cps-accent);}
+.cps-item-dossier h2 {font-size:clamp(21px,3vw,32px);line-height:1.3;margin:12px 0;overflow-wrap:anywhere;}
+.cps-item-dossier code {font-size:11px;color:var(--cps-muted);overflow-wrap:anywhere;}
+.cps-item-dossier p {line-height:1.75;overflow-wrap:anywhere;}
+.cps-item-dossier-grid,.cps-upgrade-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0;}
+.cps-item-dossier-grid>section {padding:16px;border:1px solid var(--cps-line);background:var(--cps-surface);}
+.cps-item-dossier-grid h4 {margin:0 0 8px;}.cps-item-dossier-grid p {margin:0;}
+.cps-item-game-reference,.cps-item-compare,.cps-item-icon-tools,.cps-medical-fallback {margin-top:20px;padding:18px;border-left:2px solid var(--cps-accent);background:var(--item-grid,color-mix(in srgb,var(--cps-accent) 5%,transparent));}
+.cps-item-dossier label {display:grid;gap:9px;margin-block:14px;}
+.cps-item-dossier input,.cps-item-dossier select {min-height:44px;max-width:100%;min-width:0;font:inherit;color:var(--cps-text);background:var(--cps-surface);border:1px solid var(--cps-line);padding:10px;}
+.cps-item-dossier a {color:var(--cps-accent);text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere;}
+.cps-item-art {display:grid;place-items:center;width:100%;height:100%;max-width:100%;min-width:0;}
+.cps-item-art [hidden] {display:none!important;}.cps-item-art-fallback {width:100%;}
+.cps-shop-product-icon .cps-item-art img {width:100%;height:100%;object-fit:contain;max-height:110px;}
+.cps-compare-table {max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;margin:16px 0;border:1px solid var(--cps-line);}
+.cps-compare-table table {width:100%;border-collapse:collapse;table-layout:fixed;min-width:0;}
+.cps-compare-table th,.cps-compare-table td {padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--cps-line);overflow-wrap:anywhere;font-size:13px;}
+.cps-compare-table thead {background:color-mix(in srgb,var(--cps-accent) 10%,var(--cps-surface));}
+.cps-compare-table td small {display:block;color:var(--cps-muted);margin-top:6px;}
+.cps-item-dossier .cps-button,.cps-upgrade-grid .cps-button {min-height:44px;white-space:normal;}
+.cps-capacity-audit .cps-neural-breakdown {grid-template-columns:repeat(3,minmax(0,1fr));border-color:var(--cps-line);background:var(--cps-line);}
+.cps-capacity-audit .cps-neural-breakdown strong {color:var(--cps-accent);}
+.cps-capacity-audit>p {padding:12px;border-bottom:1px solid var(--cps-line);overflow-wrap:anywhere;}
+.cps-upgrade-grid form {display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:0;padding:20px;border:1px solid var(--cps-line);border-top:2px solid var(--cps-accent);background:linear-gradient(140deg,color-mix(in srgb,var(--cps-accent) 7%,transparent),transparent);}
+.cps-upgrade-grid form>strong {font-size:24px;color:var(--cps-accent);}.cps-upgrade-grid form>button {margin-top:auto;}
+.cps-quest-card.ready {border-color:var(--cps-accent);}.cps-quest-card.ready>header {color:var(--cps-accent);}
+.cps-state-receipt {display:grid;gap:7px;width:100%;text-align:left;margin-block:12px;padding:14px 18px;border:1px solid var(--cps-line);border-left:3px solid var(--cps-accent);border-radius:0;background:var(--cps-surface);color:var(--cps-text);font:inherit;cursor:pointer;overflow-wrap:anywhere;}
+.cps-state-receipt small,.cps-state-receipt em {font-size:11px;font-style:normal;color:var(--cps-accent);letter-spacing:.07em;}.cps-state-receipt span {font-size:13px;color:var(--cps-muted);}
+.cps-state-receipt.failed {border-left-color:var(--cps-danger);}.cps-state-receipt.failed small {color:var(--cps-danger);}
+.cps-state-receipt:focus-visible,.cps-compare-table:focus-visible {outline:2px solid var(--cps-accent);outline-offset:3px;}
+.cps-item-dossier-hero,.cps-item-dossier-grid>section {animation:cps-item-reveal .25s ease-out both;}
+.cps-item-dossier-grid>section:nth-child(2n) {animation-delay:.04s;}
+@keyframes cps-item-reveal {from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+@media(max-width:640px){.cps-item-dossier-hero{grid-template-columns:76px minmax(0,1fr);gap:14px;padding:16px 12px;}.cps-item-dossier-hero>div{align-self:start;}.cps-item-dossier-grid,.cps-upgrade-grid{grid-template-columns:1fr;}.cps-item-dossier-grid>section{padding:14px;}.cps-item-game-reference,.cps-item-compare,.cps-item-icon-tools{padding:12px;}.cps-compare-table th,.cps-compare-table td{padding:8px 6px;font-size:12px;}.cps-capacity-audit .cps-neural-breakdown>div{padding:10px 6px;}.cps-item-dossier input,.cps-item-dossier select{font-size:16px;}.cps-item-dossier code{word-break:break-all;}}
+@media(prefers-reduced-motion:reduce){.cps-item-dossier *{animation:none!important;transition:none!important;}}
+[data-cps-motion=off] .cps-item-dossier *{animation:none!important;transition:none!important;}

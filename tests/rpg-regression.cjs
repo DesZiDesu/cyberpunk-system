@@ -2,10 +2,10 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const narrativeText=el=>{const copy=el.cloneNode(true);copy.querySelectorAll('.cps-scene-stack').forEach(n=>n.remove());return copy.textContent;};
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.9.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.10.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
-w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
 const C=w.CyberpunkRpgCore;let count=0;const test=(n,f)=>{f();console.log('PASS '+n);count++;};
 const q=s=>{const e=d.querySelector(s);assert.ok(e,'Missing '+s);return e;};const click=s=>q(s).click();const wait=()=>new Promise(r=>setTimeout(r,35));
 const state=()=>ctx.chatMetadata.cyberpunk_system.rpg;
@@ -16,7 +16,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.9.0');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.10.0');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  const roleOnly=await message('[CP_HEADER|Clouds Receptionist|Receptionist|Available][/CP_HEADER][CP_DIALOGUE|Clouds Receptionist]Welcome.[/CP_DIALOGUE]');
@@ -100,7 +100,9 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  await message(record('QUEST',{id:'map-quest-create',questId:'map-quest',title:'Map objective',status:'active',location:{district:'watson',subdistrict:'Kabuki',floor:'3'}}));
  test('A main-chat mission location creates a marker through the same response',()=>{assert.ok(q('.cps-ncz-marker.quest'));assert.equal(state().quests.find(q=>q.id==='map-quest').location.floor,'3');assert.equal(requests,0);});
  await message(record('QUEST',{id:'map-quest-done',questId:'map-quest',title:'Map objective',status:'completed'}));
- test('Completing a mission removes its marker and retains its saved location',()=>{assert.equal(d.querySelector('.cps-ncz-marker.quest'),null);assert.equal(state().quests.find(q=>q.id==='map-quest').location.floor,'3');});
+ test('Ready mission retains its marker until the user confirms hand-in',()=>{assert.ok(d.querySelector('.cps-ncz-marker.quest'));assert.equal(state().quests.find(q=>q.id==='map-quest').status,'ready');assert.equal(state().quests.find(q=>q.id==='map-quest').location.floor,'3');});
+ click('[data-rpg="tab:quests"]');click('[data-rpg="turn-in:map-quest"]');click('[data-rpg="confirm-change"]');click('[data-rpg="tab:map"]');
+ test('Confirmed hand-in removes the completed marker',()=>assert.equal(d.querySelector('.cps-ncz-marker.quest'),null));
  click('[data-map-reset]');click('[data-rpg="tab:cyberware"]');
  test('Cyberware displays ten anatomical groups and nineteen base sockets',()=>{assert.equal(d.querySelectorAll('.cps-implant-group').length,10);assert.equal(d.querySelectorAll('.cps-implant-socket').length,19);assert.equal(q('.cps-anatomy svg').getAttribute('viewBox'),'0 0 240 420');});
  test('Implant socket attributes escape externally supplied item identifiers',()=>{const malicious=C.item({id:'bad" onclick="alert(1)',name:'Gorilla Arms',category:'cyberware',slot:'arms',equipped:true});state().player.inventory.push(malicious);click('[data-rpg="tab:cyberware"]');const socket=q('.cps-implant-socket.linked');assert.equal(socket.getAttribute('onclick'),null);assert.equal(socket.dataset.rpg,'edit-item:'+malicious.id);state().player.inventory.pop();click('[data-rpg="tab:cyberware"]');});
@@ -113,7 +115,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  click('[data-rpg="catalog:0"]');
  test('Catalog grants a persistent item without silently spending money',()=>{assert.equal(state().player.inventory.length,1);assert.equal(state().player.balance,800);});
  const customDialogs=d.querySelectorAll('.cps-rpg-dialog');customDialogs[customDialogs.length-1].querySelector('[data-rpg=close]').click();
- const it=state().player.inventory[0];click(`[data-rpg="equip:${it.id}"]`);
+ const it=state().player.inventory[0];click(`[data-rpg="equip:${it.id}"]`);click('[data-rpg="confirm-change"]');
  test('Cyberware installation increases load and persists equipped state',()=>{assert.equal(it.equipped,true);assert.equal(C.load(state().player),15);});
  click(`[data-rpg="use:${it.id}"]`);
  test('Manual ability activation adds a persistent skill header to main chat',()=>assert.ok(q(`.mes[mesid="${ctx.chat.length-1}"]`).querySelector('[data-local-skill]')));
@@ -171,7 +173,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Main-chat item use consumes one charge, heals and adds one skill header',()=>{assert.equal(state().player.inventory.find(x=>x.id==='story-med').quantity,1);assert.equal(state().player.hp,140);assert.equal(med.t.querySelectorAll('.cps-chat-skill').length,1);});
  await message(record('QUEST',{id:'mission-start',questId:'night-gig',title:'Night gig',objective:'Reach the terminal',status:'active'}));
  await message(record('QUEST',{id:'mission-done',questId:'night-gig',title:'Night gig',status:'completed'}));
- test('Main-chat mission updates modify a single existing quest',()=>{assert.equal(state().quests.filter(x=>x.id==='night-gig').length,1);assert.equal(state().quests.find(x=>x.id==='night-gig').status,'completed');});
+ test('Main-chat mission updates prepare one existing quest for hand-in',()=>{assert.equal(state().quests.filter(x=>x.id==='night-gig').length,1);assert.equal(state().quests.find(x=>x.id==='night-gig').status,'ready');});
  await message(record('STATE',{id:'npc-health',actor:'Lucy',hp:33}));
  test('NPC status updates cannot overwrite player resources',()=>{assert.equal(state().actors['npc:lucy'].hp,33);assert.equal(state().player.hp,140);});
  click('[data-rpg="tab:settings"]');q('[name=noticeSeconds]').value='29';q('[name=noticeSeconds]').focus();
@@ -220,7 +222,9 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  await message(record('QUEST',{id:'contract-early',questId:contract.questId,status:'completed'}));
  test('Incomplete objectives block reward payout atomically',()=>{assert.equal(state().player.balance,300);assert.equal(state().quests.find(q=>q.id===contract.questId).status,'active');});
  await message(record('QUEST',{id:'contract-done',questId:contract.questId,status:'completed',objectives:[{id:'retrieve',text:'Retrieve the shard',done:true}]}));
- test('Mission completion pays money, XP and items once',()=>{const q=state().quests.find(q=>q.id===contract.questId);assert.equal(q.paid,true);assert.equal(state().player.balance,500);assert.equal(state().player.progression.level,3);assert.equal(state().player.inventory.filter(x=>x.name==='Medical kit').length,1);});
+ test('Completed objectives await hand-in with no automatic reward',()=>{assert.equal(state().quests.find(q=>q.id===contract.questId).status,'ready');assert.equal(state().player.balance,300);});
+ click('[data-rpg="tab:quests"]');click('[data-rpg="turn-in:contract-new"]');click('[data-rpg="confirm-change"]');
+ test('Confirmed mission hand-in pays money, XP and items once',()=>{const q=state().quests.find(q=>q.id===contract.questId);assert.equal(q.paid,true);assert.equal(state().player.balance,500);assert.equal(state().player.progression.level,3);assert.equal(state().player.inventory.filter(x=>x.name==='Medical kit').length,1);});
  await message(record('QUEST',{id:'contract-cycle',questId:contract.questId,status:'active'}));
  await message(record('QUEST',{id:'contract-again',questId:contract.questId,status:'completed',rewards:{amount:9999,xp:9999}}));
  test('Cycling quest status or changing settled rewards cannot farm payment',()=>{assert.equal(state().player.balance,500);assert.equal(state().player.progression.level,3);assert.equal(state().quests.find(q=>q.id===contract.questId).rewards.amount,200);});

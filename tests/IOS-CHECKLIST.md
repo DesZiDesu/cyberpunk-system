@@ -114,3 +114,17 @@ Record device, iOS/browser and SillyTavern versions with failures. Do not paste 
 - Subscribe, read the policy Shard, call with an established location, advance replies to arrival and explicitly accept extraction. Read report, pay bill and reopen receipt.
 - Check excluded danger zones, expired contract, offline biochip, insufficient funds and zero HP: no free rescue or resurrection.
 - Switch chats with a confirmation open; old controls must not alter the new chat. Disable the extension and start Braindance; the neural overlay must disappear.
+
+## 3.10.0 — item dossiers and explicit workflows (device acceptance pending)
+
+Automated DOM, mechanics, CSS and integration checks are separate from visual approval. The cloud browser could not open the internal preview URL (`ERR_BLOCKED_BY_CLIENT`); no real-iPhone or browser screenshot approval is claimed.
+
+- [ ] iPhone 13 portrait and landscape: open Inventory → Inspect / compare, select Falcon/Apogee, scroll to mechanics, sources and artwork. Long Thai names must wrap; dialog close and all controls must remain reachable.
+- [ ] Tap Manage Capacity from Cyberware, enter 180 with a reason, save, reopen, reload and verify the total and source history. A story update should show before/after on its Main Chat receipt.
+- [ ] Install an OS implant: inspect load, effective load and the replaced implant, cancel, then confirm. No change before confirmation and no duplicate installation after repeated taps.
+- [ ] Browse all five home upgrade cards. Follow Workshop → Upgrades, verify the quoted price and changed level. Return to Dossier to enter/rest through the existing home actions.
+- [ ] Complete a Main Chat or mail gig. It remains Ready and unpaid until hand-in; an in-person requirement checks location. Reopen the completed journal and verify no second payout.
+- [ ] Try prepaid extraction without insurance, then partial debt payment. Read the non-refundable dispatch terms. Verify funds, report Shard and no additional copay.
+- [ ] Observe suppression at one turn remaining and after expiry; reopening/rerendering must not repeat the warning or consume another turn.
+- [ ] Use a permitted PNG/JPEG/WebP and attribution, cancel the picker, retry and remove its assignment. Import an exact-ID pack; test a broken raster image and confirm the original icon fallback.
+- [ ] Switch chat while a loadout, hand-in or medical confirmation is open; stale controls must do nothing. Check safe-area/keyboard fit, touch scrolling and OS Reduce Motion.

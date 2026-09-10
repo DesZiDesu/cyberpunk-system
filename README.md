@@ -1,5 +1,43 @@
 # Cyberpunk System
 
+## v3.10.0 — Item dossiers, capacity clarity and connected workflows
+
+**Update the installed extension, then reload SillyTavern once.** Runtime, styles and data-module imports use the new version cache key. Existing items, money, medical contracts, NPCs and completed quest payments are preserved.
+
+- **Cyberware → Manage Capacity / sources:** edit the manual RP total (1–1000) with a reason. A separate audit distinguishes manual setup, Technical training and story awards. Old saves retain their existing total as the imported baseline. Capacity above 100 is valid; neural load uses the character's own capacity, stress, suppression, toxicity and residual burden. Main-chat `CP_STATE` cards now show applied before/after numbers or a rejected/not-applied result, with a System / Recovery link. A vague narrative claim does not itself grant a number.
+- **Install/uninstall preview:** see the resulting installed and effective neural loads and which single-slot implant will be unlinked before confirming. Changes to the loadout or neural state invalidate a stale preview. Story-confirmed equipment records still work in the same ordinary AI reply.
+- **Home dossier → Upgrades:** five room cards show the next level, exact local price, effect and missing funds. Workshop links directly to Upgrades. Ownership and the displayed eddies are required; there is no hidden material requirement for room upgrades. Crafting and item upgrades still require their separately displayed components. The older Actions form is for entering/selling a home; room upgrades use these explicit quotes.
+- **Mission hand-in:** objectives complete → **Ready** → **Turn in / claim reward** → Completed. Main-chat and mail gigs share this lifecycle. Ready missions keep their map marker. Accepted rewards, objectives and hand-in terms cannot be rewritten. In-person terms check the established district/building; remote hand-in records confirmation without sending a real mail/call. The user confirms that the agreed evidence/report was delivered. This is not an automatic inventory-delivery simulator. Rewards settle once, and paid missions cannot be reopened to farm them. Old already-paid missions stay paid.
+- **Medical fallbacks:** an independent-network, prepaid extraction option costs €$1500 up front, takes four RP turns and requires a safe known Night City pickup. It does not create insurance, clear existing debt or refund a dispatched call. Arrival still waits for extraction consent. Medical bills support partial payments. Suppression warns once when one turn remains and again when it expires. The panel explains coverage, funds and safe-location alternatives. These are fictional extension rules, not canon Trauma Team pricing.
+
+### Item information and comparisons
+
+Open **Inventory / Cyberware / Weapons → Inspect / compare**, a catalog item's details, or the selected item in a shop. Each dossier separates supplied narrative details, actual extension mechanics, model/tier, acquisition source, and any source-backed game-reference role. Compatible comparisons show saved RP level, capacity/RAM cost, power and cooldown differences; identical saved values are explicitly identified. A description is not a hidden passive bonus, damage calculation or simulated time-dilation engine.
+
+Coverage is deliberately explicit:
+
+| Data | Coverage in this release |
+| --- | --- |
+| Named base presets | 58 English/Thai **RP briefs**, not 58 verified game stat sheets |
+| Added Sandevistan presets | Dynalar, QianT Warp Dancer, Zetatech, Militech Falcon and Apogee; short sourced qualitative comparisons, independently tuned RP costs/cooldowns |
+| Technical game IDs | 3,420 inspectable index entries; exact model stats and display names remain unverified |
+| New story items | Full `details` metadata is requested in the same response and preserved through loot, purchase, payment, mail, sharing and storage |
+| Missing AI/model details | An honest fallback explains saved mechanics and labels missing information; no fabricated canon statistics or extra AI call |
+
+The editable `details` fields are `summary`, `strengths`, `limitations`, `usage`, `acquiredFrom`, `model` and `tier`. Use **Inspect / compare → Edit narrative details** to correct an item without writing JSON. This release does **not** claim a complete, current-patch database of every item, tier and iconic effect in Cyberpunk 2077.
+
+### Item artwork
+
+Official game inventory art is **not bundled**: permission to redistribute a complete icon archive into this third-party extension was not established. The default symbols are original. Existing items can use a user-provided PNG/JPEG/WebP through their dossier, with an attribution/permission note, or an exact-ID icon pack through **Catalog → Manage icon library**. No remote image URLs, hotlink tracking or SVG uploads are accepted. Invalid images fall back to the original symbol.
+
+Icon-pack JSON uses `{"version":1,"entries":[{"key":"cps:sandevistan-apogee","image":"data:image/png;base64,...","credit":"Creator / permission"}]}`. Import only artwork you own or have permission to use. Each pack is limited to 200 images / 8 MB JSON; each chat to 500 mappings / 20 MB. Per-item images are limited to 350 KB; mapped data URIs to 500 KB. Large artwork collections can exceed the existing recovery-checkpoint budget: export a backup when prompted. Removing an assignment/mapping does not delete the user's original image file.
+
+### Verification scope
+
+Release validation: **792 passing regression checks across 15 suites**, including 55 new item/workflow checks; syntax validation of all 30 JavaScript/CommonJS files, four JSON files, three stylesheets and both inline preview modules. These are automated results, not a claim of full game-item coverage or physical-device approval.
+
+Run `npm run check` and `npm test`. The suite covers existing systems plus dossier metadata, all technical-ID read paths, exact icon matching, source separation, capacity migration, stale confirmations, hand-in idempotency, home quotes and prepaid/partial-payment boundaries. No live AI calls are made by the new workflows. Responsive styles retain 44px action targets, vertical small-screen sections, bounded tables and reduced-motion support. Real iPhone Safari/visual acceptance is still pending: the cloud browser was blocked from opening the local test page. See [the device checklist](tests/IOS-CHECKLIST.md).
+
 ## v3.9.0 — Neural suppression, Trauma Team and medical packages
 
 Open **Cyberware → Cyberpsycho / Medical Link** from Status or Cyberware. The player always controls their character. The old random episode roll is replaced by deterministic effective neural load: installed capacity load + stress + legacy episode burden + toxicity contribution, scaled by the chat preference, minus active suppression. Thresholds are 70 (near limit), 90 (critical) and 100 (episode); these are extension-original fictional rules. Existing episode saves migrate to a recoverable burden once. No forced dialogue, violence, personality changes or Crisis Choice interruption.

@@ -51,7 +51,28 @@
     if(id&&a.quickhackSlots.some((value,i)=>value===id&&i!==slot))throw Error('Quickhack already loaded');
     a.quickhackSlots[slot]=id||null;syncDeck(a);
   }
-  const item = value => ({ id: text(value.id || uid(), 160), shardId: text(value.shardId,160), weaponType: ['firearm','melee'].includes(value.weaponType)?value.weaponType:'', ammo:Number.isSafeInteger(value.ammo)&&value.ammo>=0&&value.ammo<=99999?value.ammo:null, magazines:Number.isSafeInteger(value.magazines)&&value.magazines>=0&&value.magazines<=99999?value.magazines:null, name: text(value.name || value.id || 'Unknown', 180), braindance: value.braindance&&typeof value.braindance==='object'?Object.fromEntries(['info','level','rating','genres','type','creator','scenario'].map(k=>[k,text(value.braindance[k],k==='scenario'?12000:2000)])):null, level: Math.round(cap(value.level??1,1,60)), ramCost: Math.round(cap(value.ramCost??2,0,100)), category: itemCategory(value), quantity: Math.round(cap(value.quantity ?? 1, 1, 9999)), equipped: value.equipped === true, slot: value.category==='cyberware'?implantSlot(value.slot||slotAliases[text(value.name,180).toLowerCase().replace(/[ _]+/g,'-')]||''):text(value.slot,80), capacity: cap(value.capacity ?? (value.category === 'cyberware' ? 10 : 0), 0, 300), effect: text(value.effect), power: cap(value.power ?? 20, 0, 1000), charges: Math.round(cap(value.charges ?? 1, 0, 99)), cooldown: Math.round(cap(value.cooldown ?? 2, 0, 30)), cooldownUntil: 0, catalogId: text(value.catalogId, 180), image: typeof value.image === 'string' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.image) && value.image.length < 500000 ? value.image : '' });
+  const normalizeItem = value => ({ details:itemDetails(value.details), iconKey:text(value.iconKey,180), imageCredit:text(value.imageCredit,500), id: text(value.id || uid(), 160), shardId: text(value.shardId,160), weaponType: ['firearm','melee'].includes(value.weaponType)?value.weaponType:'', ammo:Number.isSafeInteger(value.ammo)&&value.ammo>=0&&value.ammo<=99999?value.ammo:null, magazines:Number.isSafeInteger(value.magazines)&&value.magazines>=0&&value.magazines<=99999?value.magazines:null, name: text(value.name || value.id || 'Unknown', 180), braindance: value.braindance&&typeof value.braindance==='object'?Object.fromEntries(['info','level','rating','genres','type','creator','scenario'].map(k=>[k,text(value.braindance[k],k==='scenario'?12000:2000)])):null, level: Math.round(cap(value.level??1,1,60)), ramCost: Math.round(cap(value.ramCost??2,0,100)), category: itemCategory(value), quantity: Math.round(cap(value.quantity ?? 1, 1, 9999)), equipped: value.equipped === true, slot: value.category==='cyberware'?implantSlot(value.slot||slotAliases[text(value.name,180).toLowerCase().replace(/[ _]+/g,'-')]||''):text(value.slot,80), capacity: cap(value.capacity ?? (value.category === 'cyberware' ? 10 : 0), 0, 300), effect: text(value.effect), power: cap(value.power ?? 20, 0, 1000), charges: Math.round(cap(value.charges ?? 1, 0, 99)), cooldown: Math.round(cap(value.cooldown ?? 2, 0, 30)), cooldownUntil: 0, catalogId: text(value.catalogId, 180), image: typeof value.image === 'string' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.image) && value.image.length < 500000 ? value.image : '' });
+  function item(value={}) {
+    const preset=globalThis.CyberpunkItemGuide?.lookup(value);
+    return normalizeItem(preset?{...preset,...value,catalogId:value.catalogId||preset.id}:value);
+  }
+  function itemDetails(value) {
+    const d=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+    return Object.fromEntries(['summary','strengths','limitations','usage','acquiredFrom','model','tier'].map(k=>[k,text(Array.isArray(d[k])?d[k].slice(0,8).join('\n'):d[k],k==='summary'?2000:1200)]));
+  }
+  function capacityHistory(a) {
+    if(!a.capacityRecord||!Number.isFinite(a.capacityRecord.baseline)||!Array.isArray(a.capacityRecord.entries)||a.capacityRecord.entries.some(e=>!e||!Number.isFinite(e.delta)))a.capacityRecord={baseline:a.capacity,entries:[]};
+    const r=a.capacityRecord,total=r.baseline+r.entries.reduce((n,e)=>n+(Number(e.delta)||0),0);
+    // Imported or older saves may have changed the total without recording its source.
+    if(Math.abs(total-a.capacity)>.001)r.baseline+=a.capacity-total;
+    return r;
+  }
+  function setCapacity(a,value,kind='manual',reason='',turn=null) {
+    if(typeof value!=='number'||!Number.isFinite(value)||value<1||value>1000)throw Error('Capacity must be a number from 1 to 1000');
+    const r=capacityHistory(a),before=a.capacity;if(value===before)return null;
+    const entry={id:uid(),before,after:value,delta:value-before,kind:['manual','training','story'].includes(kind)?kind:'manual',reason:text(reason||'No source supplied',500),turn,at:new Date().toISOString()};
+    r.entries.push(entry);while(r.entries.length>100)r.baseline+=r.entries.shift().delta;a.capacity=value;return entry;
+  }
   function hydrate(a) {
     if (!a || typeof a !== 'object') a = actor();
     const defaults = actor(); for (const [k,v] of Object.entries(defaults)) if (a[k] === undefined) a[k] = v;
@@ -95,6 +116,7 @@
       }
       next.implantUnlocks=unlocks;
     }
+    if(next.capacity!==undefined)setCapacity(a,next.capacity,'story',data.reason);
     Object.assign(a, next); return a;
   }
   function transfer(from, to, amount, reason, transactionId = uid()) {
@@ -135,7 +157,7 @@
     // Local RP bonuses: increase maxima only, never heal or refill on level-up.
     if(key==='body')a.maxHp=Math.min(1000,a.maxHp+5);
     if(key==='reflexes')a.maxStamina=Math.min(1000,a.maxStamina+5);
-    if(key==='technical')a.capacity=Math.min(1000,a.capacity+3);
+    if(key==='technical')setCapacity(a,Math.min(1000,a.capacity+3),'training','Technical attribute '+p.attributes.technical);
     if(key==='intelligence')a.maxRam=Math.min(1000,a.maxRam+1);
     if(key==='cool')a.stress=Math.max(0,a.stress-3);
   }
@@ -322,8 +344,16 @@
       if(s.player.hp<=0)return 'No automatic resurrection; resolve survival in the story';
       return '';
     }
-    function dispatch(s){
+    function cashEligibility(s){
+      if(s.player.hp<=0)return 'Resolve survival in the story; extraction cannot resurrect';
+      if(!['watson','westbrook','city-center','heywood','santo-domingo','pacifica','dogtown'].includes(s.map?.location?.district))return 'Move to an established Night City service district in the story';
+      if(s.map.location.danger)return 'Establish a safe pickup location in the story first';
+      if(s.player.balance<1500)return 'Prepaid extraction requires €$1500; earn funds, request story assistance, or visit a clinic';
+      return '';
+    }
+    function dispatch(s,options={}){
       const m=store(s);if(m.incident&&!['closed','cancelled'].includes(m.incident.phase))return m.incident;
+      if(options.cash===true){const block=cashEligibility(s);if(block)throw Error(block);debit(s,1500,'Prepaid medical extraction');m.incident={id:uid(),phase:'dispatch',next:s.turn+4,eta:4,copay:0,plan:'cash',prepaid:1500,location:JSON.parse(JSON.stringify(s.map.location)),started:s.turn};return m.incident;}
       const reason=eligibility(s);if(reason)throw Error(reason);if(m.debt>0)throw Error('Settle the outstanding medical bill first');
       const p=plans[m.contract.plan];m.incident={id:uid(),phase:'dispatch',next:s.turn+p.eta,eta:p.eta,copay:p.copay,plan:m.contract.plan,location:JSON.parse(JSON.stringify(s.map.location)),started:s.turn};return m.incident;
     }
@@ -341,13 +371,13 @@
     function rescue(s){
       const m=store(s),i=m.incident;if(!i||i.phase!=='arrival')throw Error('Wait for team arrival');
       if(s.player.hp<=0)throw Error('Resolve survival in the story; rescue cannot resurrect');
-      if(s.map.location.district!==i.location.district||s.map.location.danger&&!plans[i.plan].danger)throw Error('Location or coverage changed; cancel and request a new dispatch');
+      if(s.map.location.district!==i.location.district||s.map.location.danger&&!plans[i.plan]?.danger)throw Error('Location or coverage changed; cancel and request a new dispatch');
       i.phase='closed';i.finished=s.turn;m.debt+=i.copay;s.player.hp=Math.max(s.player.hp,Math.round(s.player.maxHp*.35));
       s.player.stress=cap(s.player.stress-15,0,100);neural(s.player).burden=cap(neural(s.player).burden-10,0,100);
-      s.map.location={district:i.location.district,building:'Trauma Team receiving clinic',area:'Recovery ward',danger:false};
-      receipt(s,'Trauma Team / extraction report',`Dispatch ${i.id}. Player consented to stabilization and extraction at turn ${s.turn}.\nTransferred to receiving clinic in ${i.location.district}. Minimum stabilized health 35%; not full healing.\nCopay €$${i.copay}. Outstanding bill €$${m.debt}. Cyberware load remains; follow-up treatment is separate.`);return i;
+      const network=i.plan==='cash'?'Medical Network':'Trauma Team';s.map.location={district:i.location.district,building:network+' receiving clinic',area:'Recovery ward',danger:false};
+      receipt(s,network+' / extraction report',`Dispatch ${i.id}. Player consented to stabilization and extraction at turn ${s.turn}.\nTransferred to receiving clinic in ${i.location.district}. Minimum stabilized health 35%; not full healing.\nCopay €$${i.copay}. Outstanding bill €$${m.debt}. Cyberware load remains; follow-up treatment is separate.`);return i;
     }
-    function settle(s){const m=store(s);if(!m.debt)throw Error('No outstanding bill');const amount=m.debt;debit(s,amount,'Medical bill');m.debt=0;receipt(s,'Trauma Team / bill paid',`Paid €$${amount}. Outstanding balance €$0.`);}
+    function settle(s,amount=store(s).debt){const m=store(s);if(!m.debt)throw Error('No outstanding bill');amount=money(amount);if(amount<1||amount>m.debt)throw Error('Payment must be between €$1 and the outstanding bill');debit(s,amount,'Medical bill');m.debt-=amount;receipt(s,'Medical / bill payment',`Paid €$${amount}. Outstanding balance €$${m.debt}.`);}
     function therapy(s){debit(s,300,'Neural recovery session');s.turn+=1;const n=neural(s.player);n.burden=cap(n.burden-15,0,100);n.toxicity=cap(n.toxicity-20,0,100);s.player.stress=cap(s.player.stress-20,0,100);advance(s);receipt(s,'Neural recovery / session receipt','€$300 · one RP turn. Stress −20, legacy burden −15, toxicity −20. Implant load unchanged. Fictional treatment rules.');}
     function request(s,data,id){
       const m=store(s);if(!text(id,160))throw Error('Medical request ID required');if(m.requests.some(r=>r.id===id))return;
@@ -356,7 +386,7 @@
       if(data.operation==='use'&&!medicine(it))throw Error('Owned suppressant required; no medicine created from narration');
       m.requests.push({id,operation:data.operation,itemId:it?.id,status:'pending',turn:s.turn});
     }
-    return Object.freeze({medicines,plans,neural,store,assess,medicine,dose,purchase,subscribe,eligibility,dispatch,advance,rescue,settle,therapy,request});
+    return Object.freeze({medicines,plans,neural,store,assess,medicine,dose,purchase,subscribe,eligibility,cashEligibility,dispatch,advance,rescue,settle,therapy,request});
   })();
-  globalThis.CyberpunkRpgCore = Object.freeze({medical,arrow,arrowLabel,cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,itemCategory,syncDeck,setQuickhackSlot,resolveItem,unlockBlackwall,blackwallFeedback,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
+  globalThis.CyberpunkRpgCore = Object.freeze({medical,arrow,arrowLabel,cap,text,handle,money,uid,implantGroups,implantSlot,slotLimit,actor,item,itemDetails,capacityHistory,setCapacity,itemCategory,syncDeck,setQuickhackSlot,resolveItem,unlockBlackwall,blackwallFeedback,hydrate,patchActor,transfer,xpGoal,award,train,trade,load,risk,equip,use,addSkill,useSkill,tick,puzzle,remaining,pause,choose,finish});
 })();

@@ -6,7 +6,7 @@ const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function
 const events=new Map();let stops=0,hostBusy=false;
 const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt:async()=>'',stopGeneration(){stops++;},isGenerating:()=>hostBusy};
 w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const C=w.CyberpunkRpgCore,q=s=>{const el=d.querySelector(s);assert.ok(el,'Missing '+s);return el;},click=s=>q(s).click(),wait=()=>new Promise(r=>setTimeout(r,20)),json=x=>JSON.stringify(x);
 const bucket=()=>ctx.chatMetadata.cyberpunk_system,state=()=>bucket().rpg,record=(tag,v)=>'[CP_'+tag+']'+json(v)+'[/CP_'+tag+']';let count=0,seq=0;
@@ -51,7 +51,7 @@ async function check(name,fn){await fn();count++;console.log('PASS '+name);}
  await check('Rest requires entering the owned home',()=>assert.throws(()=>assets.transact('property',home.id,'rest'),/Enter/));
  process('PROPERTY',{id:'enter-home',operation:'enter',assetId:home.id});
  await check('Living recovery applies advertised resources once per story turn',()=>{p().hp=40;p().stamina=30;p().ram=2;p().stress=20;assets.transact('property',home.id,'rest');assert.equal(p().hp,50);assert.equal(p().stamina,50);assert.equal(p().ram,3);assert.equal(p().stress,15);assert.throws(()=>assets.transact('property',home.id,'rest'),/already used/);});
- await check('Home dossier includes notes, usable storage, workshop and recovery controls',()=>{assets.open('property',home.id);assert.ok(q('[data-op=rest]'));assert.ok(q('[data-op=details]'));click('[data-asset="page:storage"]');assert.ok(q('[data-op=deposit]'));click('[data-asset="page:workshop"]');assert.equal(d.querySelectorAll('[data-op=craft]').length,3);});
+ await check('Home dossier includes notes, usable storage, workshop and recovery controls',()=>{assets.open('property',home.id);click('[data-asset="page:overview"]');assert.ok(q('[data-op=rest]'));assert.ok(q('[data-op=details]'));click('[data-asset="page:storage"]');assert.ok(q('[data-op=deposit]'));click('[data-asset="page:workshop"]');assert.equal(d.querySelectorAll('[data-op=craft]').length,3);});
  p().balance=100000;
  process('VEHICLE',{id:'vehicle-purchase',operation:'buy',name:'Test ride',amount:1000});
  const car=state().vehicles[0];

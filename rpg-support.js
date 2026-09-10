@@ -14,6 +14,7 @@ globalThis.CyberpunkSupportFactory=api=>{
     const visit=(v,depth=0)=>{if(depth>50)throw Error('Backup nesting too deep');if(v&&typeof v==='object')for(const [k,x] of Object.entries(v)){if(['__proto__','prototype','constructor'].includes(k))throw Error('Unsafe backup key');visit(x,depth+1);}};visit(value);
     for(const bucket of [value.chat,value.character||{}])for(const k of ['npcs','skills'])if(bucket[k]!==undefined&&!Array.isArray(bucket[k]))throw Error('Invalid backup '+k);
     const r=value.chat.rpg;for(const k of ['quests','properties','vehicles','processed','events','recordLog','recordReceipts','failedReceipts','requests','assetReceipts'])if(r[k]!==undefined&&!Array.isArray(r[k]))throw Error('Invalid backup '+k);
+    if(r.itemIcons!==undefined){if(!Array.isArray(r.itemIcons)||r.itemIcons.length>500||JSON.stringify(r.itemIcons).length>20e6||new Set(r.itemIcons.map(x=>x?.key)).size!==r.itemIcons.length)throw Error('Invalid item icon library');for(const x of r.itemIcons)if(!x||typeof x.key!=='string'||!x.key||x.key.length>180||typeof x.credit!=='string'||!x.credit||x.credit.length>500||!C.item({image:x.image}).image)throw Error('Invalid item icon mapping');}
     if(r.deviceSystem!==undefined){
       const b=r.deviceSystem;if(!object(b)||!Number.isInteger(b.slotCount)||b.slotCount<1||b.slotCount>16||!Number.isSafeInteger(b.visit)||b.visit<0||typeof b.location!=='string'||typeof b.enabled!=='boolean')throw Error('Invalid device settings');
       const ids=['shutdown','loop','view','unlock','lock','jam','retarget','read','reboot'];
