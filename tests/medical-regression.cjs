@@ -58,6 +58,13 @@ test('RP request only queues, deduplicates and requires owned medication',()=>{c
  async function message(raw){const i=ctx.chat.push({mes:raw,is_user:false})-1,el=d.createElement('div');el.className='mes';el.setAttribute('mesid',i);el.innerHTML='<div class="mes_text"></div>';el.firstChild.textContent=raw;d.querySelector('#chat').append(el);events.get('received')(i);await wait();return {i,el};}
  w.CyberpunkSystem.openCyberware();
  test('Medical Link is reachable directly in Cyberware Status',()=>{click('[data-rpg=medical]');assert.ok(q('.cps-medical-window'));assert.equal(d.querySelectorAll('.cps-medical-plans article').length,3);});
+ test('Field Ops package selection starts without a contract or charge',()=>{assert.equal(q('[data-med-choice=silver]').getAttribute('aria-pressed'),'true');assert.equal(s().player.balance,0);assert.ok(!s().medical.contract);});
+ for(const key of ['silver','executive','platinum']){
+  test(key+' selection updates exact quote and benefits without subscribing',()=>{click('[data-med-choice='+key+']');assert.equal(q('[data-med-choice='+key+']').getAttribute('aria-pressed'),'true');assert.equal(q('.cps-plan-total .cps-plan-price').textContent,'€$'+M.plans[key].price.toLocaleString());assert.ok(q('.cps-plan-benefits').textContent.includes('60'));assert.equal(s().player.balance,0);assert.ok(!s().medical.contract);});
+  test(key+' review displays the selected price and cancellation is mutation-free',()=>{click('[data-rpg="med-plan:'+key+'"]');assert.equal(q('.cps-field-confirm .cps-plan-price').textContent,'€$'+M.plans[key].price.toLocaleString());assert.ok(q('.cps-field-confirm .cps-plan-benefits').textContent.includes(String(M.plans[key].copay)));click('[data-rpg=medical-cancel]');assert.ok(!s().medical.contract);assert.equal(s().player.balance,0);});
+ }
+ click('[data-med-choice=silver]');
+ test('Price CSS explicitly sets readable text and WebKit text fill even on strong elements',()=>{const ast=require('postcss').parse(fs.readFileSync(path.join(repo,'style.css'),'utf8'));let found=false;ast.walkRules('.cps-ui .cps-plan-price',r=>{const rules=Object.fromEntries(r.nodes.filter(x=>x.type==='decl').map(x=>[x.prop,x]));assert.equal(rules.color.value,'var(--cps-text)');assert.equal(rules.color.important,true);assert.equal(rules['-webkit-text-fill-color'].value,'var(--cps-text)');assert.equal(rules['-webkit-text-fill-color'].important,true);found=true;});assert.ok(found);});
  s().player.balance=10000;
  click('[data-rpg="med-buy:neural-suppressant-injector"]');
  test('Purchase confirmation does not mutate inventory before acceptance',()=>{assert.equal(s().player.inventory.length,0);assert.equal(s().player.balance,10000);});
@@ -78,11 +85,18 @@ test('RP request only queues, deduplicates and requires owned medication',()=>{c
  test('Confirming RP use consumes one dose and resolves request',()=>{assert.equal(s().player.inventory.length,0);assert.equal(s().medical.requests[0].status,'accepted');assert.ok(s().player.neural.until>s().turn);});
  test('Medical prompt forbids forced player control and duplicate costs',()=>{assert.ok(prompt.includes('Never control the player'));assert.ok(prompt.includes('do not declare a rescue completed'));});
  test('Effects are scoped to chat and default to reduced motion',()=>{const fx=q('#cps-neural-fx');assert.equal(fx.dataset.motion,'reduced');assert.equal(fx.getAttribute('aria-hidden'),'true');});
+ test('Original edge layers remain but no side-screen text or redesigned holo layer is mounted',()=>{const fx=q('#cps-neural-fx');assert.equal(fx.textContent,'');assert.equal(fx.querySelectorAll('.cps-nfx-corner').length,4);assert.equal(fx.querySelectorAll('.cps-nfx-tear').length,3);assert.ok(fx.querySelector('.cps-nfx-edge'));assert.equal(fx.querySelector('.cps-nfx-code,.cps-nfx-holo'),null);});
  const selector=q('[data-med-effects]');selector.value='off';selector.dispatchEvent(new w.Event('change'));
  test('Disabling effects removes overlay but preserves suppression',()=>{assert.equal(d.querySelector('#cps-neural-fx'),null);assert.ok(s().player.neural.potency>0);});
  click('[data-rpg="med-plan:silver"]');const stale=q('[data-rpg=medical-confirm]'),oldBalance=s().player.balance;
  ctx.chatMetadata={};events.get('changed')();await wait();stale.click();
  test('Switching chat closes medical dialogs and invalidates stale confirmation',()=>{assert.equal(d.querySelector('.cps-medical-window'),null);assert.equal(d.querySelector('#cps-neural-fx'),null);assert.equal(s().player.balance,0);assert.equal(oldBalance,9760);});
+ w.CyberpunkSystem.openCyberware();click('[data-rpg=medical]');s().player.balance=10000;
+ click('[data-med-choice=executive]');click('[data-rpg="med-plan:executive"]');const confirmOnce=q('[data-rpg=medical-confirm]');confirmOnce.click();confirmOnce.click();
+ test('Field Ops confirmation buys once, archives one policy and selects the active plan',()=>{assert.equal(s().player.balance,9000);assert.equal(s().medical.contract.plan,'executive');assert.equal(s().shards.length,1);assert.equal(q('[data-med-choice=executive]').getAttribute('aria-pressed'),'true');});
+ test('Active coverage blocks switching to another package in the new selector',()=>{assert.equal(q('[data-med-choice=silver]').disabled,true);assert.equal(q('[data-med-choice=platinum]').disabled,true);q('[data-med-choice=silver]').click();assert.equal(q('[data-med-choice=executive]').getAttribute('aria-pressed'),'true');assert.equal(s().medical.contract.plan,'executive');});
+ click('[data-rpg="med-plan:executive"]');click('[data-rpg=medical-confirm]');
+ test('New renewal layout preserves existing term and charges the original premium',()=>{assert.equal(s().medical.contract.expires,120);assert.equal(s().player.balance,8000);assert.equal(s().shards.length,2);});
  test('No live AI calls or browser errors during medical interactions',()=>{assert.equal(requests,0);assert.deepEqual(errors,[]);});
  dom.window.close();console.log(`${count} medical integration checks passed. No live AI calls.`);
 })().catch(e=>{console.error(e);process.exitCode=1;});

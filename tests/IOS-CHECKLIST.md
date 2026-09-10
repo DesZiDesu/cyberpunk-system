@@ -1,4 +1,12 @@
-# v3.7.1 native acceptance checks — pending
+# v3.10.1 native acceptance checks — pending
+
+- [ ] Update/reload and confirm 3.10.1. In portrait and landscape, open long Thai/English documents: title appears once, text is complete, one content region scrolls and footer controls remain reachable.
+- [ ] Connect a new shard: progress completes, 100% becomes compact, Close & archive grants the shard once and reopening preserves its contents. Switching chats before closing must not grant it to the new chat.
+- [ ] Review every Trauma Team plan with light/dark host themes: card, checkout and confirmation prices remain bright and readable on the dark panels in Safari, including enlarged text.
+- [ ] Changing selection or cancelling review does not charge. Confirm once, verify actual displayed price and contract, then verify renewal uses the same terms. Other plans remain unavailable during an active contract.
+- [ ] Original neural edge graphics remain with no vertical lettering. Full/reduced/off and OS Reduce Motion retain their existing behavior.
+
+## v3.7.1 native acceptance checks — pending
 
 - [ ] Confirm version 3.7.1. On the reported closed store, review both addresses, confirm only if actually at that counter, and verify stock/wallet/till do not change. Leaving the counter still disables checkout.
 - [ ] Reopen a closed pending Device Breach; it resumes the existing console. Try another device; Resume existing and Cancel-and-switch both work without AI or RAM spend. A successful actual puzzle is still required for secured access.

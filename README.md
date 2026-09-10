@@ -1,5 +1,15 @@
 # Cyberpunk System
 
+## v3.10.1 — Field Ops document and Trauma Team UI
+
+**Update the installed extension, then reload SillyTavern once.** This applies approved design A without changing existing prices, medical effects, contracts or quest rules.
+
+- Document / Shard: one content title, clearer source and reading hierarchy, a single content scroll region, and compact 100% status after connection completes. Full document text and the connect/read/archive workflow remain intact. A stale shard window cannot archive into a different chat.
+- Trauma Team: stacked selectable package cards, selected-plan benefits and price summary, then review and explicit confirmation before payment. Selection and cancellation do not charge. Prices use explicit bright theme text, including WebKit text fill, in both package and confirmation views.
+- Original neural edge effects are retained; only the vertical diagnostic lettering is removed. No replacement neon effect or gameplay change is included.
+
+Verification: **805 passing checks across all 15 regression suites**, plus runtime syntax and three-stylesheet validation. Native iPhone Safari visual acceptance remains pending; see [the device checklist](tests/IOS-CHECKLIST.md).
+
 ## v3.10.0 — Item dossiers, capacity clarity and connected workflows
 
 **Update the installed extension, then reload SillyTavern once.** Runtime, styles and data-module imports use the new version cache key. Existing items, money, medical contracts, NPCs and completed quest payments are preserved.
