@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.12.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.12.1';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -995,19 +995,20 @@ ${systems?.prompt() || ''}`.trim();
       callOverlay.querySelector('.cps-call-status').textContent = callGenerating ? t('generating') : pending ? `${pending} · ${t('queuedShort')}` : t('signalReady');
     }
 
-    function animateSignal(copy, item) {
-      if (animatedSignals.has(item.id) || item.role === 'system') return;
+    function animateSignal(copy, item, finishRenderer = null) {
+      const revealToken=copy.cpsRevealToken={};
+      if (animatedSignals.has(item.id) || item.role === 'system') { if(finishRenderer)finishRenderer(copy,item.text); return; }
       animatedSignals.add(item.id);
       if (animatedSignals.size > 600) animatedSignals.delete(animatedSignals.values().next().value);
-      if (!settings().signalDecrypt || settings().animationSpeed === 'off' || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.hidden) return;
+      if (!settings().signalDecrypt || settings().animationSpeed === 'off' || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.hidden) { if(finishRenderer)finishRenderer(copy,item.text); return; }
       const chars = globalThis.Intl?.Segmenter ? [...new Intl.Segmenter(settings().language, { granularity: 'grapheme' }).segment(item.text)].map(x => x.segment) : Array.from(item.text);
       const visual = document.createElement('span'); visual.setAttribute('aria-hidden', 'true');
       const accessible = document.createElement('span'); accessible.className = 'cps-sr-only'; accessible.textContent = item.text;
       copy.replaceChildren(visual, accessible); copy.classList.add('cps-decrypting');
       const start = performance.now(); const duration = ({ slow: 1000, fast: 360 })[settings().animationSpeed] || 650;
-      const finish = () => { copy.textContent = item.text; copy.classList.remove('cps-decrypting'); };
+      const finish = () => { if(finishRenderer)finishRenderer(copy,item.text);else copy.textContent = item.text; copy.classList.remove('cps-decrypting'); };
       const frame = now => {
-        if (!copy.isConnected) return;
+        if (!copy.isConnected || copy.cpsRevealToken!==revealToken) return;
         if (now - start >= duration || document.hidden || !settings().signalDecrypt || settings().animationSpeed === 'off') { finish(); return; }
         const count = Math.floor(chars.length * Math.max(0, (now - start) / duration));
         visual.textContent = chars.map((c,i) => i < count || /\s/.test(c) ? c : '▰01/░'[Math.floor(Math.random() * 6)]).join('');
@@ -1019,18 +1020,19 @@ ${systems?.prompt() || ''}`.trim();
     function signalDisplay(){
       clearTimeout(signalTimer);const call=chatBucket().call,host=callOverlay?.querySelector('.cps-private-display');if(!host)return;
       if(signalCallId!==call.id){signalCallId=call.id;signalPages=[];signalIndex=0;signalSeen.clear();}
-      for(const m of call.messages.filter((m,i)=>m.role==='assistant'&&(m.sessionId===call.id||!m.sessionId&&i>=(call.signalStart||0))&&!m.attachment)){
+      for(const m of call.messages.filter((m,i)=>['user','assistant'].includes(m.role)&&(m.sessionId===call.id||!m.sessionId&&i>=(call.signalStart||0))&&!m.attachment)){
         if(signalSeen.get(m.id)===m.text)continue;signalSeen.set(m.id,m.text);
         const previous=signalPages.length;signalPages=signalPages.filter(p=>p.id!==m.id);
         const chunks=String(m.text).match(/[^\n.!?。！？]+[.!?。！？]*|[\n]+/gu)||[m.text];const pages=[];let part='';for(const chunk of chunks){if((part+chunk).length>240&&part){pages.push(part.trim());part='';}part+=chunk;}if(part.trim())pages.push(part.trim());
-        signalPages.push(...pages.filter(Boolean).map(text=>({id:m.id,text})));if(previous&&signalIndex===previous-1)signalIndex=Math.min(previous,signalPages.length-1);
+        signalPages.push(...pages.filter(Boolean).map((text,part)=>({id:m.id,role:m.role,name:m.name,text,part})));if(previous&&signalIndex===previous-1)signalIndex=Math.min(previous,signalPages.length-1);
       }
-      signalIndex=Math.max(0,Math.min(signalIndex,signalPages.length-1));const current=signalPages[signalIndex];const copy=host.querySelector('[data-signal-copy]'),text=current?.text||(call.dialing?(settings().language==='th'?'กำลังรอผู้ติดต่อรับสาย…':'Waiting for contact to answer…'):t('signalReady'));if(copy.textContent!==text){copy.textContent=text;copy.classList.remove('cps-signal-enter');requestAnimationFrame(()=>{if(copy.isConnected)copy.classList.add('cps-signal-enter');});}host.querySelector('output').textContent=current?`${signalIndex+1} / ${signalPages.length}`:call.dialing?'DIALING':'CONNECTED';host.querySelector('[data-signal-next]').disabled=signalIndex>=signalPages.length-1;
+      signalIndex=Math.max(0,Math.min(signalIndex,signalPages.length-1));const current=signalPages[signalIndex];const copy=host.querySelector('[data-signal-copy]'),text=current?.text||(call.dialing?(settings().language==='th'?'กำลังรอผู้ติดต่อรับสาย…':'Waiting for contact to answer…'):t('signalReady'));const key=current?`${current.id}:${current.part}:${markupFingerprint(text)}`:text;if(copy.dataset.pageKey!==key){copy.dataset.pageKey=key;copy.textContent=text;copy.classList.remove('cps-signal-enter');const rich=(node,value)=>{node.replaceChildren();const parts=String(value).split(/(\*[^*\n]+\*|_[^_\n]+_)/g);for(const part of parts){if((part.startsWith('*')&&part.endsWith('*'))||(part.startsWith('_')&&part.endsWith('_'))){const em=document.createElement('em');em.textContent=part.slice(1,-1);node.append(em);}else node.append(document.createTextNode(part));}node.classList.remove('cps-decrypting');};if(current)animateSignal(copy,{id:'signal-page:'+key,role:current.role,text},rich);else rich(copy,text);requestAnimationFrame(()=>{if(copy.isConnected)copy.classList.add('cps-signal-enter');});}host.querySelector('[data-signal-speaker]').textContent=current?(current.role==='user'?(context()?.name1||t('userLabel')):current.name):'';host.querySelector('output').textContent=current?`${signalIndex+1} / ${signalPages.length}`:call.dialing?'DIALING':'CONNECTED';host.querySelector('[data-signal-prev]').disabled=signalIndex<=0;host.querySelector('[data-signal-next]').disabled=signalIndex>=signalPages.length-1;
       const seconds=clamp(settings().signalSeconds,0,30);if(seconds&&signalIndex<signalPages.length-1&&!document.hidden&&!call.minimized&&document.activeElement?.tagName!=='TEXTAREA')signalTimer=setTimeout(()=>{if(!document.hidden&&!call.minimized&&document.activeElement?.tagName!=='TEXTAREA')signalIndex++;signalDisplay();},seconds*1000);
     }
     function decoratePhone(node){
       const log=node.querySelector('.cps-call-log'),history=document.createElement('details');history.className='cps-phone-history';const summary=document.createElement('summary');summary.textContent=settings().language==='th'?'ประวัติสนทนา / ไฟล์ที่ได้รับ':'Conversation history / attachments';history.append(summary);log.before(history);history.append(log);
-      const display=document.createElement('section');display.className='cps-private-display';display.innerHTML=`<header><span>PRIVATE SIGNAL</span><output></output></header><div data-signal-copy aria-live="polite"></div><button type="button" class="cps-button" data-signal-next>${htmlEscape(settings().language==='th'?'ถัดไป':'Next')} →</button><label>${htmlEscape(settings().language==='th'?'เปลี่ยนทุก (วินาที) · 0 = แตะเอง':'Advance every (seconds) · 0 = manual')}<input type="number" min="0" max="30" step="1" data-signal-seconds value="${clamp(settings().signalSeconds,0,30)}"></label>`;history.before(display);
+      const display=document.createElement('section');display.className='cps-private-display';display.innerHTML=`<header><span>PRIVATE SIGNAL</span><output></output></header><strong data-signal-speaker></strong><div data-signal-copy aria-live="polite"></div><div class="cps-signal-pager"><button type="button" class="cps-button" data-signal-prev>${uiIcon('chevron')}<span>${htmlEscape(settings().language==='th'?'ก่อนหน้า':'Previous')}</span></button><button type="button" class="cps-button" data-signal-next><span>${htmlEscape(settings().language==='th'?'ถัดไป':'Next')}</span>${uiIcon('chevron')}</button></div><label>${htmlEscape(settings().language==='th'?'เปลี่ยนทุก (วินาที) · 0 = แตะเอง':'Advance every (seconds) · 0 = manual')}<input type="number" min="0" max="30" step="1" data-signal-seconds value="${clamp(settings().signalSeconds,0,30)}"></label>`;history.before(display);
+      display.querySelector('[data-signal-prev]').onclick=()=>{if(signalIndex>0){signalIndex--;signalDisplay();}};
       display.querySelector('[data-signal-next]').onclick=()=>{if(signalIndex<signalPages.length-1){signalIndex++;signalDisplay();}};
       display.querySelector('input').onchange=e=>{const n=Number(e.target.value);if(!Number.isInteger(n)||n<0||n>30)return;settings().signalSeconds=n;saveSettings();signalDisplay();};
       node.addEventListener('click',e=>{if(e.target.closest('button,input,textarea,a,summary,details,label,.cps-call-drawer'))return;if(signalIndex<signalPages.length-1){signalIndex++;signalDisplay();}});
@@ -1112,6 +1114,12 @@ ${systems?.prompt() || ''}`.trim();
       return chat.slice(-8).map(item => `${item.is_user ? 'USER' : 'MAIN AI'}: ${clean(stripTags(item.mes), 900)}`).join('\n');
     }
 
+    function hostRoleplayContext() {
+      const ctx=context()||{},character=ctx.characters?.[ctx.characterId]||{};
+      const take=(value,n=5000)=>typeof value==='string'?clean(value,n):'';
+      return `SillyTavern active role-play context (authoritative characterization): ${JSON.stringify({user:ctx.name1||'',character:character.name||ctx.name2||'',description:take(character.description),personality:take(character.personality),scenario:take(character.scenario),exampleDialogue:take(character.mes_example),systemPrompt:take(character.system_prompt),postHistory:take(character.post_history_instructions),persona:take(ctx.persona?.description||globalThis.power_user?.persona_description)})}`;
+    }
+
     function cancelCallGeneration() {
       const request = callRequest;
       if (!request) return;
@@ -1152,12 +1160,13 @@ ${systems?.prompt() || ''}`.trim();
 NPC dossier: ${profile ? JSON.stringify({ role: profile.role, status: profile.status, affiliation: profile.affiliation, personality: profile.personality, appearance: profile.appearance, notes: profile.notes }) : 'Use the established main-chat characterization.'}
 Recent main-chat context (context only; do not continue it as public dialogue):
 ${recentMainChat()}
+${hostRoleplayContext()}
 ${worldLorePrompt()}
 Private call transcript:
 ${transcript}
-Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record, with optional structured Cyberware records after it. ${replace ? 'Rewrite only the next spoken reply. Do not emit game actions or structured records other than CP_SIGNAL.' : systems?.channelPrompt('call',peer.name) || ''} Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No narration, no markdown fences, no public dialogue, and never write the user's reply.`;
+Respond only as ${call.peer.name} through the private call. Match the language and register of the newest user role-play message and established dialogue; the extension UI language is irrelevant. Return one [CP_SIGNAL|${call.peer.name}]...[/CP_SIGNAL] record, with optional structured Cyberware records after it. Short surrounding actions or ambience may appear inside the signal wrapped in single asterisks, for example *a train passes overhead*. ${replace ? 'Rewrite only the next spoken reply. Do not emit game actions or structured records other than CP_SIGNAL.' : systems?.channelPrompt('call',peer.name) || ''} Answer only the newest unanswered user turn. Never repeat earlier transcript lines. No markdown fences, no public dialogue, and never write the user's reply.`;
       try {
-        const result = await Promise.race([systems.support.generate('call',prompt), cancelled]);
+        const result = await Promise.race([systems.support.generate('call',prompt,{hostContext:true}), cancelled]);
         if (!sameCall()) return;
         const matches = parseTagAttributes(result, 'CP_SIGNAL').filter(m=>!m[1]||[peer.name,peer.handle].some(n=>n&&n.toLowerCase()===m[1].toLowerCase()));const match=matches[0];
         const reply = match ? clean(matches.map(m=>stripTags(m[6])).join('\n\n'), 4000) : /\[CP_/i.test(result) ? '' : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
@@ -1897,7 +1906,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
         systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, playPhoneSound:(...args)=>comms?.play(...args), messageDestination:name=>comms?.route(name), closeComms:()=>{comms?.changed();if(chatBucket().call.active)endCall();}, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating||comms?.busy(), context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
-        comms=globalThis.CyberpunkCommsFactory({settings,context,chatBucket,saveChat,saveSettings,findEffectiveNpc,npcDisabled,htmlEscape,toast,showUiDialog,removeUiDialog,avatar:avatarMarkup,contacts:()=>effectiveRecords('npcs'),assetUrl:path=>new URL(path,import.meta.url).href,systems:()=>systems,busy:()=>hostGenerationBusy()||callGenerating||npcGenerating||systems?.mailBusy(),parse:parseTagAttributes,strip:stripTags,contextPrompt:()=>recentMainChat()+'\n'+worldLorePrompt(),beforeOpen:()=>{if(callOverlay)minimizeCallWindow();closeManager();closeHostWand();}});
+        comms=globalThis.CyberpunkCommsFactory({settings,context,chatBucket,saveChat,saveSettings,findEffectiveNpc,npcDisabled,htmlEscape,toast,showUiDialog,removeUiDialog,avatar:avatarMarkup,contacts:()=>effectiveRecords('npcs'),assetUrl:path=>new URL(path,import.meta.url).href,systems:()=>systems,busy:()=>hostGenerationBusy()||callGenerating||npcGenerating||systems?.mailBusy(),parse:parseTagAttributes,strip:stripTags,animateText:animateSignal,contextPrompt:()=>hostRoleplayContext()+'\n'+recentMainChat()+'\n'+worldLorePrompt(),beforeOpen:()=>{if(callOverlay)minimizeCallWindow();closeManager();closeHostWand();}});
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

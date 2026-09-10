@@ -1,4 +1,13 @@
-# v3.11.1 B / SHARD native acceptance checks — pending
+# v3.12.1 B / SHARD native acceptance checks — pending
+
+## v3.12.1 communications acceptance — pending
+
+- [ ] With extension UI set to English, role-play in Thai. Calls and DMs answer in the established Thai voice using the active SillyTavern character card, scenario, persona, World Info/Author's Note and recent chat.
+- [ ] In a DM, press Enter several times: each user bubble appears with Decryption and no generation begins. Press the adjacent Send button once: one request answers all queued bubbles. Verify Shift+Enter and Thai IME composition.
+- [ ] Confirm an NPC response appears as several separate character-paced bubbles and plays one notification tone for the batch. A short natural acknowledgement may remain one bubble.
+- [ ] Minimize a DM and verify its floating restore button is immediately visible above Main Chat—not inside ST menu—and stays above the mobile composer in portrait, landscape and keyboard-open layouts.
+- [ ] In a call, verify both user and NPC pages decrypt. Confirm Previous/Next work at both ends, auto-advance still works, and `*ambient action*` is italic without visible asterisks.
+- [ ] Disable Decryption/animations and enable iOS Reduce Motion separately; text remains complete and readable without a reveal.
 
 - [ ] At 320, 375, 390 and 430 CSS pixels, the B header, solid-accent labels and raised All systems button fit with no clipped text. Check Thai and English, UI scale 80–120%, large OS text, portrait and landscape.
 - [ ] Character / World / All systems open the section router above a stationary dock. Scroll to all 16 links; selecting a link restores content. Close, Back and Escape first dismiss the router; Back then returns to the previous section.
@@ -8,7 +17,7 @@
 - [ ] Document / Shard, Medical / Trauma Team and plan review retain their approved 3.10.1–3.10.2 styling and behavior. Field Journal 3.10.3 content remains unchanged inside the new navigation shell. Main Chat overlays and call/NPC interfaces are not restyled.
 - [ ] Existing custom colors and animation settings persist. Dark primary accent uses light label text; bright primary accent uses dark text. No added looping effect.
 
-## v3.11.1 Personal Messages device acceptance — pending
+## v3.12.1 Personal Messages device acceptance — pending
 
 - [ ] On iPhone, Enter/Return inserts a newline without generating, including Thai IME composition; only Send starts a DM request.
 - [ ] Press Test sound directly below the composer; hear the bundled message clip. Verify mute, zero volume, fresh reload, blocked autoplay and a later incoming reply. Spoken phone dialogue does not trigger the text tone.

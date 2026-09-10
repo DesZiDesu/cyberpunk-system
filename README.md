@@ -1,5 +1,18 @@
 # Cyberpunk System
 
+## v3.12.1 — Contextual calls, queued texts and Decryption playback
+
+Private calls and Personal Messages now use SillyTavern's contextual quiet-generation path, including the active character card, scenario, personality, example dialogue, system/post-history instructions, persona, World Info/Author's Note path, recent main chat and the saved NPC dossier. Reply language and register follow the latest role-play conversation rather than the extension display-language setting.
+
+- In Personal Messages, **Enter queues and displays the user's bubble without generating**. The adjacent SVG Send button starts one reply request for all queued bubbles. Shift+Enter remains available to insert a line break, and IME composition is not intercepted.
+- NPC text output requests 2–5 character-paced `CP_MESSAGE` records and stores each as its own bubble. A long single-record fallback is safely divided at sentence boundaries; genuinely short replies may remain one bubble. One response batch plays one notification sound.
+- Newly sent user and NPC text bubbles use the existing optional Decryption reveal. The setting, animation-speed preference, page visibility and OS Reduce Motion remain authoritative.
+- The minimized-message control is promoted to the top layer and positioned above the host composer, so it appears directly over Main Chat without opening ST menu. Waiting/unread state and contact-safe restore behavior are unchanged.
+- Private Signal playback now includes both participants and has explicit SVG Previous/Next controls. Newly displayed pages use Decryption. Single-asterisk or underscore ambience is rendered as real italic emphasis with text-only safe parsing.
+- Calls keep their existing one-reply behavior. Their prompt now permits brief emphasized ambience but never writes the user's turn.
+
+Validation: 901 passing checks across 17 suites, including 52 focused communication checks and the latest Origin workbench checks, plus runtime syntax, parsed stylesheets and Chromium mobile layout checks. Native iPhone acceptance remains listed in `tests/IOS-CHECKLIST.md`.
+
 ## v3.12.0 — Player Origin Workbench C
 
 The blank-first-message player registration now uses approved design C: side navigation, collapsible field groups, compact − / value / + controls and SVG action/lifepath icons (no emoji arrows). Surface, accent and text follow user settings; interface labels follow Thai/English settings.

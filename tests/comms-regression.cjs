@@ -5,8 +5,8 @@ const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><
 const w=dom.window,d=w.document,events=new Map(),sounds=[];
 w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 w.Audio=class{constructor(src){this.src=src;this.paused=true;}play(){this.paused=false;sounds.push({src:this.src,loop:this.loop,muted:this.muted,action:'play'});return rejectAudio?Promise.reject(Error('Autoplay blocked')):Promise.resolve();}pause(){this.paused=true;sounds.push({src:this.src,action:'pause'});}};
-let resolve,reject,requests=0,lastPrompt='',rejectAudio=false;
-const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'lucy',role:'Netrunner'},{id:'judy',name:'Judy',handle:'judy',role:'Tech'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt(p){lastPrompt=p;requests++;return new Promise((a,b)=>{resolve=a;reject=b;});}};
+let resolve,reject,requests=0,lastPrompt='',lastSkipWian=null,rejectAudio=false;
+const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png',description:'A loyal Night City netrunner.',personality:'Dry wit; replies in short bursts.',scenario:'Kabuki after midnight.'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'lucy',role:'Netrunner'},{id:'judy',name:'Judy',handle:'judy',role:'Tech'}],skills:[]}},chat:[{is_user:true,mes:'เจอกันที่คาบูกิไหม'}],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt(p,_loud,skipWian){lastPrompt=p;lastSkipWian=skipWian;requests++;return new Promise((a,b)=>{resolve=a;reject=b;});}};
 w.SillyTavern={getContext:()=>ctx};
 for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
@@ -18,14 +18,17 @@ let count=0;const test=(n,f)=>{f();count++;console.log('PASS '+n);};const bucket
  api.openMessages('Lucy');
  test('Direct messages open without starting a call or an AI request',()=>{assert.equal(bucket().call.active,false);assert.equal(requests,0);assert.ok(q('.cps-dm-window').open);});
  type('.cps-dm-input','Meet in Kabuki?');enter('.cps-dm-input');
- test('Enter keeps the draft and never starts generation',()=>{assert.equal(requests,0);assert.equal(q('.cps-dm-input').value,'Meet in Kabuki?');assert.equal(q('.cps-dm-input').getAttribute('enterkeyhint'),'enter');});
- const key=new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true,isComposing:true});q('.cps-dm-input').dispatchEvent(key);
- test('IME Enter retains the browser default without sending',()=>{assert.equal(key.defaultPrevented,false);assert.equal(requests,0);});
+ test('Enter queues the message without starting generation',()=>{assert.equal(requests,0);assert.equal(q('.cps-dm-input').value,'');assert.equal(thread('Lucy').messages[0].text,'Meet in Kabuki?');assert.equal(thread('Lucy').messages[0].pending,true);assert.equal(q('.cps-dm-input').getAttribute('enterkeyhint'),'send');});
+ test('Queued user message starts its own Decryption reveal',()=>assert.ok(q('.cps-dm-row.user .cps-dm-copy').classList.contains('cps-decrypting')));
+ type('.cps-dm-input','กำลังพิมพ์');const key=new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true,isComposing:true});q('.cps-dm-input').dispatchEvent(key);
+ test('IME Enter retains the composition draft without sending',()=>{assert.equal(key.defaultPrevented,false);assert.equal(q('.cps-dm-input').value,'กำลังพิมพ์');assert.equal(requests,0);});
+ q('.cps-dm-input').value='';q('.cps-dm-input').dispatchEvent(new w.Event('input',{bubbles:true}));
  click('[data-dm-send]');
- test('Send starts exactly one private text request',()=>{assert.equal(requests,1);assert.ok(lastPrompt.includes('[CP_MESSAGE|Lucy]'));assert.equal(thread('Lucy').messages[0].text,'Meet in Kabuki?');});
+ test('Send starts one contextual SillyTavern request',()=>{assert.equal(requests,1);assert.equal(lastSkipWian,false);assert.ok(lastPrompt.includes('[CP_MESSAGE|Lucy]'));assert.ok(lastPrompt.includes('A loyal Night City netrunner.'));assert.ok(lastPrompt.includes('ignore the extension UI language'));});
  click('[data-dm-send]');test('Repeated Send cannot duplicate an in-flight request',()=>assert.equal(requests,1));
- resolve('[CP_MESSAGE|Lucy]Meet at the station.[/CP_MESSAGE]');await wait();
- test('NPC text is saved only to its direct thread and plays the message sound',()=>{assert.equal(thread('Lucy').messages.at(-1).text,'Meet at the station.');assert.equal(bucket().call.messages.length,0);assert.equal(played('v-phone-new-message.mp3').length,1);});
+ resolve('[CP_MESSAGE|Lucy]Meet at the station.[/CP_MESSAGE][CP_MESSAGE|Lucy]Bring the shard.[/CP_MESSAGE][CP_MESSAGE|Lucy]มาเงียบ ๆ[/CP_MESSAGE]');await wait();
+ test('NPC replies become separate character-paced bubbles with one notification',()=>{assert.equal(JSON.stringify(thread('Lucy').messages.slice(-3).map(m=>m.text)),JSON.stringify(['Meet at the station.','Bring the shard.','มาเงียบ ๆ']));assert.equal(bucket().call.messages.length,0);assert.equal(played('v-phone-new-message.mp3').length,1);});
+ test('NPC message bubbles receive Decryption treatment',()=>assert.equal(d.querySelectorAll('.cps-dm-copy.cps-decrypting').length,3));
 
  test('Message send and minimize controls render SVGs',()=>{assert.ok(q('[data-dm-send] svg'));assert.ok(q('[data-dm-minimize] svg'));});
  type('.cps-dm-input','Reply while minimized');click('[data-dm-send]');const beforeMin=requests;click('[data-dm-minimize]');
@@ -73,10 +76,14 @@ let count=0;const test=(n,f)=>{f();count++;console.log('PASS '+n);};const bucket
  const bad=JSON.parse(JSON.stringify(snapshot));bad.chat.directThreads[0].messages[0].role='invalid';test('Malformed DM backups are rejected',()=>assert.throws(()=>systems.support.validate(bad),/direct message/));
  click('[data-dm-close]');click('.cps-call-minimized');await wait();
  type('.cps-call-input','Can you hear me?');enter('.cps-call-input');const beforeSpeech=played('v-phone-new-message.mp3').length;
- resolve('[CP_SIGNAL|Lucy]'+('The station is secure. '.repeat(30))+'[/CP_SIGNAL]');await wait();
+ test('Queued user call page starts Decryption before the NPC reply',()=>{assert.ok(q('[data-signal-copy]').classList.contains('cps-decrypting'));assert.equal(q('[data-signal-speaker]').textContent,'Mael');});
+ resolve('[CP_SIGNAL|Lucy]*A train rattles overhead.* '+('The station is secure. '.repeat(30))+'[/CP_SIGNAL]');await new Promise(r=>setTimeout(r,750));
  test('Phone Enter generates a spoken signal, not a text-message sound',()=>{assert.ok(q('[data-signal-copy]').textContent.includes('station'));assert.equal(played('v-phone-new-message.mp3').length,beforeSpeech);});
+ test('Phone generation uses contextual SillyTavern prompting',()=>{assert.equal(lastSkipWian,false);assert.ok(lastPrompt.includes('A loyal Night City netrunner.'));assert.ok(lastPrompt.includes('UI language is irrelevant'));});
+ test('Phone ambience markup is rendered as emphasis after Decryption',()=>assert.equal(q('[data-signal-copy] em').textContent,'A train rattles overhead.'));
  test('Long phone dialogue is split into multiple private-signal pages',()=>assert.ok(Number(q('.cps-private-display output').textContent.split('/')[1])>1));
  const first=q('.cps-private-display output').textContent;q('[data-signal-copy]').click();test('Tapping subtitle area advances one page',()=>assert.notEqual(q('.cps-private-display output').textContent,first));
+ click('[data-signal-prev]');test('Previous returns to the prior signal page',()=>assert.equal(q('.cps-private-display output').textContent,first));test('Revisited ambience retains semantic italics',()=>assert.equal(q('[data-signal-copy] em').textContent,'A train rattles overhead.'));click('[data-signal-next]');
  const second=q('.cps-private-display output').textContent;q('.cps-call-input').click();test('Composer taps never skip dialogue pages',()=>assert.equal(q('.cps-private-display output').textContent,second));
  q('[data-signal-seconds]').value='0';q('[data-signal-seconds]').dispatchEvent(new w.Event('change'));test('Manual subtitle mode persists in user settings',()=>assert.equal(ctx.extensionSettings.cyberpunk_system.signalSeconds,0));
  click('[data-call-action=minimize]');const mini=q('.cps-call-minimized');for(const [type,x,y] of [['pointerdown',10,10],['pointermove',70,90],['pointerup',70,90]]){const e=new w.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{clientX:x,clientY:y,pointerId:1,button:0});mini.dispatchEvent(e);}
