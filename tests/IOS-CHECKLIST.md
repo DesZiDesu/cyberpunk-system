@@ -1,4 +1,11 @@
-# v3.10.2 native acceptance checks — pending
+# v3.10.3 native acceptance checks — pending
+
+- [ ] At 320–430 CSS pixels, Field Journal A titles, counts and four category buttons fit. Long Thai/English titles wrap; actions remain reachable at enlarged text sizes.
+- [ ] Open one mission, then another: the first folds closed smoothly and hidden controls cannot receive keyboard focus or taps. Motion off / OS Reduce Motion removes the transitions.
+- [ ] Completed/failed missions appear only in Archive. More than eight entries paginate; changing pages/categories collapses details and returns to the list top. Check chat switching resets display selection.
+- [ ] Mark objectives complete, switch to Hand-in, confirm delivery and verify one reward. Inspect paid rewards in Archive. Open a declined offer from Offers and accept it; withdrawn offers stay unavailable.
+
+## v3.10.2 native acceptance checks — pending
 
 - [ ] Compare Document against Field Ops A with fonts loaded: compact toolbar, archive badge, numbered sections, readable copy and contrasting footer. Custom surface/text/danger colors remain applied; long TH/EN documents preserve every supplied paragraph.
 - [ ] Review dialog fills the phone width without a right gutter, in portrait and landscape. Package indices never overlap names or prices at 320–430 CSS pixels.

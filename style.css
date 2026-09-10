@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500&family=Noto+Sans+Thai:wght@400;500&display=swap');
-@import url('./device-style.css?v=3.10.2');
-@import url('./breach-style.css?v=3.10.2');
+@import url('./device-style.css?v=3.10.3');
+@import url('./breach-style.css?v=3.10.3');
 
 .cps-arrow{display:inline-block;width:1.1em;height:1.1em;flex:none;vertical-align:-.15em;pointer-events:none}
 /* In-chat identity registration and full-world continuity. */
@@ -1710,6 +1710,52 @@ html[data-cps-motion=on] [data-ai-state=thinking] .cps-ai-equalizer i:nth-child(
 @media(prefers-reduced-motion:reduce){
  .cps-ui .cps-plan-choice,.cps-ui.cps-field-document .cps-shard-progress i,.cps-ui.cps-field-document .cps-shard-content {animation:none!important;transition:none!important;}
 }
+
+/* Field Journal A: bounded lists, a single expanded mission and separate archive. */
+.cps-ui .cps-journal {--cps-font-en:'Rajdhani','Noto Sans Thai',sans-serif;--cps-font-th:'Noto Sans Thai','Rajdhani',sans-serif;background:var(--cps-surface);color:var(--cps-text);border:1px solid var(--cps-line);border-top:3px solid var(--cps-danger);}
+.cps-ui .cps-journal-heading {padding:24px 18px 20px;background:linear-gradient(120deg,color-mix(in srgb,var(--cps-danger) 8%,var(--cps-surface)),var(--cps-surface) 70%);}
+.cps-ui .cps-journal-heading>small {font:500 11px/1.5 var(--cps-font-en);letter-spacing:.08em;color:var(--cps-muted);}
+.cps-ui .cps-journal-heading h3 {font:500 26px/1.5 var(--cps-font-th);margin:6px 0 0;color:var(--cps-text);}
+.cps-ui .cps-journal-heading h3>span {display:block;color:var(--cps-danger);font:500 34px/1.1 var(--cps-font-en);letter-spacing:.05em;}
+.cps-ui .cps-journal-tabs {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-block:1px solid var(--cps-line);}
+.cps-ui .cps-journal-tabs button {min-width:0;min-height:48px;padding:10px 3px;background:transparent;color:var(--cps-muted);border:0;border-bottom:2px solid transparent;border-radius:0;font:400 12px/1.7 var(--cps-font-th);cursor:pointer;transition:background .25s,color .25s,border-color .25s;}
+.cps-ui .cps-journal-tabs b {font:500 14px/1.5 var(--cps-font-en);}
+.cps-ui .cps-journal-tabs [aria-pressed=true] {background:color-mix(in srgb,var(--cps-danger) 10%,var(--cps-surface));color:var(--cps-danger);border-bottom-color:var(--cps-danger);}
+.cps-ui .cps-journal-list {padding:8px 18px 18px;animation:cps-journal-enter calc(.3s * var(--cps-motion,1)) ease-out both;}
+.cps-ui .cps-journal .cps-journal-row {padding:0;margin:0;border:0;border-bottom:1px solid var(--cps-line);background:transparent;box-shadow:none;}
+.cps-ui .cps-journal-toggle {display:flex;align-items:center;gap:12px;width:100%;min-height:76px;text-align:left;padding:16px 10px;background:transparent;color:var(--cps-text);border:0;border-left:2px solid transparent;border-radius:0;cursor:pointer;transition:background .25s,border-color .25s;}
+.cps-ui .cps-journal-toggle[aria-expanded=true] {background:color-mix(in srgb,var(--cps-danger) 10%,var(--cps-surface));border-left-color:var(--cps-danger);}
+.cps-ui .cps-journal-number {font:500 19px/1.3 var(--cps-font-en);color:var(--cps-danger);flex:0 0 24px;}
+.cps-ui .cps-journal-label {flex:1;min-width:0;}
+.cps-ui .cps-journal-label strong {display:block;font:500 22px/1.25 var(--cps-font-en);color:var(--cps-text);overflow-wrap:anywhere;}
+.cps-ui .cps-journal-label small {display:block;font:400 11px/1.8 var(--cps-font-th);letter-spacing:0;color:var(--cps-muted);margin-top:5px;overflow-wrap:anywhere;}
+.cps-ui .cps-journal-chevron {font:500 24px/1 var(--cps-font-en);color:var(--cps-danger);transition:transform .3s;}
+.cps-ui [aria-expanded=true]>.cps-journal-chevron {transform:rotate(90deg);}
+.cps-ui .cps-journal-fold {display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows calc(.35s * var(--cps-motion,1)) cubic-bezier(.2,.8,.2,1),visibility calc(.35s * var(--cps-motion,1));}
+.cps-ui .cps-journal-fold.open {grid-template-rows:1fr;visibility:visible;}
+.cps-ui .cps-journal-fold>div {min-height:0;overflow:hidden;}
+.cps-ui .cps-journal-detail {padding:18px 12px 20px;}
+.cps-ui .cps-journal-detail .cps-rpg-note {font:400 13px/1.85 var(--cps-font-th);overflow-wrap:anywhere;}
+.cps-ui .cps-journal .cps-quest-objectives>div {grid-template-columns:18px minmax(0,1fr);gap:8px;border:0;border-bottom:1px solid var(--cps-line);padding:12px 0;background:transparent;}
+.cps-ui .cps-journal .cps-quest-objectives p {font:400 12px/1.8 var(--cps-font-th);}
+.cps-ui .cps-journal .cps-quest-objectives b {font:500 11px/1.5 var(--cps-font-en);grid-column:2;color:var(--cps-muted);}
+.cps-ui .cps-journal .cps-quest-objectives button {grid-column:2;justify-self:start;min-height:44px;}
+.cps-ui .cps-journal .cps-quest-rewards {border:0;border-top:1px solid var(--cps-line);padding:14px 0;background:transparent;}
+.cps-ui .cps-journal .cps-quest-rewards strong {font:500 22px/1.5 var(--cps-font-en);color:var(--cps-text);}
+.cps-ui .cps-journal .cps-rpg-actions {display:flex;flex-wrap:wrap;gap:8px;}
+.cps-ui .cps-journal .cps-rpg-actions button {min-height:46px;flex:1 1 130px;}
+.cps-ui .cps-journal [data-rpg^="turn-in:"] {background:var(--cps-danger);color:var(--cps-surface);border-color:var(--cps-danger);}
+.cps-ui .cps-journal-footer {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-top:1px solid var(--cps-line);background:color-mix(in srgb,var(--cps-surface) 96%,var(--cps-text));}
+.cps-ui .cps-journal-footer nav {display:flex;align-items:center;gap:12px;}
+.cps-ui .cps-journal-footer button {min-height:44px;min-width:44px;background:transparent;border:1px solid var(--cps-line);color:var(--cps-text);border-radius:0;cursor:pointer;font:400 12px/1.6 var(--cps-font-th);}
+.cps-ui .cps-journal-footer button:disabled {opacity:.4;cursor:default;}
+.cps-ui .cps-journal-footer output {font:500 14px/1.5 var(--cps-font-en);color:var(--cps-muted);}
+.cps-ui .cps-journal-offer {border-bottom:1px solid var(--cps-line);}
+.cps-ui .cps-journal-offer summary {padding:16px 10px;cursor:pointer;min-height:48px;font:500 20px/1.5 var(--cps-font-en);overflow-wrap:anywhere;}
+.cps-ui .cps-journal-offer summary small {display:block;font:400 11px/1.8 var(--cps-font-th);color:var(--cps-muted);}
+@keyframes cps-journal-enter {from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@media(prefers-reduced-motion:reduce){.cps-ui .cps-journal *{animation:none!important;transition:none!important;}}
+[data-cps-motion=off] .cps-journal *{animation:none!important;transition:none!important;}
 
 /* Field Ops A fidelity and small-screen dialog containment. */
 .cps-ui.cps-field-document>.cps-rpg-top h2 {display:none;}

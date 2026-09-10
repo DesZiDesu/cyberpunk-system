@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const narrativeText=el=>{const copy=el.cloneNode(true);copy.querySelectorAll('.cps-scene-stack').forEach(n=>n.remove());return copy.textContent;};
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.10.2','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.10.3','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
 w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
@@ -16,7 +16,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
 (async()=>{
  const source=fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'));
  await w.eval('(async()=>{'+source+'\n})()');await wait();
- test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.10.2');assert.ok(q('#cps-open-cyberware'));});
+ test('Stale extension drawer is upgraded to the running version and Cyberware entry',()=>{assert.equal(q('#cyberpunk-system-settings .cps-version').textContent,'v3.10.3');assert.ok(q('#cps-open-cyberware'));});
  test('Manifest, runtime, drawer and package versions agree',()=>{const manifest=JSON.parse(fs.readFileSync(path.join(repo,'manifest.json'))),pkg=JSON.parse(fs.readFileSync(path.join(repo,'package.json')));assert.equal(manifest.version,w.CyberpunkSystem.version);assert.equal(pkg.version,manifest.version);assert.ok(manifest.js.endsWith('?v='+manifest.version));assert.ok(manifest.css.endsWith('?v='+manifest.version));assert.ok(fs.readFileSync(path.join(repo,'settings.html'),'utf8').includes('v'+manifest.version));});
  test('Legacy handles are normalized in storage and API',()=>{assert.equal(w.CyberpunkSystem.getNpcs()[0].handle,'lucy');assert.equal(ctx.chatMetadata.cyberpunk_system.npcs[0].handle,'lucy');});
  const roleOnly=await message('[CP_HEADER|Clouds Receptionist|Receptionist|Available][/CP_HEADER][CP_DIALOGUE|Clouds Receptionist]Welcome.[/CP_DIALOGUE]');
@@ -101,7 +101,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('A main-chat mission location creates a marker through the same response',()=>{assert.ok(q('.cps-ncz-marker.quest'));assert.equal(state().quests.find(q=>q.id==='map-quest').location.floor,'3');assert.equal(requests,0);});
  await message(record('QUEST',{id:'map-quest-done',questId:'map-quest',title:'Map objective',status:'completed'}));
  test('Ready mission retains its marker until the user confirms hand-in',()=>{assert.ok(d.querySelector('.cps-ncz-marker.quest'));assert.equal(state().quests.find(q=>q.id==='map-quest').status,'ready');assert.equal(state().quests.find(q=>q.id==='map-quest').location.floor,'3');});
- click('[data-rpg="tab:quests"]');click('[data-rpg="turn-in:map-quest"]');click('[data-rpg="confirm-change"]');click('[data-rpg="tab:map"]');
+ click('[data-rpg="tab:quests"]');click('[data-journal-category=ready]');click('[data-journal-open="map-quest"]');click('[data-rpg="turn-in:map-quest"]');click('[data-rpg="confirm-change"]');click('[data-rpg="tab:map"]');
  test('Confirmed hand-in removes the completed marker',()=>assert.equal(d.querySelector('.cps-ncz-marker.quest'),null));
  click('[data-map-reset]');click('[data-rpg="tab:cyberware"]');
  test('Cyberware displays ten anatomical groups and nineteen base sockets',()=>{assert.equal(d.querySelectorAll('.cps-implant-group').length,10);assert.equal(d.querySelectorAll('.cps-implant-socket').length,19);assert.equal(q('.cps-anatomy svg').getAttribute('viewBox'),'0 0 240 420');});
@@ -223,13 +223,25 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Incomplete objectives block reward payout atomically',()=>{assert.equal(state().player.balance,300);assert.equal(state().quests.find(q=>q.id===contract.questId).status,'active');});
  await message(record('QUEST',{id:'contract-done',questId:contract.questId,status:'completed',objectives:[{id:'retrieve',text:'Retrieve the shard',done:true}]}));
  test('Completed objectives await hand-in with no automatic reward',()=>{assert.equal(state().quests.find(q=>q.id===contract.questId).status,'ready');assert.equal(state().player.balance,300);});
- click('[data-rpg="tab:quests"]');click('[data-rpg="turn-in:contract-new"]');click('[data-rpg="confirm-change"]');
+ click('[data-rpg="tab:quests"]');click('[data-journal-category=ready]');click('[data-journal-open="contract-new"]');click('[data-rpg="turn-in:contract-new"]');click('[data-rpg="confirm-change"]');
  test('Confirmed mission hand-in pays money, XP and items once',()=>{const q=state().quests.find(q=>q.id===contract.questId);assert.equal(q.paid,true);assert.equal(state().player.balance,500);assert.equal(state().player.progression.level,3);assert.equal(state().player.inventory.filter(x=>x.name==='Medical kit').length,1);});
  await message(record('QUEST',{id:'contract-cycle',questId:contract.questId,status:'active'}));
  await message(record('QUEST',{id:'contract-again',questId:contract.questId,status:'completed',rewards:{amount:9999,xp:9999}}));
  test('Cycling quest status or changing settled rewards cannot farm payment',()=>{assert.equal(state().player.balance,500);assert.equal(state().player.progression.level,3);assert.equal(state().quests.find(q=>q.id===contract.questId).rewards.amount,200);});
  click('[data-rpg="tab:quests"]');
- test('Mission journal exposes objective completion and received reward details',()=>{assert.ok(q('.cps-quest-objectives').textContent.includes('Retrieve the shard'));assert.ok(q('.cps-quest-rewards').textContent.includes('200'));});
+ click('[data-journal-category=archive]');click('[data-journal-open="contract-new"]');
+ test('Mission journal exposes objective completion and received reward details',()=>{assert.ok(q('.cps-journal-fold.open .cps-quest-objectives').textContent.includes('Retrieve the shard'));assert.ok(q('.cps-journal-fold.open .cps-quest-rewards').textContent.includes('200'));});
+ const journalBefore=JSON.stringify(state().quests),journalWallet=state().player.balance;
+ for(let i=0;i<18;i++)state().quests.push({id:'journal-fixture-'+i,title:'Archived file '+i,status:'completed',paid:true,objectives:[],rewards:{amount:10,xp:0,items:[]}});
+ click('[data-journal-category=active]');
+ test('Field Journal excludes completed files from the active category',()=>{assert.equal(d.querySelectorAll('.cps-journal-row.completed').length,0);assert.equal(d.querySelectorAll('.cps-journal-fold.open').length,0);});
+ click('[data-journal-category=archive]');
+ test('Archive renders at most eight collapsed missions per page',()=>{assert.equal(d.querySelectorAll('.cps-journal-row').length,8);assert.equal(d.querySelectorAll('.cps-journal-fold.open').length,0);assert.equal(q('[data-journal-page="-1"]').disabled,true);});
+ const toggles=[...d.querySelectorAll('[data-journal-open]')];toggles[0].click();toggles[1].click();
+ test('Opening another journal file closes the previous file and removes hidden actions from focus',()=>{assert.equal(d.querySelectorAll('.cps-journal-fold.open').length,1);assert.equal(toggles[0].getAttribute('aria-expanded'),'false');assert.equal(toggles[0].nextElementSibling.inert,true);assert.equal(toggles[1].nextElementSibling.inert,false);});
+ const firstPage=q('[data-journal-open]').dataset.journalOpen;click('[data-journal-page="1"]');
+ test('Archive navigation changes its bounded page without altering rewards or saved mission state',()=>{assert.notEqual(q('[data-journal-open]').dataset.journalOpen,firstPage);assert.equal(d.querySelectorAll('.cps-journal-fold.open').length,0);assert.equal(state().player.balance,journalWallet);state().quests=state().quests.filter(x=>!x.id.startsWith('journal-fixture-'));assert.equal(JSON.stringify(state().quests),journalBefore);});
+ click('[data-journal-category=active]');
  const shard=await message(record('SHARD',{id:'shard-event-1',shardId:'konpeki-route',from:'Nika Sato',title:'Konpeki service route',preview:'Encrypted maintenance memo',content:'Use the east service elevator after 22:00. Clearance rotates at midnight.',sections:[{heading:'Fallback',body:'If the elevator is sealed, reach stairwell C.'}]}));
  test('A received shard renders as a compact clickable Main Chat document without auto-loot',()=>{assert.ok(shard.t.querySelector('[data-shard-open="konpeki-route"]'));assert.equal(state().shards[0].read,false);assert.equal(state().player.inventory.some(x=>x.shardId==='konpeki-route'),false);});
  shard.t.querySelector('[data-shard-open]').click();click('[data-rpg=shard-connect]');await new Promise(r=>setTimeout(r,1750));

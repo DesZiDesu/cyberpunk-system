@@ -73,7 +73,7 @@ const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAA
  test('Chat offer preserves specific hand-in requirements',()=>{assert.equal(quest().turnIn.method,'in-person');assert.equal(quest().turnIn.location.building,'Clinic');});
  await message('QUEST',{id:'done-hand-in',questId:'chat-gig:job',status:'completed',objectives:[{id:'copy',text:'Copy evidence',done:true}]});
  test('Objective completion creates ready state without granting rewards',()=>{assert.equal(quest().status,'ready');assert.equal(state().player.balance,initialMoney);});
- systems.open('user','quests');click('[data-rpg="turn-in:chat-gig:job"]');click('[data-rpg=confirm-change]');
+ systems.open('user','quests');click('[data-journal-category=ready]');click('[data-journal-open="chat-gig:job"]');click('[data-rpg="turn-in:chat-gig:job"]');click('[data-rpg=confirm-change]');
  test('In-person hand-in refuses a different location',()=>{assert.equal(quest().paid,undefined);assert.equal(state().player.balance,initialMoney);});
  state().map.location={district:'watson',building:'Clinic'};click('[data-rpg=confirm-change]');
  test('Eligible hand-in pays once and makes completion terminal',()=>{assert.equal(quest().paid,true);assert.equal(state().player.balance,initialMoney+300);});

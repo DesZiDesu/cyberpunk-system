@@ -1,5 +1,11 @@
 # Cyberpunk System
 
+## v3.10.3 — Field Journal A
+
+Update the extension and reload once. Missions now use the approved Field Journal A layout, with animated single-open rows and separate Active, Hand-in, Archive and Offers categories. Each category renders at most eight entries per page. Completed and failed missions stay in the archive, and declined/withdrawn offers remain inspectable without filling the active list. Category counts update from the current chat; display selection is local and resets when the chat changes.
+
+Existing objectives, hand-in confirmation, rewards, sharing and reopening failed missions retain their behavior. The new view makes no AI requests and does not change mission data merely by opening or paging. Saved palette colors, animation settings and OS reduced motion are respected. Validation: 813 checks across all 15 suites, runtime syntax and three stylesheets. Native iPhone rendering still needs device acceptance.
+
 ## v3.10.2 — Package switching and Field Ops corrections
 
 Update the extension and reload once. Package cards remain selectable during active coverage. Selecting or cancelling changes nothing; explicit confirmation can replace the active policy at the full displayed price, starting a fresh term with no refund or carried-over time. Renewing the same package still extends its term. Active dispatches, insufficient funds, changed contracts and stale chat windows cannot bypass transaction checks.
