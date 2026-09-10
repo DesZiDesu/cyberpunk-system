@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500&family=Noto+Sans+Thai:wght@400;500&display=swap');
-@import url('./device-style.css?v=3.10.3');
-@import url('./breach-style.css?v=3.10.3');
+@import url('./device-style.css?v=3.11.0');
+@import url('./breach-style.css?v=3.11.0');
 
 .cps-arrow{display:inline-block;width:1.1em;height:1.1em;flex:none;vertical-align:-.15em;pointer-events:none}
 /* In-chat identity registration and full-world continuity. */
@@ -1786,3 +1786,78 @@ html[data-cps-motion=on] [data-ai-state=thinking] .cps-ai-equalizer i:nth-child(
  .cps-ui.cps-field-document .cps-shard-actions .cps-button {flex:0 1 auto;}
  .cps-ui.cps-field-confirm>.cps-rpg-content {min-width:0;overflow-x:hidden;}
 }
+/* Private communications / approved B layouts. All paint follows user theme. */
+.cps-incoming {font-family:'Rajdhani','Noto Sans Thai',sans-serif;background:var(--cps-surface);border:0;border-top:5px solid var(--cps-accent);}
+.cps-incoming .cps-incoming-head {background:var(--cps-accent);color:var(--cps-on-accent);}
+.cps-incoming .cps-contact-identity {flex-direction:column;align-items:stretch;}
+.cps-incoming .cps-contact-identity>.cps-avatar {order:2;width:100%;height:65px;border:0;border-left:3px solid var(--cps-accent);clip-path:none;background:color-mix(in srgb,var(--cps-accent) 8%,var(--cps-surface));}
+.cps-incoming .cps-incoming-name {font:500 clamp(38px,9vw,62px)/1.1 'Rajdhani','Noto Sans Thai',sans-serif;letter-spacing:-.03em;}
+.cps-incoming .cps-incoming-actions {display:grid;grid-template-columns:1fr;}
+.cps-incoming .cps-incoming-actions button {min-height:48px;}
+.cps-incoming [data-action=accept] {grid-row:1;}
+.cps-dm-window button.primary,.cps-phone-b button.primary,.cps-incoming button.primary {color:var(--cps-on-accent);background:var(--cps-accent);}
+dialog.cps-phone-b,dialog.cps-dm-window {font:500 16px/1.65 'Rajdhani','Noto Sans Thai',sans-serif;color:var(--cps-text);background:var(--cps-surface);background-image:none;}
+dialog.cps-phone-b[open] {display:flex;flex-direction:column;gap:16px;overflow-y:auto;overscroll-behavior:contain;}
+.cps-phone-b>* {width:min(620px,100%);min-width:0;margin-inline:auto;flex-shrink:0;}
+.cps-phone-b .cps-call-header {display:grid;grid-template-columns:minmax(0,1fr) auto;border:0;padding:0;gap:18px;}
+.cps-phone-b .cps-call-channel {padding:10px 16px;background:var(--cps-accent);color:var(--cps-on-accent,var(--cps-surface));border:0;}
+.cps-phone-b .cps-call-channel span {color:inherit;}
+.cps-phone-b .cps-call-identity {grid-column:1;grid-row:2;padding-inline:12px;}
+.cps-phone-b .cps-call-identity>strong {font:500 clamp(38px,9vw,68px)/1.1 'Rajdhani','Noto Sans Thai',sans-serif;letter-spacing:-.03em;}
+.cps-phone-b .cps-call-header>[data-call-action=minimize] {grid-column:2;grid-row:2;min-width:44px;min-height:44px;}
+.cps-phone-b .cps-call-header .cps-avatar {grid-column:1/-1;grid-row:3;width:100%;height:72px;aspect-ratio:auto;border:0;border-left:3px solid var(--cps-accent);background:color-mix(in srgb,var(--cps-accent) 8%,var(--cps-surface));clip-path:none;justify-content:flex-start;padding-inline:16px;}
+.cps-phone-b .cps-call-header .cps-avatar img {width:72px;height:72px;object-fit:cover;}
+.cps-private-display {padding:18px 16px;border-block:1px solid var(--cps-line);background:color-mix(in srgb,var(--cps-accent) 4%,var(--cps-surface));}
+.cps-private-display>header {display:flex;justify-content:space-between;gap:12px;font-size:12px;letter-spacing:.14em;color:var(--cps-accent);}
+.cps-private-display [data-signal-copy] {min-height:110px;padding:24px 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(18px,4vw,24px);line-height:1.8;}
+.cps-private-display>label {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;color:var(--cps-muted);font-size:12px;}
+.cps-private-display input {width:65px;min-height:40px;background:var(--cps-surface);color:var(--cps-text);border:1px solid var(--cps-line);padding:6px;}
+.cps-phone-history {border-bottom:1px solid var(--cps-line);}
+.cps-phone-history>summary {padding:12px;cursor:pointer;color:var(--cps-muted);}
+.cps-phone-history .cps-call-log {max-height:45dvh;}
+.cps-phone-b .cps-call-composer {border:0;border-top:2px solid var(--cps-accent);padding:16px 0;background:var(--cps-surface);margin-top:auto;}
+.cps-phone-b .cps-call-actions {display:grid;grid-template-columns:1fr 44px;gap:8px;}
+.cps-phone-b .cps-call-actions .cps-call-send {grid-column:1/-1;grid-row:1;min-height:48px;}
+.cps-phone-b .cps-call-actions [data-call-action=queue] {grid-column:1/-1;}
+.cps-phone-b .cps-call-actions .cps-button {font:500 15px/1.5 'Rajdhani','Noto Sans Thai',sans-serif;}
+.cps-call-minimized {touch-action:none;user-select:none;cursor:grab;}
+.cps-call-minimized:active {cursor:grabbing;}
+dialog.cps-dm-window {padding:0;max-width:100%;width:100%;height:var(--cps-viewport-height,100dvh);max-height:var(--cps-viewport-height,100dvh);margin:0;border:0;inset:var(--cps-viewport-top,0px) 0 auto;overflow:hidden;}
+dialog.cps-dm-window[open] {display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;}
+.cps-dm-window>* {min-width:0;}
+.cps-dm-top {display:flex;align-items:center;gap:8px;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left));background:var(--cps-accent);color:var(--cps-on-accent,var(--cps-surface));letter-spacing:.1em;font-size:12px;}
+.cps-dm-top>span {margin-right:auto;}
+.cps-dm-top button {color:inherit;background:transparent;border-color:currentColor;min-height:44px;}
+.cps-dm-contact {display:flex;gap:14px;padding:22px 20px;width:min(740px,100%);margin:auto;}
+.cps-dm-contact h2 {font:500 39px/1.1 'Rajdhani','Noto Sans Thai',sans-serif;letter-spacing:-.02em;margin:7px 0;overflow-wrap:anywhere;}
+.cps-dm-contact small {color:var(--cps-accent);letter-spacing:.1em;font-size:11px;}
+.cps-dm-contact p {color:var(--cps-muted);font-size:12px;margin:0;}
+.cps-dm-contact .cps-avatar {width:44px;height:48px;flex:0 0 44px;border:0;border-bottom:2px solid var(--cps-accent);clip-path:none;}
+.cps-dm-log {overflow:auto;overscroll-behavior:contain;min-height:0;width:min(740px,100%);margin:auto;padding:6px 20px 20px;height:100%;}
+.cps-dm-row {padding:18px 0;border-bottom:1px solid var(--cps-line);overflow-wrap:anywhere;animation:cps-comms-enter .25s ease-out;}
+.cps-dm-row>header {display:flex;gap:16px;color:var(--cps-accent);font-size:12px;margin-bottom:10px;}
+.cps-dm-row time,.cps-dm-row>small {color:var(--cps-muted);font-size:11px;}
+.cps-dm-copy {padding-left:14px;border-left:2px solid var(--cps-accent);white-space:pre-wrap;line-height:1.85;}
+.cps-dm-row.user>header {justify-content:flex-end;}
+.cps-dm-row.user .cps-dm-copy {text-align:right;margin-left:24px;padding:0 14px 0 0;border-left:0;border-right:2px solid var(--cps-accent);}
+.cps-dm-row.user>small {display:block;text-align:right;}
+.cps-dm-row-actions {display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.cps-dm-row-actions button {font-size:11px;min-height:36px;padding:6px 10px;background:transparent;color:var(--cps-muted);}
+.cps-dm-composer {border-top:2px solid var(--cps-accent);padding:14px max(20px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));width:min(740px,100%);margin:auto;}
+.cps-dm-composer label {display:block;margin-bottom:8px;font-size:12px;color:var(--cps-accent);}
+.cps-dm-compose-row {display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:10px;}
+.cps-dm-window textarea {width:100%;min-width:0;resize:vertical;max-height:25dvh;min-height:52px;padding:12px;background:var(--cps-surface);color:var(--cps-text);border:1px solid var(--cps-line);font:400 16px/1.65 'Rajdhani','Noto Sans Thai',sans-serif;}
+.cps-dm-status {display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--cps-muted);}
+.cps-dm-directory {grid-row:2/-1;overflow:auto;padding:20px;width:min(740px,100%);margin:auto;height:100%;}
+.cps-dm-contact-button {display:flex;align-items:center;gap:14px;width:100%;padding:16px 0;border:0;border-bottom:1px solid var(--cps-line);background:transparent;color:var(--cps-text);text-align:left;}
+.cps-dm-contact-button>span {flex:1;min-width:0;}.cps-dm-contact-button small {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--cps-muted);}
+.cps-dm-legacy {white-space:pre-wrap;overflow-wrap:anywhere;}
+.cps-call-tool-sheet,.cps-call-tools .cps-call-tool {background:var(--cps-surface);}
+.cps-call-tool:hover,.cps-call-tool:focus-visible {background:color-mix(in srgb,var(--cps-accent) 10%,var(--cps-surface));}
+@keyframes cps-comms-enter {from {opacity:0;transform:translateY(6px)} to {opacity:1;transform:translateY(0)}}
+.cps-signal-enter {animation:cps-comms-enter .3s ease-out;}
+html[data-cps-motion=off] .cps-signal-enter {animation:none;}
+@media(prefers-reduced-motion:reduce) {.cps-signal-enter {animation:none;}}
+html[data-cps-motion=off] .cps-dm-row {animation:none;}
+@media(prefers-reduced-motion:reduce) {.cps-dm-row {animation:none;}}
+@media(max-height:550px) {.cps-dm-contact {padding-block:8px;}.cps-dm-contact h2 {font-size:26px;}.cps-phone-b .cps-call-header .cps-avatar {display:none;}}

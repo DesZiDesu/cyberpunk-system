@@ -5,8 +5,8 @@ const dom=new JSDOM('<!doctype html><div id="extensionsMenu"></div><div id="exte
 const w=dom.window,d=w.document,events=new Map();let hostBusy=false,requests=0;
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.confirm=()=>true;
 const ctx={name1:'Noah',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHAT_CHANGED:'changed',GENERATION_STARTED:'started',GENERATION_ENDED:'ended'},eventSource:{on:(k,f)=>events.set(k,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt:async()=>{requests++;return '';},isGenerating:()=>hostBusy};
-w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));
+w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const C=w.CyberpunkRpgCore,json=v=>JSON.stringify(v),copy=v=>JSON.parse(json(v)),wait=()=>new Promise(r=>setTimeout(r,25));
 const q=s=>{const n=d.querySelector(s);assert.ok(n,'Missing '+s);return n;},click=s=>q(s).click(),submit=form=>form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
@@ -57,7 +57,7 @@ const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supp
  await systems.support.generate('npc','Dossier');
  await test('Older-host fallback skips WIAN, limits output and labels its compatibility cost risk',()=>{assert.equal(args[2],true);assert.equal(args[5],1200);assert.equal(state().requests.at(-1).transport,'quiet compatibility');assert.ok(injected);});
  systems.support.open();
- await test('Recovery shows character counts and output limits without pretending to show real billing',()=>{assert.ok(q('[data-cost-summary]').textContent.includes('Not token usage or billing'));assert.equal(d.querySelectorAll('[data-response-limit]').length,4);});
+ await test('Recovery shows character counts and output limits without pretending to show real billing',()=>{assert.ok(q('[data-cost-summary]').textContent.includes('Not token usage or billing'));assert.equal(d.querySelectorAll('[data-response-limit]').length,5);});
  const mainBefore=injected;for(let i=0;i<18;i++)state().mailbox.documents.push({id:'audit-'+i,from:'Lucy',to:'user',subject:'Audit',body:'x'.repeat(1800),threadId:'audit',direction:'inbox'});
  w.CyberpunkSystem.refreshPrompt(true);
  await test('Mail context is bounded to six short excerpts, not eighteen full excerpts',()=>{assert.ok(injected.length-mainBefore.length<6500);});

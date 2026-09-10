@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.10.3';
+const CYBERPUNK_SYSTEM_VERSION = '3.11.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -17,6 +17,9 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
       defaultScope: 'chat',
       headerPosition: 'left',
       callHistoryLimit: 100,
+      phoneSounds: true,
+      phoneVolume: 55,
+      signalSeconds: 5,
       accent: '#fcee0a',
       danger: '#ff5b66',
       surface: '#101116',
@@ -133,6 +136,11 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
     let callRequest = null;
     let npcGenerating = false;
     let systems = null;
+    let comms = null, signalTimer=null, signalCallId=null, signalPages=[],signalIndex=0;
+    const signalSeen=new Map();
+    document.addEventListener('visibilitychange',()=>{clearTimeout(signalTimer);if(!document.hidden)signalDisplay();});
+    globalThis.addEventListener('resize',()=>{if(minimizedCall?.isConnected)renderMinimizedCall();});
+    let miniPosition=null;
     let managerTrigger = null;
     let callDraft = '';
     const viewState = { characters: { query: '', scope: 'all' }, hacking: { query: '', scope: 'all' } };
@@ -374,8 +382,11 @@ if (!globalThis.CyberpunkSystemRuntimePromise) {
 
     function applyTheme() {
       const s = settings();
+      if (!s.enabled || !s.phoneSounds) comms?.stopAudio();
       const root = document.documentElement;
       root.style.setProperty('--cps-accent', s.accent);
+      const rgb=/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(s.accent);
+      root.style.setProperty('--cps-on-accent',rgb&&(.299*parseInt(rgb[1],16)+.587*parseInt(rgb[2],16)+.114*parseInt(rgb[3],16))>145?'#080b0d':'#f5f7fa');
       root.style.setProperty('--cps-danger', s.danger);
       root.style.setProperty('--cps-surface', s.surface);
       root.style.setProperty('--cps-text', s.text);
@@ -530,6 +541,7 @@ Use tags only when their semantic condition is true. Keep ordinary narration out
 1. HEADER identifies the NPC who is about to speak. Use once when a speaker starts or changes. Narration and that same NPC's monologue do not reset the speaker: continue with dialogue only until another character speaks or interrupts. Never repeat a header between that NPC's lines. Format: [CP_HEADER|Name|role|signal status][/CP_HEADER]. Do not put prose in Header.
 2. DIALOGUE contains only audible spoken NPC words: [CP_DIALOGUE|Name]words[/CP_DIALOGUE]. Never wrap narration, actions, descriptions, or the user's words.
 3. MONOLOGUE contains only an NPC's truly private thoughts that the user cannot hear: [CP_MONOLOGUE|Name]thought[/CP_MONOLOGUE]. Do not use it for narration.
+3a. TEXT MESSAGE: [CP_MESSAGE|Exact NPC name]private written message[/CP_MESSAGE]. This is separate from CP_SIGNAL speech and never starts or ends a call. Use for an NPC texting the player, even during a call. Never invent the player's reply.
 4. CALL REQUEST is only for an NPC initiating a remote private call: [CP_CALL_REQUEST|Name|network handle]short reason[/CP_CALL_REQUEST]. It creates a separate incoming-call window, so do not repeat it as main-chat dialogue.
 5. PRIVATE SIGNAL is speech inside an active call: [CP_SIGNAL|Name]private call words[/CP_SIGNAL]. It is removed from the main chat and delivered to the call UI. A participant in an active call must use CP_SIGNAL instead of CP_DIALOGUE.
 6. HACK UPDATE is only for hacking progress actually earned or lost in this scene: [CP_HACK|Skill name|category|numeric delta|max]short reason[/CP_HACK]. Delta may be negative. Omit it when nothing changed.
@@ -641,6 +653,7 @@ ${systems?.prompt() || ''}`.trim();
         if (!fresh('CP_SIGNAL', match)) continue;
         if (settings().callMainSignals) receiveCallSignal(clean(match[1], 180), clean(stripTags(match[6]), 4000));
       }
+      for(const match of parseTagAttributes(raw,'CP_MESSAGE'))if(fresh('CP_MESSAGE',match))comms?.receive(clean(match[1],180),clean(stripTags(match[6]),4000));
       for (const match of parseTagAttributes(raw, 'CP_HACK')) if (fresh('CP_HACK', match)) updateHackingSkill(match);
       systems?.process(raw, messageKey);
     }
@@ -675,7 +688,7 @@ ${systems?.prompt() || ''}`.trim();
       output = output.replace(/\[CP_DIALOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_DIALOGUE\]/gi, (_, name, content) => speechHtml('dialogue', name, content));
       output = output.replace(/\[CP_MONOLOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_MONOLOGUE\]/gi, (_, name, content) => speechHtml('monologue', name, content));
       output = output.replace(/\[CP_NPC_PROFILE\][\s\S]*?\[\/CP_NPC_PROFILE\]/gi, '<!--cps-hidden-record-->').replace(/\[CP_NPC_PROFILE\][\s\S]*$/i, '<!--cps-hidden-record-->');
-      for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
+      for (const tag of ['CALL_REQUEST', 'SIGNAL', 'MESSAGE', 'HACK']) {
         output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '<!--cps-hidden-record-->');
       }
       return systems?.transform(output, true) ?? output;
@@ -687,7 +700,7 @@ ${systems?.prompt() || ''}`.trim();
       output = output.replace(/\[CP_DIALOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_DIALOGUE\]/gi, (_, name, content) => speechHtml('dialogue', name, content));
       output = output.replace(/\[CP_MONOLOGUE\|([^\]]+)\]([\s\S]*?)\[\/CP_MONOLOGUE\]/gi, (_, name, content) => speechHtml('monologue', name, content));
       output = output.replace(/\[CP_NPC_PROFILE\][\s\S]*?\[\/CP_NPC_PROFILE\]/gi, '<!--cps-hidden-record-->').replace(/\[CP_NPC_PROFILE\][\s\S]*$/i, '<!--cps-hidden-record-->');
-      for (const tag of ['CALL_REQUEST', 'SIGNAL', 'HACK']) {
+      for (const tag of ['CALL_REQUEST', 'SIGNAL', 'MESSAGE', 'HACK']) {
         output = output.replace(new RegExp(`\\[CP_${tag}\\|[^\\]]+\\][\\s\\S]*?\\[\\/CP_${tag}\\]`, 'gi'), '<!--cps-hidden-record-->');
       }
       return (systems?.transform(output, true) ?? output).replace(/\r?\n/g, '<br>');
@@ -770,14 +783,14 @@ ${systems?.prompt() || ''}`.trim();
       const source = element.innerHTML;
       const fingerprint = markupFingerprint(source);
       if (!force && element.dataset.cpsRenderFingerprint === fingerprint) return;
-      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|MEDICAL|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(source)) {
+      if (!/\[CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|MESSAGE|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|MEDICAL|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(source)) {
         connectChatBlocks(element);
         systems?.decorate(element);
         element.dataset.cpsRenderFingerprint = markupFingerprint(element.innerHTML);
         return;
       }
       let output = transformProtocolMarkup(source);
-      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|MEDICAL|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(stripTags(output))) {
+      if (/\[\/?CP_(?:HEADER|DIALOGUE|MONOLOGUE|CALL_REQUEST|SIGNAL|MESSAGE|HACK|NPC_PROFILE|SKILL|MAIL|SCENE|PAYMENT|BD_UPDATE|TRADE|PROGRESS|INCOME|LOOT|STATE|BREACH|TRANSFER|SHARE|MEDICAL|SHARD|QUEST_OFFER|CALL_END|LOCATION|QUEST|ITEM|RELIC|BLACKWALL|AI|PROPERTY|VEHICLE|DEVICE|SHOP)(?:\||\])/i.test(stripTags(output))) {
         output = transformPlainProtocolText(element.textContent || '');
       }
       element.innerHTML = output;
@@ -815,6 +828,8 @@ ${systems?.prompt() || ''}`.trim();
 
     function showIncomingCall(peer) {
       if (!peer?.name || npcDisabled(peer.name)) return;
+      if(chatBucket().call.active){toast(settings().language==='th'?'มีสายอยู่แล้ว':'A call is already active');return;}
+      comms?.stopLoop();comms?.play('ring',true);
       incomingWindow?.remove();
       pendingIncomingCall = { ...peer, signals: [] };
       const node = document.createElement('section');
@@ -823,7 +838,7 @@ ${systems?.prompt() || ''}`.trim();
       node.setAttribute('aria-label', t('incoming'));
       node.lang = settings().language;
       node.innerHTML = `<div class="cps-incoming-head">${uiIcon('calls')}<span>${htmlEscape(t('incoming'))}</span><span class="cps-signal-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div><div class="cps-incoming-body"><div class="cps-contact-identity">${avatarMarkup(peer.name)}<div><div class="cps-incoming-name">${htmlEscape(peer.name)}</div><span class="cps-muted">${htmlEscape(peer.handle ? `@${cleanHandle(peer.handle)}` : t('encrypted'))}</span></div></div><p class="cps-incoming-reason">${htmlEscape(peer.reason || t('incomingHint'))}</p></div><div class="cps-incoming-actions"><button type="button" class="cps-button danger" data-action="decline">${uiIcon('end')}${htmlEscape(t('decline'))}</button><button type="button" class="cps-button primary" data-action="accept">${uiIcon('calls')}${htmlEscape(t('accept'))}</button></div>`;
-      node.querySelector('[data-action="decline"]').addEventListener('click', () => { node.remove(); incomingWindow = null; pendingIncomingCall = null; });
+      node.querySelector('[data-action="decline"]').addEventListener('click', () => { comms?.stopLoop();node.remove(); incomingWindow = null; pendingIncomingCall = null; });
       node.querySelector('[data-action="accept"]').addEventListener('click', () => {
         const accepted = pendingIncomingCall || { ...peer, signals: [] };
         node.remove(); incomingWindow = null; pendingIncomingCall = null;
@@ -839,7 +854,7 @@ ${systems?.prompt() || ''}`.trim();
       const value = clean(text, 4000);
       if (!value) return null;
       const call = chatBucket().call;
-      const message = { id: id('signal'), role, name: clean(name, 180), text: value, pending: Boolean(pending), at: new Date().toISOString() };
+      const message = { sessionId:call.id, id: id('signal'), role, name: clean(name, 180), text: value, pending: Boolean(pending), at: new Date().toISOString() };
       call.messages.push(message);
       const limit = clamp(settings().callHistoryLimit, 20, 300);
       call.messages = call.messages.slice(-limit);
@@ -852,22 +867,28 @@ ${systems?.prompt() || ''}`.trim();
       return message;
     }
 
-    function startCall(peer, incoming = false) {
+    function startCall(peer, incoming = false, dialing=false) {
       if (npcDisabled(peer.name)) { toast(t('disabledNpcHint')); return; }
+      if(dialing&&(hostGenerationBusy()||callGenerating||npcGenerating||systems?.mailBusy?.()||comms?.busy())){toast(t('generating'));return;}
+      comms?.close();incomingWindow?.remove();incomingWindow=null;pendingIncomingCall=null;
       cancelCallGeneration();
       const call = chatBucket().call;
       removeCallOverlay();
       callDraft = '';
       call.id = id('call');
+      call.signalStart=call.messages.length;
       call.active = true;
+      call.dialing=dialing;
+      comms?.stopLoop();
       call.minimized = false;
       call.unread = 0;
       call.peer = { name: clean(peer.name, 180), handle: cleanHandle(peer.handle) };
-      appendCallMessage('system', 'SYSTEM', t('connected'));
+      appendCallMessage('system', 'SYSTEM', dialing ? (settings().language==='th'?'กำลังโทรออก…':'Dialing…') : t('connected'));
       if (incoming && peer.reason) appendCallMessage('assistant', peer.name, peer.reason);
       saveChat();
       refreshPrompt();
       showCallOverlay();
+      if(dialing){comms?.play('outgoing',true);requestCallResponse(null,true);}else comms?.play('open');
       if (manager) renderManagerBody();
     }
 
@@ -881,12 +902,14 @@ ${systems?.prompt() || ''}`.trim();
       const peerName = clean(call.peer.name, 180).toLocaleLowerCase();
       const sender = clean(name, 180).toLocaleLowerCase();
       if (sender && peerName && sender !== peerName && clean(call.peer.handle, 180).toLocaleLowerCase() !== sender) return;
+      if(call.dialing){call.dialing=false;comms?.stopLoop();comms?.play('open');}
       call.messages.forEach(item => { if (item.role === 'user' && item.pending) item.pending = false; });
       appendCallMessage('assistant', call.peer.name, text);
       if (!call.minimized && !callOverlay) showCallOverlay();
     }
 
     function removeCallOverlay() {
+      clearTimeout(signalTimer);
       if (!callOverlay) return;
       callDraft = callOverlay.querySelector('.cps-call-input')?.value || '';
       removeUiDialog(callOverlay);
@@ -894,10 +917,12 @@ ${systems?.prompt() || ''}`.trim();
     }
 
     function endCall() {
+      comms?.stopLoop();if(chatBucket().call.active)comms?.play('close');
       cancelCallGeneration();
       const call = chatBucket().call;
       if (call.active) appendCallMessage('system', 'SYSTEM', t('ended'));
       call.active = false;
+      call.dialing=false;
       call.minimized = false;
       call.peer = null;
       call.unread = 0;
@@ -936,10 +961,16 @@ ${systems?.prompt() || ''}`.trim();
         node.remove(); minimizedCall = null;
         requestAnimationFrame(showCallOverlay);
       };
-      node.addEventListener('pointerup', restore);
-      node.addEventListener('click', restore);
+      let drag=null,wasDragged=false;const bucket=chatBucket();
+      const place=()=>{if(!miniPosition)return;const v=globalThis.visualViewport,left=v?.offsetLeft||0,top=v?.offsetTop||0,width=v?.width||innerWidth,height=v?.height||innerHeight;miniPosition.x=Math.max(left+8,Math.min(miniPosition.x,left+width-node.offsetWidth-8));miniPosition.y=Math.max(top+8,Math.min(miniPosition.y,top+height-node.offsetHeight-8));Object.assign(node.style,{left:miniPosition.x+'px',top:miniPosition.y+'px',right:'auto',bottom:'auto',margin:'0'});};
+      node.addEventListener('pointerdown',e=>{if(e.button>0)return;const r=node.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,left:r.left,top:r.top,id:e.pointerId};wasDragged=false;node.setPointerCapture?.(e.pointerId);});
+      node.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>7)wasDragged=true;if(wasDragged){e.preventDefault();miniPosition={x:drag.left+dx,y:drag.top+dy};place();}});
+      node.addEventListener('pointerup',e=>{drag=null;if(bucket!==chatBucket()||chatBucket().call!==call)return;if(!wasDragged)restore(e);});
+      node.addEventListener('pointercancel',()=>{drag=null;wasDragged=true;});
+      node.addEventListener('click',e=>{if(bucket===chatBucket()&&(!wasDragged||e.detail===0))restore(e);});
       document.body.append(node);
       minimizedCall = node;
+      requestAnimationFrame(place);
       if (typeof node.showPopover === 'function') { node.setAttribute('popover', 'manual'); try { node.showPopover(); } catch {} }
     }
 
@@ -948,8 +979,9 @@ ${systems?.prompt() || ''}`.trim();
       const hasDraft = Boolean(clean(callOverlay.querySelector('.cps-call-input')?.value));
       const pending = chatBucket().call.messages.filter(item => item.role === 'user' && item.pending).length;
       const send = callOverlay.querySelector('.cps-call-send');
-      send.disabled = callGenerating || (!hasDraft && !pending);
+      send.disabled = callGenerating || (!chatBucket().call.dialing && !hasDraft && !pending);
       send.innerHTML = `${uiIcon(callGenerating ? 'signal' : 'send')}<span>${htmlEscape(t('sendAi'))}</span>`;
+      if(chatBucket().call.dialing&&!callGenerating)send.querySelector('span').textContent=settings().language==='th'?'ลองโทรอีกครั้ง':'Retry connection';
       send.setAttribute('aria-busy', String(callGenerating));
       callOverlay.querySelector('[data-call-action="cancel-generation"]').hidden = !callGenerating;
       callOverlay.querySelectorAll('[data-message-action]').forEach(button => { button.disabled = callGenerating; });
@@ -978,6 +1010,27 @@ ${systems?.prompt() || ''}`.trim();
       requestAnimationFrame(frame);
     }
 
+    function signalDisplay(){
+      clearTimeout(signalTimer);const call=chatBucket().call,host=callOverlay?.querySelector('.cps-private-display');if(!host)return;
+      if(signalCallId!==call.id){signalCallId=call.id;signalPages=[];signalIndex=0;signalSeen.clear();}
+      for(const m of call.messages.filter((m,i)=>m.role==='assistant'&&(m.sessionId===call.id||!m.sessionId&&i>=(call.signalStart||0))&&!m.attachment)){
+        if(signalSeen.get(m.id)===m.text)continue;signalSeen.set(m.id,m.text);
+        const previous=signalPages.length;signalPages=signalPages.filter(p=>p.id!==m.id);
+        const chunks=String(m.text).match(/[^\n.!?。！？]+[.!?。！？]*|[\n]+/gu)||[m.text];const pages=[];let part='';for(const chunk of chunks){if((part+chunk).length>240&&part){pages.push(part.trim());part='';}part+=chunk;}if(part.trim())pages.push(part.trim());
+        signalPages.push(...pages.filter(Boolean).map(text=>({id:m.id,text})));if(previous&&signalIndex===previous-1)signalIndex=Math.min(previous,signalPages.length-1);
+      }
+      signalIndex=Math.max(0,Math.min(signalIndex,signalPages.length-1));const current=signalPages[signalIndex];const copy=host.querySelector('[data-signal-copy]'),text=current?.text||(call.dialing?(settings().language==='th'?'กำลังรอผู้ติดต่อรับสาย…':'Waiting for contact to answer…'):t('signalReady'));if(copy.textContent!==text){copy.textContent=text;copy.classList.remove('cps-signal-enter');requestAnimationFrame(()=>{if(copy.isConnected)copy.classList.add('cps-signal-enter');});}host.querySelector('output').textContent=current?`${signalIndex+1} / ${signalPages.length}`:call.dialing?'DIALING':'CONNECTED';host.querySelector('[data-signal-next]').disabled=signalIndex>=signalPages.length-1;
+      const seconds=clamp(settings().signalSeconds,0,30);if(seconds&&signalIndex<signalPages.length-1&&!document.hidden&&!call.minimized&&document.activeElement?.tagName!=='TEXTAREA')signalTimer=setTimeout(()=>{if(!document.hidden&&!call.minimized&&document.activeElement?.tagName!=='TEXTAREA')signalIndex++;signalDisplay();},seconds*1000);
+    }
+    function decoratePhone(node){
+      const log=node.querySelector('.cps-call-log'),history=document.createElement('details');history.className='cps-phone-history';const summary=document.createElement('summary');summary.textContent=settings().language==='th'?'ประวัติสนทนา / ไฟล์ที่ได้รับ':'Conversation history / attachments';history.append(summary);log.before(history);history.append(log);
+      const display=document.createElement('section');display.className='cps-private-display';display.innerHTML=`<header><span>PRIVATE SIGNAL</span><output></output></header><div data-signal-copy aria-live="polite"></div><button type="button" class="cps-button" data-signal-next>${htmlEscape(settings().language==='th'?'ถัดไป':'Next')} →</button><label>${htmlEscape(settings().language==='th'?'เปลี่ยนทุก (วินาที) · 0 = แตะเอง':'Advance every (seconds) · 0 = manual')}<input type="number" min="0" max="30" step="1" data-signal-seconds value="${clamp(settings().signalSeconds,0,30)}"></label>`;history.before(display);
+      display.querySelector('[data-signal-next]').onclick=()=>{if(signalIndex<signalPages.length-1){signalIndex++;signalDisplay();}};
+      display.querySelector('input').onchange=e=>{const n=Number(e.target.value);if(!Number.isInteger(n)||n<0||n>30)return;settings().signalSeconds=n;saveSettings();signalDisplay();};
+      node.addEventListener('click',e=>{if(e.target.closest('button,input,textarea,a,summary,details,label,.cps-call-drawer'))return;if(signalIndex<signalPages.length-1){signalIndex++;signalDisplay();}});
+      node.querySelector('textarea').addEventListener('focus',()=>clearTimeout(signalTimer));node.querySelector('textarea').addEventListener('blur',signalDisplay);
+      node.querySelector('#cps-call-hint').textContent=settings().language==='th'?'Enter เพื่อพูดตอบ · Shift + Enter ขึ้นบรรทัดใหม่':'Enter to reply · Shift + Enter for a new line';
+    }
     function renderCallLog() {
       const log = callOverlay?.querySelector('.cps-call-log');
       if (!log) return;
@@ -1032,6 +1085,7 @@ ${systems?.prompt() || ''}`.trim();
       }
       requestAnimationFrame(() => { log.scrollTop = atBottom ? log.scrollHeight : scroll; });
       updateCallComposer();
+      signalDisplay();
     }
 
     function queueCallInput() {
@@ -1055,6 +1109,7 @@ ${systems?.prompt() || ''}`.trim();
     function cancelCallGeneration() {
       const request = callRequest;
       if (!request) return;
+      if(request.call?.dialing)comms?.stopLoop();
       callRequest = null; callGenerating = false;
       request.cancel();const stopped=systems?.support.cancel('call');
       request.pending.forEach(item => { if (request.call.messages.includes(item)) item.pending = true; });
@@ -1062,17 +1117,19 @@ ${systems?.prompt() || ''}`.trim();
       if (chatBucket().call === request.call) { saveChat(); refreshPrompt(true); renderCallLog(); }
     }
 
-    async function requestCallResponse(replace = null) {
-      if (callGenerating || npcGenerating || hostGenerationBusy() || systems?.mailBusy?.()) { toast(t('generating')); return; }
+    async function requestCallResponse(replace = null, connecting=false) {
+      if (callGenerating || npcGenerating || hostGenerationBusy() || systems?.mailBusy?.() || comms?.busy()) { toast(t('generating')); return; }
       const call = chatBucket().call;
       if (!call.active || !call.peer) return;
+      connecting = connecting || Boolean(call.dialing);
       const input = callOverlay?.querySelector('.cps-call-input');
       if (!replace && clean(input?.value, 4000)) queueCallInput();
       const pending = replace ? [] : call.messages.filter(item => item.role === 'user' && item.pending);
       if (replace && (!call.messages.includes(replace) || replace.role !== 'assistant')) return;
-      if (!replace && !pending.length) return;
+      if (!replace && !pending.length && !connecting) return;
       const generator = context()?.generateQuietPrompt;
       if (typeof generator !== 'function') { toast(t('promptUnavailable')); return; }
+      if(connecting)comms?.play('outgoing',true);
       const callId = call.id;
       const peer = call.peer;
       let cancel;
@@ -1085,7 +1142,7 @@ ${systems?.prompt() || ''}`.trim();
       updateCallComposer();
       const profile = findEffectiveNpc(call.peer.name);
       const transcript = (replace ? call.messages.slice(0, call.messages.indexOf(replace)) : call.messages).slice(-12).map(item => `${item.role === 'user' ? 'USER' : item.role === 'assistant' ? call.peer.name : 'SYSTEM'}: ${clean(item.text,1200)}`).join('\n');
-      const prompt = `You are continuing a private cyberpunk call as ${call.peer.name}${call.peer.handle ? `, network handle @${cleanHandle(call.peer.handle)}` : ''}.
+      const prompt = `${connecting?'The user is calling. Answer with CP_SIGNAL to accept; if unavailable return only CP_CALL_END. Do not invent a user utterance. ':''}You are continuing a private cyberpunk call as ${call.peer.name}${call.peer.handle ? `, network handle @${cleanHandle(call.peer.handle)}` : ''}.
 NPC dossier: ${profile ? JSON.stringify({ role: profile.role, status: profile.status, affiliation: profile.affiliation, personality: profile.personality, appearance: profile.appearance, notes: profile.notes }) : 'Use the established main-chat characterization.'}
 Recent main-chat context (context only; do not continue it as public dialogue):
 ${recentMainChat()}
@@ -1096,8 +1153,8 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       try {
         const result = await Promise.race([systems.support.generate('call',prompt), cancelled]);
         if (!sameCall()) return;
-        const match = parseTagAttributes(result, 'CP_SIGNAL')[0];
-        const reply = match ? clean(stripTags(match[6]), 4000) : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
+        const matches = parseTagAttributes(result, 'CP_SIGNAL').filter(m=>!m[1]||[peer.name,peer.handle].some(n=>n&&n.toLowerCase()===m[1].toLowerCase()));const match=matches[0];
+        const reply = match ? clean(matches.map(m=>stripTags(m[6])).join('\n\n'), 4000) : /\[CP_/i.test(result) ? '' : clean(stripTags(systems?.transform(htmlEscape(result)) ?? result), 4000);
         if (!reply && !/\[CP_(?:SHARE|CALL_END|TRANSFER|SCENE|PAYMENT|BD_UPDATE|TRADE|INCOME|LOOT|PROGRESS|STATE|QUEST|ITEM)(?:\||\])/i.test(result)) throw new Error('Empty private response');
         if (replace) {
           if (!reply) throw new Error('Empty regenerated reply');
@@ -1105,13 +1162,15 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
           callOverlay?.querySelectorAll('[data-signal-id]').forEach(row => { if (row.dataset.signalId === replace.id) row.remove(); });
           animatedSignals.delete(replace.id); saveChat(); refreshPrompt(true); renderCallLog();
         } else {
-          if (reply) appendCallMessage('assistant', peer.name, reply);
+          if(reply&&call.dialing){call.dialing=false;comms?.stopLoop();comms?.play('open');}if (reply) appendCallMessage('assistant', peer.name, reply);
           callRequest = null; callGenerating = false; updateCallComposer();
-          systems?.process(result, `call:${pending.map(item => item.id).join(',')}`);
+          systems?.process(result, `call:${call.id}:${connecting?'connect':pending.map(item => item.id).join(',')}`);
+          for(const m of parseTagAttributes(result,'CP_MESSAGE'))if([peer.name,peer.handle].some(n=>n&&n.toLowerCase()===m[1]?.toLowerCase()))comms?.receive(peer.name,stripTags(m[6]));
         }
       } catch (error) {
         if (sameCall()) console.warn('[Cyberpunk System] Private call generation failed', error);
         if (sameCall()) {
+          if(call.dialing)comms?.stopLoop();
           pending.forEach(item => { item.pending = true; }); saveChat(); renderCallLog();
           toast(t('callFailed')+': '+error.message);
         }
@@ -1129,7 +1188,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       closeHostWand();
       minimizedCall?.remove(); minimizedCall = null;
       const node = document.createElement('dialog');
-      node.className = 'cps-call-overlay cps-ui';
+      node.className = 'cps-call-overlay cps-ui cps-phone-b';
       node.setAttribute('aria-labelledby', 'cps-call-peer');
       node.innerHTML = `<header class="cps-call-header"><div class="cps-call-channel"><span class="cps-eyebrow"><span class="cps-live-dot"></span>${htmlEscape(t('privateLine'))}</span><span>${uiIcon('shield')}${htmlEscape(t('encrypted'))}</span></div>${avatarMarkup(call.peer.name)}<div class="cps-call-identity"><strong id="cps-call-peer">${htmlEscape(call.peer.name)}</strong><small>${htmlEscape(call.peer.handle ? `@${cleanHandle(call.peer.handle)}` : t('signalReady'))}</small></div><button class="cps-icon-button" type="button" data-call-action="minimize" aria-label="${htmlEscape(t('minimize'))}">${uiIcon('minimize')}</button></header><main class="cps-call-log" role="log" aria-label="${htmlEscape(t('privateLine'))}" aria-live="polite" tabindex="0"></main><footer class="cps-call-composer"><div class="cps-composer-state"><span class="cps-call-status" role="status"></span>${uiIcon('signal')}</div><textarea class="cps-call-input" rows="2" maxlength="4000" enterkeyhint="send" autocomplete="off" placeholder="${htmlEscape(t('inputPlaceholder'))}" aria-label="${htmlEscape(t('inputPlaceholder'))}" aria-describedby="cps-call-hint"></textarea><div class="cps-call-actions"><button class="cps-button danger cps-end-call" type="button">${uiIcon('end')}<span>${htmlEscape(t('endCall'))}</span></button><button class="cps-button" type="button" data-call-action="queue">${uiIcon('plus')}<span>${htmlEscape(t('queueMessage'))}</span></button><button class="cps-button danger" type="button" data-call-action="cancel-generation" hidden>${htmlEscape(t('cancelGeneration'))}</button><button class="cps-button primary cps-call-send" type="button" aria-label="${htmlEscape(t('sendAi'))}"></button></div><p class="cps-composer-hint" id="cps-call-hint">${htmlEscape(t('queueHint'))}</p></footer>`;
       node.querySelector('[data-call-action="minimize"]').addEventListener('click', minimizeCallWindow);
@@ -1141,10 +1200,10 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       input.value = callDraft;
       input.addEventListener('input', () => { callDraft = input.value; updateCallComposer(); });
       input.addEventListener('keydown', event => {
-        if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); event.stopPropagation(); queueCallInput(); }
+        if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); event.stopPropagation(); requestCallResponse(); }
       });
       node.addEventListener('cancel', event => { event.preventDefault(); minimizeCallWindow(); });
-      document.body.append(node); callOverlay = node; systems?.callToolbar(node); showUiDialog(node); renderCallLog();
+      decoratePhone(node);document.body.append(node); callOverlay = node; systems?.callToolbar(node); showUiDialog(node); renderCallLog();
       requestAnimationFrame(() => { const log = node.querySelector('.cps-call-log'); log.scrollTop = log.scrollHeight; });
       node.querySelector('[data-call-action="minimize"]').focus({ preventScroll: true });
     }
@@ -1287,7 +1346,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (!isCurrent()) { status.textContent = t('npcContextChanged'); return; }
         const ctx = context(); const generator = ctx?.generateQuietPrompt;
         if (typeof generator !== 'function') { status.textContent = t('promptUnavailable'); return; }
-        if (callGenerating || npcGenerating || hostGenerationBusy() || systems?.mailBusy?.()) { status.textContent = t('generating'); return; }
+        if (callGenerating || npcGenerating || hostGenerationBusy() || systems?.mailBusy?.() || comms?.busy()) { status.textContent = t('generating'); return; }
         const epoch = ++requestEpoch; busy = true; npcGenerating = true; setBusy();
         const useImage = Boolean(portraitSource && studio.querySelector('[data-use-reference]').checked);
         if (useImage) {
@@ -1495,7 +1554,8 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
           refreshPrompt(); refreshPortraits(); renderManagerBody();
         };
         card.querySelector('[data-action="assets"]').addEventListener('click', () => systems?.open(record.name));
-        card.querySelector('[data-action="call"]').addEventListener('click', () => { closeManager(); startCall(record, false); });
+        card.querySelector('[data-action="call"]').addEventListener('click', () => { closeManager(); startCall(record, false, true); });
+        const dm=document.createElement('button');dm.type='button';dm.className='cps-button';dm.dataset.action='message';dm.textContent=settings().language==='th'?'ข้อความ':'Message';dm.disabled=record.enabled===false;dm.onclick=()=>{closeManager();comms?.open(record.name);};card.querySelector('.cps-card-actions').append(dm);
         card.querySelector('[data-action="edit"]').addEventListener('click', () => openNpcEditor(record));
         card.querySelector('[data-action="remove"]').addEventListener('click', () => removeRecord('npcs', record));
         grid.append(card);
@@ -1542,6 +1602,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       body.querySelector('[data-action="restore-call"]')?.addEventListener('click', () => { closeManager(); showCallOverlay(); });
       body.querySelector('[data-action="end-call"]')?.addEventListener('click', endCall);
       body.querySelector('[data-action="browse-contacts"]')?.addEventListener('click', () => selectManagerTab('characters'));
+      const messageButton=document.createElement('button');messageButton.type='button';messageButton.className='cps-button primary';messageButton.textContent=settings().language==='th'?'เปิดข้อความส่วนตัว':'Open private messages';messageButton.onclick=()=>{closeManager();comms?.list();};body.prepend(messageButton);
       const history = body.querySelector('[data-call-history]');
       if (!call.messages.length) { history.innerHTML = `<p class="cps-muted">${htmlEscape(t('noCalls'))}</p>`; return; }
       call.messages.slice().reverse().forEach(item => {
@@ -1574,7 +1635,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const colors = colorKeys.map(key => configField(t(key === 'text' ? 'textColor' : key), `<span class="cps-color-control"><input name="${key}" type="color" value="${htmlEscape(s[key])}"><output data-color-output="${key}">${htmlEscape(s[key])}</output></span>`, 'cps-config-color')).join('');
       const appearance = `<fieldset class="cps-palette-field wide"><legend>${htmlEscape(t('palette'))}</legend><div class="cps-palette-grid">${paletteMarkup}</div></fieldset><div class="cps-theme-preview wide"><span class="cps-eyebrow">${htmlEscape(t('livePreview'))}</span><div class="cps-preview-identity">${uiIcon('signal')}<strong>NEURAL LINK</strong><span class="cps-status-tag">${htmlEscape(t('signalReady'))}</span></div><p>${htmlEscape(t('previewLine'))}</p></div>${colors}<div class="wide"><button class="cps-button" type="button" data-reset-appearance>${htmlEscape(t('resetAppearance'))}</button></div>`;
       const layout = `${configToggle(s.language==='th'?'Scene Tracker บนคำตอบ AI':'Scene Tracker on AI replies','sceneTracker',s.sceneTracker)}${configToggle(s.language==='th'?'การ์ดแจ้งเข้าสู่พื้นที่':'Area arrival cards','areaCards',s.areaCards)}${configToggle(s.language==='th'?'ภาพประกอบฉาก':'Scene images','sceneImages',s.sceneImages)}${configRange(t('uiScale'), 'uiScale', 80, 120, 2, s.uiScale, '%')}${configField(t('density'), configSelect('density', s.density, ['comfortable','compact'].map(key => [key, t(key)])))}${configRange(t('callOpacity'), 'callOpacity', 20, 90, 5, s.callOpacity, '%')}${configRange(t('callBlur'), 'callBlur', 0, 24, 1, s.callBlur, 'px')}${configField(t('animationSpeed'), configSelect('animationSpeed', s.animationSpeed, ['off','slow','normal','fast'].map(key => [key, t(key)])))}${configField(t('headerPosition'), configSelect('headerPosition', s.headerPosition, ['left','center','right'].map(key => [key, t(key)])))}${configToggle(t('scanlines'), 'scanlines', s.scanlines)}${configToggle(t('ambientMotion'), 'ambientMotion', s.ambientMotion)}${configToggle(t('signalDecrypt'), 'signalDecrypt', s.signalDecrypt)}`;
-      const behavior = `${[['enableSystem','enabled'],['showWand','showWand'],['autoProfiles','autoProfiles'],['hackingTracking','hackingEnabled']].map(([label,key]) => configToggle(t(label), key, s[key])).join('')}${configField(t('language'), configSelect('language', s.language, [['en','English'],['th','ไทย']]))}${configField(t('defaultScope'), configSelect('defaultScope', s.defaultScope, ['chat','character'].map(key => [key,t(key)])))}${configField(t('callHistory'), `<input name="callHistoryLimit" type="number" min="20" max="300" step="10" inputmode="numeric" value="${htmlEscape(s.callHistoryLimit)}">`)}`;
+      const behavior = `${configToggle(s.language==='th'?'เสียงโทรและข้อความ':'Phone and message sounds','phoneSounds',s.phoneSounds)}${configRange(s.language==='th'?'ระดับเสียง':'Phone volume','phoneVolume',0,100,5,s.phoneVolume,'%')}${[['enableSystem','enabled'],['showWand','showWand'],['autoProfiles','autoProfiles'],['hackingTracking','hackingEnabled']].map(([label,key]) => configToggle(t(label), key, s[key])).join('')}${configField(t('language'), configSelect('language', s.language, [['en','English'],['th','ไทย']]))}${configField(t('defaultScope'), configSelect('defaultScope', s.defaultScope, ['chat','character'].map(key => [key,t(key)])))}${configField(t('callHistory'), `<input name="callHistoryLimit" type="number" min="20" max="300" step="10" inputmode="numeric" value="${htmlEscape(s.callHistoryLimit)}">`)}`;
       const protocol = `${configToggle(t('teachAi'), 'injectPrompt', s.injectPrompt)}${configToggle(t('callSignals'), 'callMainSignals', s.callMainSignals)}<p class="cps-inline-note wide">${uiIcon('shield')}${htmlEscape(t('quotaNote'))}</p><label class="cps-config-field wide"><span>${htmlEscape(t('customInstructions'))}</span><textarea name="customPrompt" rows="5" maxlength="6000">${htmlEscape(s.customPrompt)}</textarea></label><details class="cps-tag-reference wide"><summary>${htmlEscape(t('tagReference'))}</summary><pre>[CP_HEADER|Name|role|status][/CP_HEADER]
 [CP_DIALOGUE|Name]Spoken words[/CP_DIALOGUE]
 [CP_MONOLOGUE|Name]Private thoughts[/CP_MONOLOGUE]
@@ -1629,7 +1690,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if(target.matches('[data-lore-search]')){const query=target.value.trim().toLocaleLowerCase();form.querySelectorAll('.cps-lore-entry').forEach(el=>{el.hidden=!el.textContent.toLocaleLowerCase().includes(query);});return;}
         if (target.dataset.loreId) { s.loreEntries[target.dataset.loreId] = target.checked; save(); return; }
         if (!target.name || !Object.hasOwn(DEFAULTS, target.name)) return;
-        const numeric = ['uiScale', 'callOpacity', 'callBlur', 'callHistoryLimit'].includes(target.name);
+        const numeric = ['uiScale', 'callOpacity', 'callBlur', 'callHistoryLimit','signalSeconds','phoneVolume'].includes(target.name);
         if (numeric && !target.validity.valid) return;
         s[target.name] = target.type === 'checkbox' ? target.checked : numeric ? Number(target.value) : target.value;
         const output = form.querySelector(`[data-config-output="${target.name}"]`);
@@ -1785,7 +1846,7 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
       const listen = (name, handler) => { if (types[name] !== undefined) source.on(types[name], handler); };
       listen('MESSAGE_RECEIVED', onAssistantMessage);
       listen('MESSAGE_UPDATED', onAssistantMessage);
-      listen('CHAT_CHANGED', () => { cancelCallGeneration();generationBusy=false;systems?.onChatChanged(); removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
+      listen('CHAT_CHANGED', () => { comms?.changed();clearTimeout(signalTimer);signalPages=[];signalSeen.clear();signalCallId=null;cancelCallGeneration();generationBusy=false;systems?.onChatChanged(); removeCallOverlay(); callDraft = ''; incomingWindow?.remove(); incomingWindow = null; pendingIncomingCall = null; animatedSignals.clear(); refreshPrompt(); renderVisibleMessages(); renderMinimizedCall(); if (manager) renderManager(); });
       listen('CHARACTER_MESSAGE_RENDERED', onAssistantMessage);
       listen('GENERATION_STARTED', (_type, _options, dryRun) => {
         // Prompt previews/token counting emit STARTED without generating text.
@@ -1809,6 +1870,9 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         receiveCall: (name, handle = '', reason = '') => showIncomingCall({ name, handle, reason }),
         endCall,
         openMail: () => systems?.openMail(),
+        openMessages:name=>name?comms?.open(name):comms?.list(),
+        receiveMessage:(name,text)=>comms?.receive(name,text),
+        dialCall:(name,handle='')=>startCall({name,handle},false,true),
         getNpcs: () => clone(effectiveRecords('npcs')),
         getHackingSkills: () => clone(effectiveRecords('skills')),
         refreshPrompt,
@@ -1823,10 +1887,11 @@ Respond only as ${call.peer.name} through the private call. Return one [CP_SIGNA
         if (typeof host.isGenerating==='function') hostGenerationProbe=host.isGenerating;
       } catch { /* Context probe or lifecycle events support alternate hosts. */ }
       try {
-        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-item-data.js', 'CyberpunkItemGuide'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-shops.js', 'CyberpunkShopsFactory'], ['rpg-campaign.js', 'CyberpunkCampaignFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory']]) {
+        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-item-data.js', 'CyberpunkItemGuide'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-shops.js', 'CyberpunkShopsFactory'], ['rpg-campaign.js', 'CyberpunkCampaignFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory'], ['comms.js','CyberpunkCommsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating, context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, playPhoneSound:(...args)=>comms?.play(...args), messageDestination:name=>comms?.route(name), closeComms:()=>{comms?.changed();if(chatBucket().call.active)endCall();}, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating||comms?.busy(), context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        comms=globalThis.CyberpunkCommsFactory({settings,context,chatBucket,saveChat,findEffectiveNpc,npcDisabled,htmlEscape,toast,showUiDialog,removeUiDialog,avatar:avatarMarkup,contacts:()=>effectiveRecords('npcs'),assetUrl:path=>new URL(path,import.meta.url).href,systems:()=>systems,busy:()=>hostGenerationBusy()||callGenerating||npcGenerating||systems?.mailBusy(),parse:parseTagAttributes,strip:stripTags,contextPrompt:()=>recentMainChat()+'\n'+worldLorePrompt(),beforeOpen:()=>{if(callOverlay)minimizeCallWindow();closeManager();closeHostWand();}});
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

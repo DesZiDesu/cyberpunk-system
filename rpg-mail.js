@@ -35,7 +35,7 @@ globalThis.CyberpunkMailFactory = api => {
     const terms=offer(data.offer,id,from);
     const doc={id,from,to:api.context()?.name1||'USER',subject,body,direction:'inbox',read:false,archived:false,pinned:false,at:new Date().toISOString(),threadId:C.text([...b.documents,...b.trash].find(d=>d.id===data.replyTo)?.threadId||data.threadId||id,160),replyTo:C.text(data.replyTo,160),offerId:terms?id:null};
     b.documents.push(doc);b.seen.push(id);if(terms)b.offers[id]=terms;
-    changed();api.notify('NEW MAIL',from+' · '+subject);render();badge();if(b.documents.find(d=>d.id===selected)?.threadId===doc.threadId)scrollThreadEnd();return true;
+    changed();api.playPhoneSound?.('message');api.notify('NEW MAIL',from+' · '+subject);render();badge();if(b.documents.find(d=>d.id===selected)?.threadId===doc.threadId)scrollThreadEnd();return true;
   }
   function decide(id,accept) {
     const b=store(),o=b.offers[id];if(!o||o.status!=='pending')return false;

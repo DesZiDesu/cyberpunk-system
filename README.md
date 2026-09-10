@@ -1,5 +1,20 @@
 # Cyberpunk System
 
+## v3.11.0 — Private Signal / Personal Messages B
+
+Update the extension and reload once. Both communication layouts use the approved B structure, Rajdhani / Noto Sans Thai fonts and the user's surface, text and accent settings. Incoming/outgoing calls and direct text messages are separate interfaces; opening messages never starts a call.
+
+- Contact cards provide **Call** and **Message**. Calls wait for one NPC generation to accept or decline. Type and press Send/Enter to reply; Shift+Enter inserts a newline. The separate queue button remains available.
+- Private Signal shows paginated speech, automatically advancing every five seconds (adjustable 0–30; zero is manual). Tap the non-control area or Next to advance. Typing and minimizing pause advancement. The collapsible history keeps all available dialogue and attachments accessible.
+- Minimize keeps the call active and exposes a draggable, bounded floating button. Tap to restore; dragging does not hang up.
+- Personal Messages retain independent per-contact histories, drafts, unread counts, edit/delete/regenerate, cancel and explicit retry. Tools retain money transfers, location pins, data sharing and Cyberware access. Receipts and attachments stay with the selected conversation, even with a minimized call to somebody else.
+- Five owner-supplied MP3s are bundled under `assets/audio`. Mute/volume are in settings. Incoming texts and mail share the message sound; spoken subtitles do not play it. Browser autoplay policy still applies, especially before the first user gesture on iOS.
+- Each send uses one private AI request. Animations, subtitle changes, reading history and minimizing make no requests. Old call transcripts remain available without silently assigning mixed legacy history to a contact. Backup/restore includes new message threads.
+
+Protocol: `[CP_MESSAGE|Exact NPC name]written text[/CP_MESSAGE]` delivers direct text. `CP_SIGNAL` remains spoken phone dialogue. Existing structured transaction checks and explicit payment confirmations are retained. API `openMessages(name)` opens a contact, `openMessages()` lists contacts, and `dialCall(name, handle)` initiates outgoing generation; legacy `startCall` remains a connected-call compatibility entry point.
+
+Validation: 848 passing checks across all 16 suites, 15 runtime JavaScript syntax checks, three parsed stylesheets, and clean diff checks. Tests use simulated host, DOM, pointer and audio APIs. Native iPhone keyboard, rendering and first-gesture audio acceptance still need device verification; automated tests do not establish real Safari behavior.
+
 ## v3.10.3 — Field Journal A
 
 Update the extension and reload once. Missions now use the approved Field Journal A layout, with animated single-open rows and separate Active, Hand-in, Archive and Offers categories. Each category renders at most eight entries per page. Completed and failed missions stay in the archive, and declined/withdrawn offers remain inspectable without filling the active list. Category counts update from the current chat; display selection is local and resets when the chat changes.

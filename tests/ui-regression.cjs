@@ -22,7 +22,7 @@ d.addEventListener('keydown',()=>hostKeys++);d.addEventListener('click',()=>host
 const events=new Map();
 const makeCall=()=>({active:false,minimized:false,peer:null,messages:[],unread:0});
 const ctx={name1:'QA User',name2:'Rin',characterId:0,characters:[{avatar:'qa.png',name:'Rin'}],extensionSettings:{cyberpunk_system:{accent:'#123456',danger:'#ff8888',surface:'#101318',text:'#e8eeee',language:'en',characters:{'character:qa.png':{npcs:[{id:'char1',name:'Rin',handle:'ghost',role:'Netrunner',affiliation:'Afterlife',notes:'Keep this note.'},{id:'char2',name:'อารยา',role:'นายหน้าข่าวสาร'}],skills:[{id:'skill1',name:'Breach',level:75,max:100,rank:'B',category:'Intrusion'}]}}}},chatMetadata:{cyberpunk_system:{npcs:[{id:'chat1',name:'Cass',role:'Medic',notes:'Local only'}],skills:[],call:makeCall()}},chat:[],event_types:{MESSAGE_RECEIVED:'message',MESSAGE_UPDATED:'updated',CHAT_CHANGED:'changed',CHARACTER_MESSAGE_RENDERED:'rendered',GENERATION_STARTED:'started',MESSAGE_SENT:'sent'},eventSource:{on:(name,fn)=>{events.set(name,fn);}},saveSettingsDebounced(){saves++;},saveMetadataDebounced(){saves++;},setExtensionPrompt(key,prompt){lastPrompt=prompt;},generateQuietPrompt(...args){lastArgs=args;apiCalls++;return new Promise((resolve,reject)=>{resolveReply=resolve;rejectReply=reject;});}};
-w.SillyTavern={getContext:()=>ctx};
+w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};
 const wait=()=>new Promise(r=>setTimeout(r,35));
 const q=selector=>{const el=d.querySelector(selector);assert.ok(el,'missing '+selector);return el;};
 const click=selector=>q(selector).click();
@@ -30,7 +30,7 @@ const input=(selector,value)=>{const el=q(selector);el.value=value;el.dispatchEv
 let passed=0;
 const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
- for (const file of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+ for (const file of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()'); await wait();
  assert.ok(w.CyberpunkSystem);
  test('Gear image frames cannot stretch with a tall equipment description',()=>{const values={};postcss.parse(css).walkRules(rule=>{if(rule.selector==='.cps-gear-card .cps-gear-visual')rule.walkDecls(decl=>values[decl.prop]=decl.value);});assert.equal(values['aspect-ratio'],'1 / 1');assert.equal(values['min-height'],'0');assert.equal(values['align-self'],'start');assert.equal(values.height,'auto');});
@@ -102,8 +102,8 @@ const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
  click('.cps-incoming [data-action="accept"]');await wait();
  test('Accept opens a dedicated call dialog',()=>{assert.equal(q('.cps-call-overlay').open,true);assert.equal(q('#cps-call-peer').textContent,'Rin');assert.equal(q('.cps-call-log').getAttribute('role'),'log');});
  input('.cps-call-input','Meet under the bridge');const keys=hostKeys;
- q('.cps-call-input').dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
- test('Enter queues a private message with no API or host-key event',()=>{assert.equal(apiCalls,0);assert.equal(hostKeys,keys);assert.equal(ctx.chatMetadata.cyberpunk_system.call.messages.at(-1).pending,true);});
+ click('[data-call-action="queue"]');
+ test('Explicit queue preserves a private draft without API or host-key event',()=>{assert.equal(apiCalls,0);assert.equal(hostKeys,keys);assert.equal(ctx.chatMetadata.cyberpunk_system.call.messages.at(-1).pending,true);});
  const animatedCopy=q('.cps-call-row.user .cps-signal-copy');
  test('New user call text starts the decrypt effect with accessible final text',()=>{assert.equal(animatedCopy.classList.contains('cps-decrypting'),true);assert.equal(animatedCopy.querySelector('.cps-sr-only').textContent,'Meet under the bridge');});
  await new Promise(r=>setTimeout(r,750));
