@@ -315,7 +315,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     const protectedDesign=/\bcps-(?:data-window|shard-window|field-document|field-confirm|medical-window|medical-confirm)\b/.test(cls);
     if(!protectedDesign)d.classList.add('cps-shard-shell');
     d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.11.1')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.12.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     if(!protectedDesign&&!d.classList.contains('cps-rpg-main'))d.querySelector('.cps-rpg-content').classList.add('cps-shard-surface');
     d.addEventListener('error',e=>{if(e.target.matches?.('.cps-item-art img')){e.target.hidden=true;const fallback=e.target.parentElement.querySelector('.cps-item-art-fallback');if(fallback)fallback.hidden=false;}},true);
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();if(d.cpsCloseRouter?.())return;if(d===panel){closePanel();return;}api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;

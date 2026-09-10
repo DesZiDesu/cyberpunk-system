@@ -1,5 +1,12 @@
 # Cyberpunk System
 
+## v3.12.0 — Player Origin Workbench C
+
+The blank-first-message player registration now uses approved design C: side navigation, collapsible field groups, compact − / value / + controls and SVG action/lifepath icons (no emoji arrows). Surface, accent and text follow user settings; interface labels follow Thai/English settings.
+
+Three local RP presets (Netrunner, Street Solo, Nomad Tech) and optional AI assistance propose starting values across all registration sections. AI assistance makes one isolated, bounded request per click, fills missing fields only, and requires review before applying. Existing player names and edited values are preserved, including changes made while AI is responding. New untouched defaults can be replaced by the reviewed preset; existing saved drafts are treated conservatively. Cancelled/stale responses cannot cross chats. Preset/AI application updates only the registration draft—not the player, wallet, inventory or story. First Message generation remains a separate explicit final confirmation. Reload after updating. Native iPhone rendering and provider behavior still require device acceptance.
+
+
 ## v3.11.1 — B / SHARD HUD and message controls
 
 Update the extension and reload once. This release builds on the complete v3.11.0 communication update.
