@@ -344,10 +344,16 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Re-rendering an exited recording cannot replay its fictional rewards',()=>{assert.equal(state().player.balance,realBalance);assert.equal(state().turn,realTurn);});
  click('.cps-bd-window [data-rpg=close]');
  await message(record('ITEM',{id:'qh-own',item:{id:'qh-ping',name:'Target Ping',category:'quickhack',level:3,ramCost:2,cooldown:3,effect:'Reveal the target network link'}}));
+ C.addSkill(state().player,{id:'toolkit-ui-check',name:'Signal Trace',description:'Trace a hostile signal',cost:1,resource:'ram'});
  w.CyberpunkSystem.openCyberware();click('[data-rpg="tab:skills"]');
+ test('Skills page starts abilities collapsed while keeping level and readiness visible',()=>{const card=q('[data-skill-card]'),toggle=q('[data-skill-toggle]');assert.ok(card);assert.equal(toggle.getAttribute('aria-expanded'),'false');assert.equal(card.classList.contains('open'),false);assert.ok(card.textContent.includes('LEVEL'));assert.equal(card.querySelector('.cps-ability-collapse').hasAttribute('inert'),true);});
+ click('[data-skill-toggle]');
+ test('An ability can be opened and explicitly collapsed again',()=>{const card=q('[data-skill-card]');assert.equal(card.classList.contains('open'),true);assert.equal(card.querySelector('.cps-ability-collapse').hasAttribute('inert'),false);click('[data-skill-close]');assert.equal(card.classList.contains('open'),false);assert.equal(card.querySelector('.cps-ability-collapse').hasAttribute('inert'),true);});
  test('Skills page has no duplicate deck slots',()=>assert.equal(d.querySelectorAll('[data-deck-slot]').length,0));click('[data-rpg="tab:quickhacks"]');
  test('Quickhack deck has exactly eight loadout slots',()=>assert.equal(d.querySelectorAll('[data-deck-slot]').length,8));
- const deckSelect=q('[data-deck-slot="0"]');deckSelect.value='qh-ping';deckSelect.dispatchEvent(new w.Event('change'));
+ click('[data-deck-slot="0"]');
+ test('Choosing a deck slot opens a card picker without a dropdown',()=>{assert.ok(q('.cps-deck-picker'));assert.ok(q('[data-deck-program="qh-ping"]'));assert.equal(d.querySelector('.cps-neural-deck select'),null);});
+ click('[data-deck-program="qh-ping"]');
  const flow=await message('[CP_HEADER|Vendor|Shopkeeper|Ready][/CP_HEADER][CP_DIALOGUE|Vendor]Hello[/CP_DIALOGUE] Narrative. [CP_HEADER|Vendor|Shopkeeper|Ready][/CP_HEADER][CP_MONOLOGUE|Vendor]Thinking[/CP_MONOLOGUE][CP_DIALOGUE|Vendor]Again[/CP_DIALOGUE][CP_HEADER|Lucy|Netrunner|Ready][/CP_HEADER][CP_DIALOGUE|Lucy]Interrupting[/CP_DIALOGUE][CP_HEADER|Vendor|Shopkeeper|Ready][/CP_HEADER][CP_DIALOGUE|Vendor]Reply[/CP_DIALOGUE]');
  test('Repeated same-speaker header is suppressed until another speaker interrupts',()=>assert.equal(flow.t.querySelectorAll('.cps-chat-header').length,3));
  flow.t.querySelector('.cps-chat-header').click();
@@ -379,7 +385,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  await message(acquired);
  test('Repeated loot records cannot duplicate the acquired quickhack',()=>assert.equal(state().player.inventory.filter(it=>it.id==='recovered-qh').length,1));
  w.CyberpunkSystem.openCyberware();click('[data-rpg="tab:quickhacks"]');
- test('Quickhack Deck has a dedicated section, instructions and eight slots',()=>{assert.equal(d.querySelectorAll('[data-deck-slot]').length,8);assert.ok(q('.cps-deck').textContent.includes('Tap an NPC header'));assert.ok(q('[data-rpg=add-quickhack]'));});
+ test('Quickhack Deck has a dedicated section, instructions and eight slots',()=>{assert.equal(d.querySelectorAll('[data-deck-slot]').length,8);assert.ok(q('.cps-deck').textContent.includes('NPC header'));assert.ok(q('[data-rpg=add-quickhack]'));});
  const ramBeforeLoading=state().player.ram;click('[data-rpg="equip:recovered-qh"]');
  test('Inventory Load into deck installs an owned quickhack and spends no RAM',()=>{assert.ok(state().player.quickhackSlots.includes('recovered-qh'));assert.equal(state().player.inventory.find(it=>it.id==='recovered-qh').equipped,true);assert.equal(state().player.ram,ramBeforeLoading);});
  await message(record('ITEM',{id:'qh-unload-story',operation:'unequip',itemId:'recovered-qh'}));
@@ -395,7 +401,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Wand menu opens Quickhack Deck directly',()=>{assert.equal(q('.cps-rpg-main').dataset.currentTab,'quickhacks');assert.ok(q('.cps-deck'));});
  click('[data-rpg=add-quickhack]');
  const recovery=q('.cps-rpg-form');recovery.querySelector('[name=name]').value='Recovered custom hack';recovery.querySelector('[name=ramCost]').value='4';recovery.querySelector('[name=effect]').value='Interrupt target optics';recovery.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
- test('Missing-loot recovery saves an owned quickhack with editable RAM cost and effect',()=>{const it=state().player.inventory.find(it=>it.name==='Recovered custom hack');assert.equal(it.category,'quickhack');assert.equal(it.ramCost,4);assert.equal(it.effect,'Interrupt target optics');assert.ok([...d.querySelectorAll('[data-deck-slot="0"] option')].some(o=>o.value===it.id));});
+ test('Missing-loot recovery saves an owned quickhack with editable RAM cost and effect',()=>{const it=state().player.inventory.find(it=>it.name==='Recovered custom hack');assert.equal(it.category,'quickhack');assert.equal(it.ramCost,4);assert.equal(it.effect,'Interrupt target optics');click('[data-deck-slot="0"]');assert.ok(q(`[data-deck-program="${it.id}"]`));});
  test('No unhandled DOM/module errors',()=>assert.deepEqual(errors,[]));
  console.log(`\n${count} RPG behavior checks passed. Host APIs and browser events simulated; real Safari still needs device testing.`);dom.window.close();
 })().catch(e=>{console.error(e.stack);dom.window.close();process.exitCode=1;});

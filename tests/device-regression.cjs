@@ -113,7 +113,11 @@ function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p)
  const partial=systems.transform('A [CP_DEVICE]{"data":"secret');
  await check('Incomplete machine metadata does not flash hidden data',()=>assert.ok(!partial.includes('secret')));
  click('[data-device-action=deck]');
- await check('Manage Device Hacks opens a separate deck inside the Quickhack workspace',()=>{assert.ok(q('[data-device-count]'));assert.equal(q('.cps-rpg-main').dataset.currentTab,'quickhacks');assert.equal(q('[data-rpg="deck-mode:devices"]').getAttribute('aria-pressed'),'true');});
+ await check('Manage Device Hacks opens a separate card deck inside the Quickhack workspace',()=>{assert.equal(d.querySelectorAll('[data-device-count]').length,2);assert.equal(d.querySelector('.cps-device-deck select'),null);assert.equal(q('.cps-rpg-main').dataset.currentTab,'quickhacks');assert.equal(q('[data-rpg="deck-mode:devices"]').getAttribute('aria-pressed'),'true');});
+ const slotsBefore=b().slotCount;click('[data-device-count="1"]');
+ await check('Device slot steppers resize and persist the separate device loadout',()=>{assert.equal(b().slotCount,slotsBefore+1);assert.equal(b().slots.length,slotsBefore+1);});
+ click('[data-device-slot="0"]');click('[data-device-program="shutdown"]');
+ await check('A device program is installed by tapping cards rather than a dropdown',()=>assert.equal(b().slots[0],'shutdown'));
  click('[data-rpg="deck-mode:quickhacks"]');
  await check('Quickhack tab retains the original eight loadout slots',()=>assert.equal(d.querySelectorAll('[data-deck-slot]').length,8));
  click('[data-rpg="deck-mode:devices"]');const toggle=q('[data-device-enabled]');toggle.checked=false;toggle.dispatchEvent(new w.Event('change'));
