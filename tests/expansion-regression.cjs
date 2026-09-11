@@ -2,10 +2,10 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const narrativeText=el=>{const copy=el.cloneNode(true);copy.querySelectorAll('.cps-scene-stack').forEach(n=>n.remove());return copy.textContent;};
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));vc.on('error',(...a)=>errors.push(a.join(' ')));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.13.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8').replace('v3.14.0','v1.1.0').replace(/<button id="cps-open-cyberware"[\s\S]*?<\/button>/,'')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 let lastPrompt='',requests=0,quietReply='';const events=new Map();const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy',role:'Netrunner',personality:'Guarded'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){lastPrompt=p;},async generateQuietPrompt(){requests++;return quietReply;}};
-w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
 const C=w.CyberpunkRpgCore;let count=0;const test=(n,f)=>{f();console.log('PASS '+n);count++;};
 const q=s=>{const e=d.querySelector(s);assert.ok(e,'Missing '+s);return e;};const click=s=>q(s).click();const wait=()=>new Promise(r=>setTimeout(r,35));
 const state=()=>ctx.chatMetadata.cyberpunk_system.rpg;
@@ -31,9 +31,9 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(at,row,col,ax
  test('Destroyed vehicle cannot be summoned',()=>{assert.equal(car.status,'destroyed');assert.equal(state().activeVehicle,null);});
  await message(record('VEHICLE',{id:'car5',assetId:car.id,operation:'repair',amount:5000}));
  test('Paid repair restores condition',()=>{assert.equal(car.condition,100);assert.equal(state().player.balance,145000);});
- await message(record('PROPERTY',{id:'home1',operation:'buy',name:'Test home',amount:25000}));const home=state().properties[0];
+ await message(record('PROPERTY',{id:'home1',operation:'buy',name:'Test home',amount:25000}));const home=state().properties[0];home.homeLevel=1;
  await message(record('PROPERTY',{id:'home2',assetId:home.id,operation:'upgrade',area:'security',amount:1000}));
- test('Property upgrade is saved and charged once',()=>{assert.equal(home.upgrades.security,1);assert.equal(state().player.balance,119000);});
+ test('Property upgrade is saved and charged once after Home Level initialization',()=>{assert.equal(home.homeLevel,1);assert.equal(home.upgrades.security,1);assert.equal(state().player.balance,119000);});
  await message(record('PROPERTY',{id:'home3',assetId:home.id,operation:'upgrade',area:'security',amount:999999}));
  test('Unaffordable upgrade changes neither level nor money',()=>{assert.equal(home.upgrades.security,1);assert.equal(state().player.balance,119000);});
  await message(record('PROPERTY',{id:'home4',assetId:home.id,operation:'sell',amount:20000}));

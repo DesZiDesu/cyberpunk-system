@@ -1,5 +1,15 @@
 # Cyberpunk System
 
+## v3.14.0 — Estate Grid housing network
+
+Properties now use the approved angular Estate Grid interface with a persistent 16:9 banner, eight square modules and responsive motion. Dossier, Stash, Workshop/Craft, Upgrades, Living, Garage, Rooms and Service Log remain available from every residence. The eight owner-supplied Night City interiors are bundled as local WebP presets; the main banner can also use a PNG, JPEG or WebP selected from the user's device.
+
+New residences start at Home Level 0 and require one explicit €$4,800 initialization before subsystem upgrades. Existing saved homes migrate at Home Level 1 so their stash, crafting, rest and garage workflows remain available. Direct upgrade cards retain the existing five-level local RP rules and remove the old upgrade dropdown.
+
+Properties can be purchased permanently or leased for a chosen number of story turns with an explicit renewal price and permanent buyout. A due/expired lease sends one local document-mail notice containing a working Renew lease action. Expired leases block residence services without deleting stored items, rooms or history. Users may own or lease any number of locations. Rooms cost €$2,500 each, retain a name/type/description and can use a bundled image or the SVG fallback.
+
+Validation: 925 passing checks across the full 18-suite regression run, including 12 focused Estate Grid checks, runtime syntax checks and parsed responsive styles. Includes the latest Skill Hacking/Quickhack UI and CP_DEVICE Main Chat fixes from main. Native iPhone visual acceptance remains listed in `tests/IOS-CHECKLIST.md`.
+
 ## v3.13.0 — Cyberpsychosis Blackwall stages
 
 Cyberpsychosis now uses the selected Blackwall frame design around Main Chat without status labels or readable overlay text. The existing neural thresholds remain authoritative: `near` maps to Stage 1, `critical` to Stage 2 and `episode` to Stage 3. Each stage increases the depth of the fractured edge, red signal density, scan interference and motion; suppression continues to reduce the effect.

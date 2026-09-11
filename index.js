@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.13.0';
+const CYBERPUNK_SYSTEM_VERSION = '3.14.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -1902,7 +1902,7 @@ Respond only as ${call.peer.name} through the private call. Match the language a
         if (typeof host.isGenerating==='function') hostGenerationProbe=host.isGenerating;
       } catch { /* Context probe or lifecycle events support alternate hosts. */ }
       try {
-        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-item-data.js', 'CyberpunkItemGuide'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-shops.js', 'CyberpunkShopsFactory'], ['rpg-campaign.js', 'CyberpunkCampaignFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory'], ['comms.js','CyberpunkCommsFactory']]) {
+        for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-item-data.js', 'CyberpunkItemGuide'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-estate.js', 'CyberpunkEstateLayer'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-shops.js', 'CyberpunkShopsFactory'], ['rpg-campaign.js', 'CyberpunkCampaignFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory'], ['comms.js','CyberpunkCommsFactory']]) {
           if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
         systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, playPhoneSound:(...args)=>comms?.play(...args), messageDestination:name=>comms?.route(name), closeComms:()=>{comms?.changed();if(chatBucket().call.active)endCall();}, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating||comms?.busy(), context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });

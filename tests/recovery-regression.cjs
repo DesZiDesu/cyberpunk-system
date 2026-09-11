@@ -6,7 +6,7 @@ const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function
 const events=new Map();let stops=0,hostBusy=false;
 const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt:async()=>'',stopGeneration(){stops++;},isGenerating:()=>hostBusy};
 w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const C=w.CyberpunkRpgCore,q=s=>{const el=d.querySelector(s);assert.ok(el,'Missing '+s);return el;},click=s=>q(s).click(),wait=()=>new Promise(r=>setTimeout(r,20)),json=x=>JSON.stringify(x);
 const bucket=()=>ctx.chatMetadata.cyberpunk_system,state=()=>bucket().rpg,record=(tag,v)=>'[CP_'+tag+']'+json(v)+'[/CP_'+tag+']';let count=0,seq=0;
@@ -26,10 +26,10 @@ async function check(name,fn){await fn();count++;console.log('PASS '+name);}
  await check('Retry cannot change the original type or event ID',()=>{assert.throws(()=>systems.retryRecord('record:poor',record('PROPERTY',{id:'changed'})),/original event ID/);assert.throws(()=>systems.retryRecord('record:poor',record('INCOME',{id:'poor'})),/original record type/);});
  p().balance=10000;
  await check('Reviewed purchase retry charges exactly once',()=>{systems.retryRecord('record:poor',record('PROPERTY',{id:'poor',operation:'buy',name:'Apartment',amount:500}));assert.equal(p().balance,9500);assert.equal(state().properties.length,1);});
- const home=state().properties[0],player=p();
+ const home=state().properties[0],player=p();assets.transact('property',home.id,'home-foundation');
  await check('Failure rollback preserves existing player and asset identity',()=>{process('PROPERTY',{id:'upgrade-fail',operation:'upgrade',assetId:home.id,area:'workshop',amount:999999});assert.equal(state().properties[0],home);assert.equal(p(),player);assert.equal(home.upgrades.workshop,undefined);});
  await check('Failed actor event removes newly created partial account',()=>{process('STATE',{id:'actor-fail',actor:'Lucy',delta:{hp:-10,unknown:1}});assert.equal(state().actors['npc:lucy'],undefined);assert.equal(state().recordLog.at(-1).status,'failed');});
- await check('Permanent event receipts survive eviction of the short processing cache',()=>{state().processed=[];process('PROPERTY',{id:'poor',operation:'buy',name:'Apartment',amount:500});assert.equal(state().properties.length,1);assert.equal(p().balance,9500);});
+ await check('Permanent event receipts survive eviction of the short processing cache',()=>{state().processed=[];process('PROPERTY',{id:'poor',operation:'buy',name:'Apartment',amount:500});assert.equal(state().properties.length,1);assert.equal(p().balance,4700);});
  await check('Recovery is reachable from Wand with keyboard-accessible entry',()=>{assert.equal(q('#cyberpunk-support-wand').getAttribute('role'),'button');click('#cyberpunk-support-wand');assert.ok(q('.cps-support-window'));assert.ok(q('[data-record-filter]'));});
  await check('Inspector exposes only failed records for review, not completed replay buttons',()=>{assert.ok(q('[data-support="retry:record:upgrade-fail"]'));assert.equal(d.querySelector('[data-support="retry:record:poor"]'),null);support.close();});
  p().inventory.push(C.item({id:'parts',name:'Components',category:'component',quantity:100}),C.item({id:'ping',name:'Ping',category:'quickhack'}));
@@ -51,7 +51,7 @@ async function check(name,fn){await fn();count++;console.log('PASS '+name);}
  await check('Rest requires entering the owned home',()=>assert.throws(()=>assets.transact('property',home.id,'rest'),/Enter/));
  process('PROPERTY',{id:'enter-home',operation:'enter',assetId:home.id});
  await check('Living recovery applies advertised resources once per story turn',()=>{p().hp=40;p().stamina=30;p().ram=2;p().stress=20;assets.transact('property',home.id,'rest');assert.equal(p().hp,50);assert.equal(p().stamina,50);assert.equal(p().ram,3);assert.equal(p().stress,15);assert.throws(()=>assets.transact('property',home.id,'rest'),/already used/);});
- await check('Home dossier includes notes, usable storage, workshop and recovery controls',()=>{assets.open('property',home.id);click('[data-asset="page:overview"]');assert.ok(q('[data-op=rest]'));assert.ok(q('[data-op=details]'));click('[data-asset="page:storage"]');assert.ok(q('[data-op=deposit]'));click('[data-asset="page:workshop"]');assert.equal(d.querySelectorAll('[data-op=craft]').length,3);});
+ await check('Estate Grid keeps notes, storage, workshop and recovery controls',()=>{assets.open('property',home.id);assert.ok(q('[data-op=details]'));click('[data-estate-page="living"]');assert.ok(q('[data-op=rest]'));click('[data-estate-page="storage"]');assert.ok(q('[data-op=deposit]'));click('[data-estate-page="workshop"]');assert.equal(d.querySelectorAll('[data-op=craft]').length,3);});
  p().balance=100000;
  process('VEHICLE',{id:'vehicle-purchase',operation:'buy',name:'Test ride',amount:1000});
  const car=state().vehicles[0];

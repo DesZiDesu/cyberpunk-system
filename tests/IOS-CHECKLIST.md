@@ -1,3 +1,12 @@
+# v3.14.0 Estate Grid acceptance — pending
+
+- [ ] At 320, 375, 390 and 430 CSS pixels, open Properties with zero, one and several locations. Cards, status labels and both existing actions remain reachable without horizontal page overflow.
+- [ ] Open all eight modules in Thai and English. Verify Dossier, Stash, Workshop, Upgrades, Living, Garage, Rooms and Service Log retain scroll position, readable labels and square tap targets.
+- [ ] Register one permanent home and one rental. Confirm both begin at Home Level 0, initialization charges once, direct subsystem upgrades unlock at Level 1, and an existing pre-3.14 home migrates without losing access.
+- [ ] Select each bundled 16:9 banner, upload PNG/JPEG/WebP under 550 KB, reload and confirm the selected banner persists. Reject oversized and unsupported files without losing the previous banner.
+- [ ] Advance a rental to three turns remaining and expiry. Confirm one mail notice per due state, renewal works from Mail and Estate Grid, buyout becomes permanent, and expired services stay locked without deleting stored data.
+- [ ] Build rooms with a preset and with no image. Confirm the preset remains 16:9 and the no-image room uses its SVG. Check motion-off and iOS Reduce Motion.
+
 # v3.13.0 Cyberpsychosis frame acceptance — pending
 
 - Trigger `near`, `critical` and `episode` neural load in Main Chat. Confirm the fractured Blackwall frame grows from Stage 1 through Stage 3 and shows no status labels or readable overlay text.
