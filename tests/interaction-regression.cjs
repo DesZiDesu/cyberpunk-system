@@ -60,6 +60,8 @@ const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supp
  await test('Repeated decoration never duplicates recovered device controls',()=>assert.equal(observed.el.querySelectorAll('[data-cps-device]').length,1));
  const broken=await reply(record('DEVICE',{id:'bad-operation',deviceId:'broken-camera',name:'Side camera',type:'camera',operation:'unsupported'}));
  await test('A rejected device record still exposes an inspection path in chat',()=>{broken.el.querySelector('[data-device-scan]').click();assert.equal(q('.cps-device-scan [name=name]').value,'Side camera');systems.devices.close();});
+ const malformed=await reply('[CP_DEVICE]{"id":"empty-device"}[/CP_DEVICE]');
+ await test('An incomplete CP_DEVICE record renders a visible local repair action instead of a blank panel',()=>{malformed.el.querySelector('[data-device-scan]').click();assert.ok(q('.cps-device-scan form'));systems.devices.close();});
  const orphan=await reply('[CP_DEVICE|missing-target]Unrecorded terminal[/CP_DEVICE]');orphan.el.querySelector('[data-cps-device=missing-target]').click();
  await test('An inline label without metadata opens a usable confirmation form',()=>{assert.ok(q('.cps-device-scan form'));assert.equal(q('.cps-device-scan [name=name]').value,'Unrecorded terminal');});systems.devices.close();
  ctx.chat.push({mes:'ฉันมองไปที่กล้อง',is_user:true});const noTags=await reply('You inspect the room.');

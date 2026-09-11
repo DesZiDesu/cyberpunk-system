@@ -25,6 +25,9 @@ function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p)
  const raw='เหนือประตูมี [CP_DEVICE|a]กล้อง A[/CP_DEVICE] และ [CP_DEVICE|b]กล้อง B[/CP_DEVICE].'+jsonRecord('a','camera',{data:'Guard at the elevator',name:'กล้อง A'})+jsonRecord('b','camera',{name:'กล้อง B'})+record('LOCATION',{id:'lobby-location',district:'watson',building:'Megabuilding',floor:'1',area:'Lobby'});
  const el=await msg(raw);
  await check('Inline device names remain in the sentence and hidden data stays hidden',()=>{assert.equal(el.querySelectorAll('.cps-nearby-device').length,2);assert.ok(el.textContent.includes('เหนือประตูมี'));assert.ok(!el.textContent.includes('Guard at the elevator'));assert.ok(!el.textContent.includes('[CP_DEVICE]'));assert.equal(w.CyberpunkSystem.getNpcs().some(n=>n.name==='กล้อง A'),false);});
+ ctx.chat.push({mes:'Transient host notice',is_user:false,is_system:true});systems.decorate(el);
+ await check('A trailing host-system entry cannot blank the latest assistant Device panel',()=>assert.equal(el.querySelectorAll('.cps-nearby-device').length,2));
+ ctx.chat.pop();
  await check('Device metadata follows the final location even if emitted before CP_LOCATION',()=>{assert.ok(lookup('a').location.includes('lobby'));assert.equal(lookup('a').visit,b().visit);assert.equal(lookup('a').reachable,true);});
  const slots=JSON.stringify(player().quickhackSlots),ram=player().ram;
  click('[data-cps-device=a]');
