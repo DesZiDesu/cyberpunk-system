@@ -1,3 +1,11 @@
+# v3.13.0 Cyberpsychosis frame acceptance — pending
+
+- Trigger `near`, `critical` and `episode` neural load in Main Chat. Confirm the fractured Blackwall frame grows from Stage 1 through Stage 3 and shows no status labels or readable overlay text.
+- Confirm NPC identity headers and audible dialogue gain light, medium and intense glitch respectively while the original dialogue remains readable. Narration and user text must remain clean.
+- Confirm a newly generated NPC line completes Decryption before its glitch slices appear.
+- Rotate the phone, open/close the keyboard and scroll Main Chat. The frame must remain aligned with the chat viewport and must not block taps.
+- Enable iOS Reduce Motion and the extension animation-off setting. Confirm the frame remains visible without looping motion and dialogue remains readable.
+
 # v3.12.1 B / SHARD native acceptance checks — pending
 
 ## v3.12.1 communications acceptance — pending

@@ -90,18 +90,19 @@ globalThis.CyberpunkSystemsFactory = api => {
   let neuralFxCleanup=null,medicalWindow=null,medicalProcessing=false;
   function refreshNeuralFx(){
     const s=state(),m=C.medical.store(s),n=C.medical.assess(s.player,s.turn,s.settings.riskScale),host=document.getElementById('chat');
-    if(!host||!api.settings().enabled||s.settings.riskScale===0||m.effects==='off'||n.level==='normal'&&!n.suppression||s.bd.status!=='stopped'||s.bd.rendering){neuralFxCleanup?.();neuralFxCleanup=null;document.getElementById('cps-neural-fx')?.remove();return;}
+    if(!host||!api.settings().enabled||s.settings.riskScale===0||m.effects==='off'||n.level==='normal'&&!n.suppression||s.bd.status!=='stopped'||s.bd.rendering){neuralFxCleanup?.();neuralFxCleanup=null;host?.removeAttribute('data-cps-neural-stage');document.getElementById('cps-neural-fx')?.remove();return;}
+    const stage=n.level==='episode'?'3':n.level==='critical'?'2':'1';
     let fx=document.getElementById('cps-neural-fx');
     if(!fx){
       neuralFxCleanup?.();neuralFxCleanup=null;
       fx=document.createElement('div');fx.id='cps-neural-fx';fx.setAttribute('aria-hidden','true');
-      fx.innerHTML='<div class="cps-nfx-edge"></div><div class="cps-nfx-scan"></div><i class="cps-nfx-corner tl"></i><i class="cps-nfx-corner tr"></i><i class="cps-nfx-corner bl"></i><i class="cps-nfx-corner br"></i><i class="cps-nfx-tear a"></i><i class="cps-nfx-tear b"></i><i class="cps-nfx-tear c"></i>';
+      fx.innerHTML='<div class="cps-nfx-veil"></div><div class="cps-nfx-fracture left"></div><div class="cps-nfx-fracture right"></div><div class="cps-nfx-rail left"></div><div class="cps-nfx-rail right"></div><div class="cps-nfx-crown top"></div><div class="cps-nfx-crown bottom"></div><div class="cps-nfx-scan"></div><i class="cps-nfx-tear a"></i><i class="cps-nfx-tear b"></i><i class="cps-nfx-tear c"></i><i class="cps-nfx-tear d"></i><i class="cps-nfx-tear e"></i>';
       document.body.append(fx);
       const position=()=>{if(!host.isConnected){fx.remove();return;}const r=host.getBoundingClientRect();Object.assign(fx.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});};
       const observer=typeof ResizeObserver==='function'?new ResizeObserver(position):null;observer?.observe(host);globalThis.addEventListener('resize',position);document.addEventListener('scroll',position,true);position();
-      neuralFxCleanup=()=>{observer?.disconnect();globalThis.removeEventListener('resize',position);document.removeEventListener('scroll',position,true);fx.remove();};
+      neuralFxCleanup=()=>{observer?.disconnect();globalThis.removeEventListener('resize',position);document.removeEventListener('scroll',position,true);host.removeAttribute('data-cps-neural-stage');fx.remove();};
     }
-    fx.dataset.level=n.level;fx.dataset.suppressed=n.suppression?'true':'false';fx.dataset.motion=m.effects==='full'&&api.settings().animationSpeed!=='off'?'full':'reduced';
+    host.dataset.cpsNeuralStage=stage;fx.dataset.stage=stage;fx.dataset.level=n.level;fx.dataset.suppressed=n.suppression?'true':'false';fx.dataset.motion=m.effects==='full'&&api.settings().animationSpeed!=='off'?'full':'reduced';
   }
   function medicalConfirm(title,body,fn,cls=''){
     const owner=api.chatBucket(),d=dialog(title,body+`<div class="cps-rpg-actions">${buttons(tr('Confirm','ยืนยัน'),'medical-confirm')}${buttons(tr('Cancel','ยกเลิก'),'medical-cancel')}</div>`,'cps-medical-confirm '+cls);let done=false;
@@ -315,7 +316,7 @@ globalThis.CyberpunkSystemsFactory = api => {
     const protectedDesign=/\bcps-(?:data-window|shard-window|field-document|field-confirm|medical-window|medical-confirm)\b/.test(cls);
     if(!protectedDesign)d.classList.add('cps-shard-shell');
     d.setAttribute('aria-label',title);
-    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.12.1')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
+    d.innerHTML=`<header class="cps-rpg-top"><span class="cps-eyebrow">NEURAL INTERFACE / v${E(api.version || '3.13.0')}</span><h2>${E(title)}</h2>${buttons('×','close','aria-label="Close"')}</header><div class="cps-rpg-content">${body}</div>`;
     if(!protectedDesign&&!d.classList.contains('cps-rpg-main'))d.querySelector('.cps-rpg-content').classList.add('cps-shard-surface');
     d.addEventListener('error',e=>{if(e.target.matches?.('.cps-item-art img')){e.target.hidden=true;const fallback=e.target.parentElement.querySelector('.cps-item-art-fallback');if(fallback)fallback.hidden=false;}},true);
     d.querySelector('[data-rpg="close"]').onclick=()=>api.removeUiDialog(d);d.addEventListener('cancel',e=>{e.preventDefault();if(d.cpsCloseRouter?.())return;if(d===panel){closePanel();return;}api.removeUiDialog(d);});document.body.append(d);api.showUiDialog(d);return d;
@@ -1043,7 +1044,7 @@ Recent authoritative outcomes (do not replay records for these): ${JSON.stringif
     }
   }
 
-  function onChatChanged(){neuralFxCleanup?.();neuralFxCleanup=null;api.removeUiDialog(medicalWindow);medicalWindow=null;campaign?.onChatChanged();shops.close();devices.close();deckMode='quickhacks';const hadRequest=support.busy();support.close();if(aiBusy&&!hadRequest)api.context()?.stopGeneration?.();aiEpoch++;aiBusy=false;mail.onChatChanged();if(bdGenerating)api.context()?.stopGeneration?.();closeExperience();bdResizeCleanup?.();bdResizeCleanup=null;document.getElementById('cps-bd-float')?.remove();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);closePanel();stopBreach();api.removeUiDialog(popup);popup=null;noticeTimers.forEach(clearTimeout);noticeTimers.clear();document.getElementById('cps-immersion')?.remove();minimized();bdButton();}
+  function onChatChanged(){neuralFxCleanup?.();neuralFxCleanup=null;document.getElementById('chat')?.removeAttribute('data-cps-neural-stage');api.removeUiDialog(medicalWindow);medicalWindow=null;campaign?.onChatChanged();shops.close();devices.close();deckMode='quickhacks';const hadRequest=support.busy();support.close();if(aiBusy&&!hadRequest)api.context()?.stopGeneration?.();aiEpoch++;aiBusy=false;mail.onChatChanged();if(bdGenerating)api.context()?.stopGeneration?.();closeExperience();bdResizeCleanup?.();bdResizeCleanup=null;document.getElementById('cps-bd-float')?.remove();document.querySelectorAll('.cps-rpg-dialog').forEach(api.removeUiDialog);closePanel();stopBreach();api.removeUiDialog(popup);popup=null;noticeTimers.forEach(clearTimeout);noticeTimers.clear();document.getElementById('cps-immersion')?.remove();minimized();bdButton();}
   return Object.freeze({campaign,shops,devices,support,channelPrompt,assets,retryRecord,captureScene:(m,i)=>scene?.capture(m,i),open,openMail:mail.open,mailBusy:()=>mail.busy()||aiBusy,mail,process,prompt,transform,decorate,ensureWand,callToolbar,attachment,userText,onChatChanged,beginBreach,state:()=>JSON.parse(JSON.stringify(state())),transfer,share,addContact,icon,quickhack});
 };
 })();

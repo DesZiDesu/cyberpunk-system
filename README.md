@@ -1,5 +1,11 @@
 # Cyberpunk System
 
+## v3.13.0 — Cyberpsychosis Blackwall stages
+
+Cyberpsychosis now uses the selected Blackwall frame design around Main Chat without status labels or readable overlay text. The existing neural thresholds remain authoritative: `near` maps to Stage 1, `critical` to Stage 2 and `episode` to Stage 3. Each stage increases the depth of the fractured edge, red signal density, scan interference and motion; suppression continues to reduce the effect.
+
+NPC identity headers and audible `CP_DIALOGUE` text now inherit a readable glitch treatment while the effect is active. Stage 1 adds faint color separation, Stage 2 adds intermittent sliced duplicates and small displacement, and Stage 3 intensifies both while retaining the untouched original text underneath. Narration, user text, private thoughts and extension controls are unaffected.
+
 ## v3.12.1 — Contextual calls, queued texts and Decryption playback
 
 Private calls and Personal Messages now use SillyTavern's contextual quiet-generation path, including the active character card, scenario, personality, example dialogue, system/post-history instructions, persona, World Info/Author's Note path, recent main chat and the saved NPC dossier. Reply language and register follow the latest role-play conversation rather than the extension display-language setting.

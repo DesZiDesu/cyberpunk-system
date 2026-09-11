@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500&display=swap');
-@import url('./device-style.css?v=3.12.1');
-@import url('./breach-style.css?v=3.12.1');
-@import url('./shard-style.css?v=3.12.1');
+@import url('./device-style.css?v=3.13.0');
+@import url('./breach-style.css?v=3.13.0');
+@import url('./shard-style.css?v=3.13.0');
 
 .cps-arrow{display:inline-block;width:1.1em;height:1.1em;flex:none;vertical-align:-.15em;pointer-events:none}
 /* In-chat identity registration and full-world continuity. */
@@ -1559,27 +1559,48 @@ html[data-cps-motion=on] [data-ai-state=thinking] .cps-ai-equalizer i:nth-child(
 .cps-medical .cps-button {min-height:44px;transition:background .2s ease,border-color .2s ease,transform .2s ease;}
 .cps-medical .cps-button:not(:disabled):hover {transform:translateY(-1px);border-color:var(--med-cyan);background:rgba(85,246,232,.1);}
 .cps-medical footer {margin-top:20px;border-top:1px solid var(--med-line);padding-top:10px;}
-#cps-neural-fx {position:fixed;z-index:90;pointer-events:none!important;overflow:hidden;isolation:isolate;--nfx-cyan:var(--cps-accent);--nfx-red:var(--cps-danger);--nfx-strength:.3;clip-path:inset(0);}
+#cps-neural-fx {position:fixed;z-index:90;pointer-events:none!important;overflow:hidden;isolation:isolate;clip-path:inset(0);--nfx-red:var(--cps-danger);--nfx-depth:18px;--nfx-cap:9px;--nfx-tear:32px;--nfx-opacity:.38;--nfx-speed:10s;--nfx-glow:22px;--nfx-blur:30px;--nfx-spread:-16px;}
 #cps-neural-fx * {pointer-events:none!important;}
-#cps-neural-fx[data-level=critical]{--nfx-strength:.55;}
-#cps-neural-fx[data-level=episode]{--nfx-strength:.8;}
-.cps-nfx-edge {position:absolute;inset:0;opacity:var(--nfx-strength);box-shadow:inset 35px 0 55px -35px var(--nfx-red),inset -35px 0 55px -35px var(--nfx-cyan);background:repeating-linear-gradient(0deg,transparent 0 11px,var(--nfx-cyan) 11px 13px) left/2px 50% no-repeat,repeating-linear-gradient(0deg,transparent 0 7px,var(--nfx-red) 7px 10px) right/2px 70% no-repeat;transition:opacity .8s ease;}
-.cps-nfx-corner {position:absolute;width:34px;height:34px;border-top:2px solid var(--nfx-cyan);border-left:2px solid var(--nfx-cyan);opacity:var(--nfx-strength);filter:drop-shadow(3px 0 0 rgba(255,49,92,.35));}
-.cps-nfx-corner.tl{top:6px;left:6px;}.cps-nfx-corner.tr{top:6px;right:6px;transform:scaleX(-1);}.cps-nfx-corner.bl{bottom:6px;left:6px;transform:scaleY(-1);}.cps-nfx-corner.br{bottom:6px;right:6px;transform:scale(-1);}
-.cps-nfx-scan {position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 4px,rgba(85,246,232,.015) 4px 5px);mask-image:linear-gradient(90deg,black,transparent 12% 88%,black);}
-.cps-nfx-tear {position:absolute;height:2px;width:8%;opacity:var(--nfx-strength);background:var(--nfx-cyan);box-shadow:3px 2px 0 rgba(255,49,92,.4);}
-.cps-nfx-tear.a{left:0;top:22%;}.cps-nfx-tear.b{right:0;top:61%;}.cps-nfx-tear.c{left:0;bottom:12%;width:4%;}
-.cps-nfx-code{display:none!important;}
-#cps-neural-fx[data-motion=full] .cps-nfx-tear{animation:cps-neural-tear 3.8s steps(2) infinite;}
-#cps-neural-fx[data-motion=full] .cps-nfx-tear.b{animation-delay:-1.7s;}
-#cps-neural-fx[data-motion=full] .cps-nfx-tear.c{animation-delay:-2.8s;}
-#cps-neural-fx[data-motion=full] .cps-nfx-edge{animation:cps-neural-breathe 4s ease-in-out infinite;}
-#cps-neural-fx[data-level=episode][data-motion=full] .cps-nfx-tear{animation-duration:2.6s;}
-#cps-neural-fx.cps-nfx-stabilizing .cps-nfx-edge{animation:cps-neural-stabilize 1.6s ease-out 1;}
-#cps-neural-fx[data-suppressed=true] {--nfx-strength:.2;}
-@keyframes cps-neural-tear{0%,70%{translate:0 0;scale:1 1;}78%{translate:4px 8px;scale:1.3 1;}88%{translate:-2px 3px;scale:.8 1;}100%{translate:0 0;scale:1 1;}}
-@keyframes cps-neural-breathe{0%,100%{filter:brightness(.85);}50%{filter:brightness(1.1);}}
-@keyframes cps-neural-stabilize{0%{transform:scaleX(.96);filter:blur(3px);}100%{transform:scaleX(1);filter:blur(0);}}
+#cps-neural-fx[data-stage='2']{--nfx-depth:34px;--nfx-cap:18px;--nfx-tear:61px;--nfx-opacity:.66;--nfx-speed:6.8s;--nfx-glow:44px;--nfx-blur:59px;--nfx-spread:-32px;}
+#cps-neural-fx[data-stage='3']{--nfx-depth:58px;--nfx-cap:30px;--nfx-tear:104px;--nfx-opacity:.94;--nfx-speed:4.2s;--nfx-glow:72px;--nfx-blur:97px;--nfx-spread:-52px;}
+#cps-neural-fx[data-suppressed=true] {--nfx-opacity:.22;--nfx-depth:14px;--nfx-glow:18px;}
+.cps-nfx-veil {position:absolute;inset:0;opacity:var(--nfx-opacity);box-shadow:inset var(--nfx-glow) 0 var(--nfx-blur) var(--nfx-spread) color-mix(in srgb,var(--nfx-red) 72%,transparent),inset calc(-1 * var(--nfx-glow)) 0 var(--nfx-blur) var(--nfx-spread) color-mix(in srgb,var(--nfx-red) 72%,transparent),inset 0 8px 24px -16px var(--nfx-red),inset 0 -8px 24px -16px var(--nfx-red);transition:opacity .7s ease,box-shadow .7s ease;}
+.cps-nfx-fracture {position:absolute;top:0;bottom:0;width:var(--nfx-depth);opacity:var(--nfx-opacity);background:linear-gradient(90deg,color-mix(in srgb,var(--nfx-red) 42%,var(--cps-surface)),color-mix(in srgb,var(--nfx-red) 22%,var(--cps-surface)) 46%,transparent),repeating-linear-gradient(0deg,transparent 0 17px,color-mix(in srgb,var(--nfx-red) 46%,transparent) 18px 20px,transparent 21px 37px);clip-path:polygon(0 0,100% 0,58% 4%,91% 8%,47% 13%,82% 19%,36% 25%,94% 31%,52% 38%,86% 43%,42% 49%,100% 55%,55% 62%,91% 68%,37% 74%,82% 80%,51% 87%,96% 93%,56% 97%,100% 100%,0 100%);filter:drop-shadow(4px 0 4px color-mix(in srgb,var(--nfx-red) 34%,transparent));transition:width .7s ease,opacity .7s ease;}
+.cps-nfx-fracture.left{left:0}.cps-nfx-fracture.right{right:0;transform:scaleX(-1)}
+.cps-nfx-rail {position:absolute;top:3%;bottom:3%;width:3px;opacity:var(--nfx-opacity);background:repeating-linear-gradient(0deg,transparent 0 9px,var(--nfx-red) 10px 12px,transparent 13px 24px);filter:drop-shadow(0 0 3px var(--nfx-red));}
+.cps-nfx-rail.left{left:5px}.cps-nfx-rail.right{right:5px}
+.cps-nfx-crown {position:absolute;left:0;right:0;height:var(--nfx-cap);opacity:var(--nfx-opacity);background:linear-gradient(180deg,color-mix(in srgb,var(--nfx-red) 18%,var(--cps-surface)),transparent),repeating-linear-gradient(90deg,transparent 0 43px,color-mix(in srgb,var(--nfx-red) 45%,transparent) 44px 47px,transparent 48px 91px);clip-path:polygon(0 0,100% 0,100% 58%,92% 43%,87% 82%,78% 49%,69% 74%,58% 31%,51% 69%,41% 38%,31% 77%,20% 46%,12% 82%,0 54%);transition:height .7s ease,opacity .7s ease;}
+.cps-nfx-crown.top{top:0}.cps-nfx-crown.bottom{bottom:0;transform:scaleY(-1)}
+.cps-nfx-scan {position:absolute;inset:0;opacity:0;background:repeating-linear-gradient(0deg,transparent 0 5px,color-mix(in srgb,var(--nfx-red) 5%,transparent) 6px 7px);mask-image:linear-gradient(90deg,black,transparent 24% 76%,black);transition:opacity .5s ease;}
+#cps-neural-fx[data-stage='2'] .cps-nfx-scan{opacity:.55}#cps-neural-fx[data-stage='3'] .cps-nfx-scan{opacity:1}
+.cps-nfx-tear {position:absolute;height:2px;width:var(--nfx-tear);opacity:var(--nfx-opacity);background:var(--nfx-red);box-shadow:9px 5px 0 color-mix(in srgb,var(--nfx-red) 42%,transparent);}
+.cps-nfx-tear.a{left:0;top:17%}.cps-nfx-tear.b{right:0;top:36%}.cps-nfx-tear.c{left:0;top:58%}.cps-nfx-tear.d{right:0;top:74%}.cps-nfx-tear.e{left:0;bottom:9%}
+#cps-neural-fx[data-motion=full] :is(.cps-nfx-fracture,.cps-nfx-crown){animation:cps-blackwall-breathe var(--nfx-speed) ease-in-out infinite alternate;}
+#cps-neural-fx[data-motion=full] .cps-nfx-rail{animation:cps-blackwall-stream calc(var(--nfx-speed) * .7) linear infinite;}
+#cps-neural-fx[data-motion=full] .cps-nfx-tear{animation:cps-blackwall-tear var(--nfx-speed) steps(2,end) infinite;}
+#cps-neural-fx[data-motion=full] .cps-nfx-tear.b{animation-delay:-1.2s}#cps-neural-fx[data-motion=full] .cps-nfx-tear.c{animation-delay:-2.5s}#cps-neural-fx[data-motion=full] .cps-nfx-tear.d{animation-delay:-3.1s}#cps-neural-fx[data-motion=full] .cps-nfx-tear.e{animation-delay:-4s}
+#cps-neural-fx.cps-nfx-stabilizing .cps-nfx-veil{animation:cps-neural-stabilize 1.6s ease-out 1;}
+@keyframes cps-blackwall-breathe{0%,100%{filter:brightness(.72) saturate(.8)}50%{filter:brightness(1.22) saturate(1.25)}}
+@keyframes cps-blackwall-stream{to{background-position:0 96px}}
+@keyframes cps-blackwall-tear{0%,76%,100%{translate:0 0;scale:1 1}82%{translate:7px 6px;scale:1.65 1}89%{translate:-3px 1px;scale:.78 1}}
+@keyframes cps-neural-stabilize{0%{transform:scaleX(.96);filter:blur(3px)}100%{transform:scaleX(1);filter:blur(0)}}
+
+/* Neural interference affects only NPC identity headers and audible dialogue. The original text remains underneath every glitch slice. */
+#chat[data-cps-neural-stage] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span[data-cps-glitch-text]{position:relative;text-shadow:1px 0 color-mix(in srgb,var(--cps-danger) 30%,transparent),-1px 0 color-mix(in srgb,var(--cps-accent) 18%,transparent)}
+#chat[data-cps-neural-stage] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span[data-cps-glitch-text]::before,#chat[data-cps-neural-stage] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span[data-cps-glitch-text]::after{content:attr(data-cps-glitch-text);position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.12;color:inherit;text-shadow:2px 0 var(--cps-danger),-2px 0 var(--cps-accent);clip-path:inset(24% 0 58% 0)}
+#chat[data-cps-neural-stage] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span.cps-decrypting::before,#chat[data-cps-neural-stage] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span.cps-decrypting::after{content:none}
+#chat[data-cps-neural-stage='1'] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span[data-cps-glitch-text]::before{animation:cps-glyph-slice-a 10s steps(2,end) infinite}
+#chat[data-cps-neural-stage='2'] :is(.cps-chat-header,.cps-chat-dialogue){animation:cps-dialogue-jolt-2 7.4s steps(1,end) infinite}
+#chat[data-cps-neural-stage='2'] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span[data-cps-glitch-text]::before{opacity:.3;animation:cps-glyph-slice-a 3.8s steps(2,end) infinite}
+#chat[data-cps-neural-stage='2'] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span[data-cps-glitch-text]::after{opacity:.22;animation:cps-glyph-slice-b 5.1s steps(2,end) infinite}
+#chat[data-cps-neural-stage='3'] :is(.cps-chat-header,.cps-chat-dialogue){animation:cps-dialogue-jolt-3 4.3s steps(1,end) infinite}
+#chat[data-cps-neural-stage='3'] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy){text-shadow:2px 0 color-mix(in srgb,var(--cps-danger) 58%,transparent),-2px 0 color-mix(in srgb,var(--cps-accent) 36%,transparent)}
+#chat[data-cps-neural-stage='3'] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span[data-cps-glitch-text]::before{opacity:.48;animation:cps-glyph-slice-a 2.1s steps(2,end) infinite}
+#chat[data-cps-neural-stage='3'] :is(.cps-chat-name,.cps-chat-dialogue .cps-chat-copy) span[data-cps-glitch-text]::after{opacity:.4;animation:cps-glyph-slice-b 2.7s steps(2,end) infinite}
+@keyframes cps-dialogue-jolt-2{0%,88%,92%,100%{translate:0 0}89%{translate:1px 0}90%{translate:-1px 1px}}
+@keyframes cps-dialogue-jolt-3{0%,76%,82%,100%{translate:0 0}77%{translate:2px -1px}79%{translate:-2px 1px}81%{translate:1px 0}}
+@keyframes cps-glyph-slice-a{0%,72%,100%{clip-path:inset(24% 0 58% 0);translate:0 0}76%{clip-path:inset(7% 0 76% 0);translate:3px 0}82%{clip-path:inset(68% 0 13% 0);translate:-2px 0}}
+@keyframes cps-glyph-slice-b{0%,64%,100%{clip-path:inset(54% 0 25% 0);translate:0 0}69%{clip-path:inset(34% 0 45% 0);translate:-3px 0}75%{clip-path:inset(82% 0 4% 0);translate:2px 0}}
 @media(max-width:640px){.cps-neural-hero{padding:18px 14px;gap:12px;}.cps-neural-hero h3{font-size:24px;}.cps-neural-hero p{font-size:12px;}.cps-neural-score strong{font-size:48px;}.cps-neural-breakdown{grid-template-columns:repeat(2,minmax(0,1fr));}.cps-medical-plans,.cps-medical-drugs{grid-template-columns:1fr;}.cps-medical-controls{align-items:stretch;flex-direction:column;}.cps-medical-controls select{width:100%;}.cps-neural-hero small{letter-spacing:.06em;}}
 @media(prefers-reduced-motion:reduce){#cps-neural-fx *, .cps-medical *, .cps-medical-launch *{animation:none!important;transition:none!important;}}
 [data-cps-motion=off] #cps-neural-fx *,[data-cps-motion=off] .cps-medical *{animation:none!important;transition:none!important;}

@@ -1,4 +1,4 @@
-const CYBERPUNK_SYSTEM_VERSION = '3.12.1';
+const CYBERPUNK_SYSTEM_VERSION = '3.13.0';
 const CYBERPUNK_SYSTEM_KEY = 'cyberpunk_system';
 const CYBERPUNK_PROMPT_KEY = 'zzzz_cyberpunk_system_protocol_v100';
 
@@ -780,7 +780,7 @@ ${systems?.prompt() || ''}`.trim();
       element.querySelectorAll('.cps-chat-name,.cps-chat-dialogue .cps-chat-copy,.cps-ai-heading,.cps-ai-copy').forEach((copy,i)=>{
         if(copy.dataset.cpsDecrypted)return;copy.dataset.cpsDecrypted='1';
         const walker=document.createTreeWalker(copy,NodeFilter.SHOW_TEXT),leaves=[];while(walker.nextNode())if(walker.currentNode.textContent.trim())leaves.push(walker.currentNode);
-        leaves.forEach((node,j)=>{const text=node.textContent,span=document.createElement('span');span.textContent=text;node.replaceWith(span);animateSignal(span,{id:'chat:'+messageId+':'+i+':'+j+':'+markupFingerprint(text),role:'assistant',text});});
+        leaves.forEach((node,j)=>{const text=node.textContent,span=document.createElement('span');span.textContent=text;span.dataset.cpsGlitchText=text;node.replaceWith(span);animateSignal(span,{id:'chat:'+messageId+':'+i+':'+j+':'+markupFingerprint(text),role:'assistant',text});});
       });
     }
 
