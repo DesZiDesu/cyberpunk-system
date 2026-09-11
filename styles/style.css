@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500&display=swap');
-@import url('./device-style.css?v=3.14.0');
-@import url('./breach-style.css?v=3.14.0');
-@import url('./shard-style.css?v=3.14.0');
+@import url('./device-style.css?v=3.14.1');
+@import url('./breach-style.css?v=3.14.1');
+@import url('./shard-style.css?v=3.14.1');
 
 .cps-arrow{display:inline-block;width:1.1em;height:1.1em;flex:none;vertical-align:-.15em;pointer-events:none}
 /* In-chat identity registration and full-world continuity. */

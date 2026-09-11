@@ -4,10 +4,10 @@
   "requires": [],
   "optional": [],
   "dependencies": [],
-  "js": "src/index.js?v=3.14.0",
-  "css": "styles/style.css?v=3.14.0",
+  "js": "src/index.js?v=3.14.1",
+  "css": "styles/style.css?v=3.14.1",
   "author": "dioneaboveall",
-  "version": "3.14.0",
+  "version": "3.14.1",
   "homePage": "https://github.com/DesZiDesu/cyberpunk-system",
   "auto_update": true
 }

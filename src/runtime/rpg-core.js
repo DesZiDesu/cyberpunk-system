@@ -101,6 +101,13 @@
     for (const key of ['maxHp','maxRam','maxStamina','capacity','hp','ram','stamina','stress']) {
       if (data[key] === undefined) continue;
       const value = Number(data[key]);
+      // Compatibility: a negative resource cannot be an absolute remaining value.
+      // Treat legacy AI shorthand as a loss, but never reinterpret maxima/capacity
+      // or positive values. Explicit delta conflicts were rejected above.
+      if (['hp','ram','stamina','stress'].includes(key) && Number.isFinite(value) && value < 0 && value >= -1000) {
+        next[key] = Math.max(0, a[key] + value);
+        continue;
+      }
       if (!Number.isFinite(value) || value < 0 || value > 1000 || ((key.startsWith('max') || key === 'capacity') && value < 1)) throw Error('Invalid state value: ' + key);
       next[key] = value;
     }

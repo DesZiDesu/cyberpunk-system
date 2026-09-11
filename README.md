@@ -4,17 +4,21 @@
 
 A mobile-first Cyberpunk role-play system for **SillyTavern**. It adds an angular Night City interface, persistent character and world state, private communications, Cyberware management, netrunning, missions, economy, housing, vehicles and recovery tools without replacing the user's normal SillyTavern workflow.
 
-> **Release naming:** “V1 Official Release” is the first public milestone of this project. The current internal runtime/build number remains **v3.14.0** so existing installations can update safely. “Official” refers only to this project's release status; this remains an unofficial fan-made extension and is not endorsed by CD PROJEKT RED or SillyTavern.
+> **Release naming:** “V1 Official Release” is the first public milestone of this project. The current internal runtime/build number remains **v3.14.1** so existing installations can update safely. “Official” refers only to this project's release status; this remains an unofficial fan-made extension and is not endorsed by CD PROJEKT RED or SillyTavern.
 
 | Release information | Value |
 | --- | --- |
 | Public release | **V1 Official Release** |
-| Runtime build | **v3.14.0** |
+| Runtime build | **v3.14.1** |
 | Release channel | `main` |
 | Platform | SillyTavern third-party extension |
 | Interface languages | English / ไทย |
 | Creator | **dioneaboveall** |
 | Contact | Add **dioneaboveall** on Discord |
+
+### v3.14.1 hotfix
+
+Negative resource shorthand from AI records (for example `hp:-60`) is now treated as a loss of 60, clamped at zero. Positive top-level values still set the remaining resource; `delta` remains the preferred format for changes. Conflicting or invalid records are still rejected atomically. Existing failed records are not replayed automatically: review the current character state and use **System / Recovery → Review and retry** only if the event has not already been corrected manually. Successful event IDs cannot apply twice.
 
 ## Contents
 
@@ -65,7 +69,7 @@ This is a fictional role-play layer. Its prices, cooldowns, cyberpsychosis proba
 
 4. Confirm the installation.
 5. Reload SillyTavern once.
-6. Open the extension drawer and confirm that **Cyberpunk System v3.14.0** appears.
+6. Open the extension drawer and confirm that **Cyberpunk System v3.14.1** appears.
 
 ### Updating an existing installation
 
@@ -300,7 +304,7 @@ Cyberpunk System คือส่วนเสริมสำหรับ SillyTav
 2. กด **Install extension**
 3. วางลิงก์ `https://github.com/DesZiDesu/cyberpunk-system`
 4. ติดตั้งแล้ว Reload SillyTavern หนึ่งครั้ง
-5. ตรวจว่าหน้าตั้งค่าแสดง **Cyberpunk System v3.14.0**
+5. ตรวจว่าหน้าตั้งค่าแสดง **Cyberpunk System v3.14.1**
 
 ### วิธีเริ่มใช้งาน
 
