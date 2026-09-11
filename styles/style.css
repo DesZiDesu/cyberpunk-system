@@ -1990,3 +1990,25 @@ html[data-cps-motion=off] .cps-origin-c .cps-campaign-form{animation:none}@media
 @media(max-width:760px){.cps-estate-grid{grid-template-columns:1fr}.cps-home-modules{grid-template-columns:repeat(4,1fr)}.cps-home-modules button{border-bottom:1px solid var(--cps-line)}.cps-estate-dossier-grid{grid-template-columns:1fr}.cps-craft-grid,.cps-estate-room-grid{grid-template-columns:1fr 1fr}.cps-banner-presets{grid-template-columns:repeat(2,1fr)}.cps-home-banner-stage{min-height:220px;padding:20px}.cps-estate-page{padding:18px}.cps-estate-contract{align-items:flex-start;flex-direction:column}.cps-estate-recovery{grid-template-columns:1fr 1fr}}
 @media(max-width:420px){.cps-estate-mast{padding:20px}.cps-estate-mast>strong{font-size:2rem}.cps-home-modules span{font-size:.55rem}.cps-craft-grid,.cps-estate-room-grid{grid-template-columns:1fr}.cps-home-banner-stage>span{font-size:.65rem}.cps-estate-stats{grid-template-columns:1fr 1fr 1fr}}
 html[data-cps-motion="off"] .cps-estate-mast:after,html[data-cps-motion="off"] .cps-home-banner-stage:after{animation:none}@media(prefers-reduced-motion:reduce){.cps-estate-mast:after,.cps-home-banner-stage:after{animation:none}.cps-estate-card,.cps-home-modules button{transition:none}}
+
+/* Keep residence dossiers and action forms inside the mobile viewport. */
+.cps-rpg-content:has(>.cps-estate-window,>.cps-rpg-form),
+.cps-rpg-body:has(.cps-estate-grid) {overflow-x:hidden;overflow-y:auto;min-width:0;}
+.cps-estate-window,.cps-estate-window *,.cps-estate-grid>* {min-width:0;}
+.cps-estate-window,.cps-estate-grid {max-width:100%;overflow-wrap:anywhere;}
+.cps-home-banner-stage {gap:12px;}
+.cps-home-banner-stage>div {flex:1;min-width:0;}
+.cps-home-banner-stage>span {flex-shrink:0;}
+.cps-ui .cps-estate-window :is(input,select,textarea),
+.cps-ui .cps-rpg-form :is(input,select,textarea) {box-sizing:border-box;width:100%;max-width:100%;min-width:0;}
+.cps-ui .cps-rpg-form,.cps-ui .cps-rpg-form>label {min-width:0;max-width:100%;overflow-wrap:anywhere;}
+.cps-estate-window textarea {resize:vertical;}
+@media(max-width:760px){
+  dialog.cps-ui.cps-estate-dialog {width:100%!important;max-width:100%;margin-inline:0;border-inline:0;}
+  .cps-home-banner-stage {flex-wrap:wrap;}
+  .cps-home-banner-stage>div {flex-basis:100%;}
+  .cps-home-banner-stage>span {margin-left:auto;}
+  .cps-estate-window .cps-banner-presets {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .cps-home-modules {grid-template-columns:repeat(4,minmax(0,1fr));}
+  .cps-home-modules span {white-space:normal;overflow-wrap:anywhere;}
+}
