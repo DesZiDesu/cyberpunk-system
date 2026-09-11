@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const {JSDOM}=require('jsdom'),repo=path.resolve(__dirname,'..');
 const dom=new JSDOM('<!doctype html><html><body></body></html>',{url:'https://fixture.test/',runScripts:'outside-only'}),w=dom.window,d=w.document;
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
-for(const file of ['rpg-core.js','rpg-assets.js','rpg-estate.js'])w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+for(const file of ['rpg-core.js','rpg-assets.js','rpg-estate.js'])w.eval(fs.readFileSync(path.join(repo,'src/runtime',file),'utf8'));
 const C=w.CyberpunkRpgCore,mails=[],events=[];
 const s={player:C.actor(),properties:[],vehicles:[],turn:10,bd:{status:'stopped',rendering:false},map:{location:{district:'watson',building:'',area:''}}};s.player.balance=100000;
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

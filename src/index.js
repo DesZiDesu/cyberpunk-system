@@ -1367,7 +1367,7 @@ Respond only as ${call.peer.name} through the private call. Match the language a
         if (useImage) {
           // Use SillyTavern's own model-capability check; do not silently drop the image.
           try {
-            const api = await import(new URL('../../../openai.js', import.meta.url).href);
+            const api = await import(new URL('../../../../openai.js', import.meta.url).href);
             if (ctx.mainApi !== 'openai' || !api.isImageInliningSupported?.()) throw new Error('Vision unavailable');
           } catch { if (epoch === requestEpoch) { status.textContent = t('visionRequired'); busy = false; npcGenerating = false; setBusy(); } return; }
         }
@@ -1834,7 +1834,7 @@ Respond only as ${call.peer.name} through the private call. Match the language a
       const host = document.getElementById('extensions_settings2');
       if (!host) return;
       try {
-        const response = await fetch(new URL(`./settings.html?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url));
+        const response = await fetch(new URL(`../ui/settings.html?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         host.insertAdjacentHTML('beforeend', await response.text());
         bindSettings();
@@ -1898,15 +1898,16 @@ Respond only as ${call.peer.name} through the private call. Match the language a
       settings(); applyTheme();
       try {
         // SillyTavern's exported probe includes both single and group generation.
-        const host=await import(new URL('../../../../script.js', import.meta.url).href);
+        const host=await import(new URL('../../../../../script.js', import.meta.url).href);
         if (typeof host.isGenerating==='function') hostGenerationProbe=host.isGenerating;
       } catch { /* Context probe or lifecycle events support alternate hosts. */ }
       try {
         for (const [file, globalName] of [['rpg-core.js', 'CyberpunkRpgCore'], ['rpg-catalog.js', 'CyberpunkCatalog'], ['rpg-item-data.js', 'CyberpunkItemGuide'], ['rpg-map-data.js', 'CyberpunkMapData'], ['rpg-map.js', 'CyberpunkMap'], ['rpg-scene.js', 'CyberpunkSceneFactory'], ['rpg-support.js', 'CyberpunkSupportFactory'], ['rpg-assets.js', 'CyberpunkAssetsFactory'], ['rpg-estate.js', 'CyberpunkEstateLayer'], ['rpg-mail.js', 'CyberpunkMailFactory'], ['rpg-devices.js', 'CyberpunkDevicesFactory'], ['rpg-shops.js', 'CyberpunkShopsFactory'], ['rpg-campaign.js', 'CyberpunkCampaignFactory'], ['rpg-ui.js', 'CyberpunkSystemsFactory'], ['comms.js','CyberpunkCommsFactory']]) {
-          if (!globalThis[globalName]) await import(new URL(`./${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
+          if (!globalThis[globalName]) await import(new URL(`./runtime/${file}?v=${CYBERPUNK_SYSTEM_VERSION}`, import.meta.url).href);
         }
-        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,import.meta.url).href, playPhoneSound:(...args)=>comms?.play(...args), messageDestination:name=>comms?.route(name), closeComms:()=>{comms?.changed();if(chatBucket().call.active)endCall();}, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating||comms?.busy(), context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
-        comms=globalThis.CyberpunkCommsFactory({settings,context,chatBucket,saveChat,saveSettings,findEffectiveNpc,npcDisabled,htmlEscape,toast,showUiDialog,removeUiDialog,avatar:avatarMarkup,contacts:()=>effectiveRecords('npcs'),assetUrl:path=>new URL(path,import.meta.url).href,systems:()=>systems,busy:()=>hostGenerationBusy()||callGenerating||npcGenerating||systems?.mailBusy(),parse:parseTagAttributes,strip:stripTags,animateText:animateSignal,contextPrompt:()=>hostRoleplayContext()+'\n'+recentMainChat()+'\n'+worldLorePrompt(),beforeOpen:()=>{if(callOverlay)minimizeCallWindow();closeManager();closeHostWand();}});
+        const extensionRoot=new URL('../',import.meta.url);
+        systems = globalThis.CyberpunkSystemsFactory({ version: CYBERPUNK_SYSTEM_VERSION, animateText:animateSignal, assetUrl:path=>new URL(path,extensionRoot).href, playPhoneSound:(...args)=>comms?.play(...args), messageDestination:name=>comms?.route(name), closeComms:()=>{comms?.changed();if(chatBucket().call.active)endCall();}, isGenerating:()=>hostGenerationBusy()||callGenerating||npcGenerating||comms?.busy(), context, settings, chatBucket, characterBucket, saveSettings, effectiveRecords, findEffectiveNpc, npcDisabled, saveChat, refreshPrompt, htmlEscape, showUiDialog, removeUiDialog, toast, closeHostWand, appendCallMessage, renderCallLog, endCall, fingerprint: markupFingerprint });
+        comms=globalThis.CyberpunkCommsFactory({settings,context,chatBucket,saveChat,saveSettings,findEffectiveNpc,npcDisabled,htmlEscape,toast,showUiDialog,removeUiDialog,avatar:avatarMarkup,contacts:()=>effectiveRecords('npcs'),assetUrl:path=>new URL(path,extensionRoot).href,systems:()=>systems,busy:()=>hostGenerationBusy()||callGenerating||npcGenerating||systems?.mailBusy(),parse:parseTagAttributes,strip:stripTags,animateText:animateSignal,contextPrompt:()=>hostRoleplayContext()+'\n'+recentMainChat()+'\n'+worldLorePrompt(),beforeOpen:()=>{if(callOverlay)minimizeCallWindow();closeManager();closeHostWand();}});
       } catch (error) { console.error('[Cyberpunk System] Cyberware modules failed to load', error); toast('Cyberware could not load. Update all extension files and reload.'); }
       exposeApi(); bindEvents(); refreshPrompt();
       await injectSettings(); ensureWandButton(); renderVisibleMessages(); renderMinimizedCall();

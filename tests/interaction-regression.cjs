@@ -1,12 +1,12 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom'),root=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
-const dom=new JSDOM('<!doctype html><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(root,'settings.html'),'utf8')+'</div><div id="chat"></div>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(root,'ui/settings.html'),'utf8')+'</div><div id="chat"></div>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document,events=new Map();let hostBusy=false,requests=0;
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.confirm=()=>true;
 const ctx={name1:'Noah',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHAT_CHANGED:'changed',GENERATION_STARTED:'started',GENERATION_ENDED:'ended'},eventSource:{on:(k,f)=>events.set(k,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt:async()=>{requests++;return '';},isGenerating:()=>hostBusy};
 w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(root,'src/runtime',f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const C=w.CyberpunkRpgCore,json=v=>JSON.stringify(v),copy=v=>JSON.parse(json(v)),wait=()=>new Promise(r=>setTimeout(r,25));
 const q=s=>{const n=d.querySelector(s);assert.ok(n,'Missing '+s);return n;},click=s=>q(s).click(),submit=form=>form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
@@ -17,7 +17,7 @@ const at={district:'watson',subdistrict:'Little China',building:'Test Market',fl
 const location=(where=at)=>record('LOCATION',{id:'loc-'+seq++,...where});
 const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supplies',merchant:'Mara',kind:'general',location:at,funds:500,buyPrices:{clothing:20},stock:[{sku:'unity',catalogId:'cps:unity',quantity:3,price:100,buyPrice:50},{sku:'jacket',origin:'story',category:'clothing',item:{name:'Worn neon jacket',effect:'Established stitched lining'},quantity:2,price:60,buyPrice:20},{sku:'zero',catalogId:'cps:ping',quantity:0,price:40,buyPrice:10}],...extra});
 (async()=>{
- await w.eval('(async()=>{'+fs.readFileSync(path.join(root,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'))+'\n})()');await wait();
+ await w.eval('(async()=>{'+fs.readFileSync(path.join(root,'src/index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/src/index.js'))+'\n})()');await wait();
  state().settings.notifications=false;player().balance=1000;
  await reply(record('BREACH',{id:'new-link',target:'Kabuki terminal',data:'Secret coordinates'}));
  await test('Connection starts idle with three stages and a 12-second default',()=>{assert.equal(q('[data-link-estimate]').textContent,'12s');assert.equal(d.querySelectorAll('[data-link-phase]').length,3);assert.equal(d.querySelector('progress'),null);assert.equal(q('[role=progressbar]').getAttribute('aria-valuenow'),'0');});
@@ -88,6 +88,6 @@ const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supp
  await reply(location({...at,area:'Different room'}));
  await test('Leaving the scene removes the old nearby-device box',()=>{assert.equal(d.querySelectorAll('[data-cps-device]').length,0);});
  await test('The reported interaction paths make no additional AI requests',()=>assert.equal(requests,0));
- await test('Connection CSS parses and respects mobile sizing and reduced motion',()=>{const css=fs.readFileSync(path.join(root,'breach-style.css'),'utf8');require('postcss').parse(css);assert.ok(css.includes('prefers-reduced-motion'));assert.ok(css.includes('--cps-viewport-height'));});
+ await test('Connection CSS parses and respects mobile sizing and reduced motion',()=>{const css=fs.readFileSync(path.join(root,'styles/breach-style.css'),'utf8');require('postcss').parse(css);assert.ok(css.includes('prefers-reduced-motion'));assert.ok(css.includes('--cps-viewport-height'));});
  assert.deepEqual(errors,[]);console.log(count+' connection and reported interaction checks passed. DOM, timers and host APIs simulated.');w.close();
 })().catch(e=>{console.error(e);process.exitCode=1;w.close();});

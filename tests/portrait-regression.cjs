@@ -5,11 +5,11 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const repo = path.resolve(__dirname, '..');
 // Host APIs are simulated, but resizing, JPEG encoding and cropping use a real raster canvas.
-const source = fs.readFileSync(path.join(repo, 'index.js'), 'utf8')
- .replace("await import(new URL('../../../openai.js', import.meta.url).href)", '({ isImageInliningSupported: () => window.fixtureVision })')
- .replaceAll('import.meta.url', JSON.stringify('https://fixture.test/scripts/extensions/third-party/cyberpunk-system/index.js'));
+const source = fs.readFileSync(path.join(repo, 'src/index.js'), 'utf8')
+ .replace("await import(new URL('../../../../openai.js', import.meta.url).href)", '({ isImageInliningSupported: () => window.fixtureVision })')
+ .replaceAll('import.meta.url', JSON.stringify('https://fixture.test/scripts/extensions/third-party/cyberpunk-system/src/index.js'));
 const errors=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
-const dom = new JSDOM('<!doctype html><html><body><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8')+'</div><div id="chat"></div></body></html>', {url:'https://fixture.test',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom = new JSDOM('<!doctype html><html><body><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'ui/settings.html'),'utf8')+'</div><div id="chat"></div></body></html>', {url:'https://fixture.test',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;
 w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};
 const nativeCanvases=new WeakMap();
@@ -27,7 +27,7 @@ const wait=async predicate=>{for(let i=0;i<100;i++){if(predicate())return;await 
 const pointer=(type,id,x,y)=>{const event=new w.Event(type,{bubbles:true,cancelable:true});Object.assign(event,{pointerId:id,clientX:x,clientY:y});q('canvas').dispatchEvent(event);};
 let passed=0;const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
- for (const file of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+ for (const file of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js']) w.eval(fs.readFileSync(path.join(repo,'src/runtime',file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()');await wait(()=>w.CyberpunkSystem);w.CyberpunkSystem.open();click('[data-record-add]');
  test('NPC editor replaces the manager with one native modal',()=>{assert.equal(d.querySelectorAll('dialog[open]').length,1);assert.equal(d.querySelector('.cps-overlay'),null);});
  q('[data-portrait-file]').dispatchEvent(new w.Event('cancel',{bubbles:true}));

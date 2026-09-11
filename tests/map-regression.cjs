@@ -4,7 +4,7 @@ const dom=new JSDOM('<!doctype html><body><main></main></body>',{runScripts:'out
 let frames=new Map(),nextFrame=0,observed=[];
 w.requestAnimationFrame=fn=>{frames.set(++nextFrame,fn);return nextFrame;};w.cancelAnimationFrame=id=>frames.delete(id);
 w.ResizeObserver=class{constructor(fn){this.fn=fn;this.disconnected=false;observed.push(this);}observe(){}disconnect(){this.disconnected=true;}};
-for(const file of ['rpg-core.js','rpg-map-data.js','rpg-map.js'])w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+for(const file of ['rpg-core.js','rpg-map-data.js','rpg-map.js'])w.eval(fs.readFileSync(path.join(repo,'src/runtime',file),'utf8'));
 const M=w.CyberpunkMap,D=w.CyberpunkMapData,E=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let count=0;const test=(name,fn)=>{fn();count++;console.log('PASS '+name);};
 const q=s=>{const node=d.querySelector(s);assert.ok(node,'Missing '+s);return node;};const flush=()=>{const queue=[...frames.values()];frames.clear();queue.forEach(fn=>fn());};

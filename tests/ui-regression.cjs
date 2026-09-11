@@ -3,9 +3,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM, VirtualConsole } = require('jsdom');
 const repo = path.resolve(__dirname, '..');
-const source = fs.readFileSync(path.join(repo, 'index.js'), 'utf8').replaceAll('import.meta.url', JSON.stringify('https://fixture.test/extension/index.js'));
-const css = fs.readFileSync(path.join(repo, 'style.css'), 'utf8');
-const settingsTemplate = fs.readFileSync(path.join(repo, 'settings.html'), 'utf8');
+const source = fs.readFileSync(path.join(repo, 'src/index.js'), 'utf8').replaceAll('import.meta.url', JSON.stringify('https://fixture.test/extension/src/index.js'));
+const css = fs.readFileSync(path.join(repo, 'styles/style.css'), 'utf8');
+const settingsTemplate = fs.readFileSync(path.join(repo, 'ui/settings.html'), 'utf8');
 const postcss = require('postcss');
 postcss.parse(css);
 const errors=[];
@@ -30,7 +30,7 @@ const input=(selector,value)=>{const el=q(selector);el.value=value;el.dispatchEv
 let passed=0;
 const test=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 (async()=>{
- for (const file of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js']) w.eval(fs.readFileSync(path.join(repo,file),'utf8'));
+ for (const file of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js']) w.eval(fs.readFileSync(path.join(repo,'src/runtime',file),'utf8'));
  await w.eval('(async()=>{'+source+'\n})()'); await wait();
  assert.ok(w.CyberpunkSystem);
  test('Gear image frames cannot stretch with a tall equipment description',()=>{const values={};postcss.parse(css).walkRules(rule=>{if(rule.selector==='.cps-gear-card .cps-gear-visual')rule.walkDecls(decl=>values[decl.prop]=decl.value);});assert.equal(values['aspect-ratio'],'1 / 1');assert.equal(values['min-height'],'0');assert.equal(values['align-self'],'start');assert.equal(values.height,'auto');});

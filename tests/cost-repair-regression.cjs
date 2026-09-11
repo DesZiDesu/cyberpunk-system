@@ -1,12 +1,12 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom'),root=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
-const dom=new JSDOM('<!doctype html><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(root,'settings.html'),'utf8')+'</div><div id="chat"></div>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(root,'ui/settings.html'),'utf8')+'</div><div id="chat"></div>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document,events=new Map();let hostBusy=false,requests=0;
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.confirm=()=>true;
 const ctx={name1:'Noah',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHAT_CHANGED:'changed',GENERATION_STARTED:'started',GENERATION_ENDED:'ended'},eventSource:{on:(k,f)=>events.set(k,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt:async()=>{requests++;return '';},isGenerating:()=>hostBusy};
 w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(root,'src/runtime',f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const C=w.CyberpunkRpgCore,json=v=>JSON.stringify(v),copy=v=>JSON.parse(json(v)),wait=()=>new Promise(r=>setTimeout(r,25));
 const q=s=>{const n=d.querySelector(s);assert.ok(n,'Missing '+s);return n;},click=s=>q(s).click(),submit=form=>form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
@@ -18,7 +18,7 @@ const location=(where=at)=>record('LOCATION',{id:'loc-'+seq++,...where});
 const opening=(id,extra={})=>({id,operation:'open',shopId:'mara',name:'Mara Supplies',merchant:'Mara',kind:'general',location:at,funds:500,buyPrices:{clothing:20},stock:[{sku:'unity',catalogId:'cps:unity',quantity:3,price:100,buyPrice:50},{sku:'jacket',origin:'story',category:'clothing',item:{name:'Worn neon jacket',effect:'Established stitched lining'},quantity:2,price:60,buyPrice:20},{sku:'zero',catalogId:'cps:ping',quantity:0,price:40,buyPrice:10}],...extra});
 
 (async()=>{
- await w.eval('(async()=>{'+fs.readFileSync(path.join(root,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'))+'\n})()');await wait();
+ await w.eval('(async()=>{'+fs.readFileSync(path.join(root,'src/index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/src/index.js'))+'\n})()');await wait();
  state().settings.notifications=false;
  const dev=systems.devices;
  await reply(location()+record('DEVICE',{id:'seen',deviceId:'screen',name:'Street display',type:'device',actions:['shutdown','reboot','invented_effect']})+'[CP_DEVICE|wrong-label-id]Street display[/CP_DEVICE]');

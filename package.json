@@ -1,10 +1,20 @@
 {
   "name": "cyberpunk-system",
   "version": "3.14.0",
+  "description": "V1 Official Release of the Cyberpunk role-play system for SillyTavern.",
+  "author": "dioneaboveall",
   "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DesZiDesu/cyberpunk-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DesZiDesu/cyberpunk-system/issues"
+  },
+  "homepage": "https://github.com/DesZiDesu/cyberpunk-system",
   "scripts": {
-    "check": "node --check comms.js && node --check rpg-shops.js && node --check rpg-devices.js && node --check rpg-assets.js && node --check rpg-estate.js && node --check rpg-support.js && node --check rpg-scene.js && node --check index.js && node --check rpg-core.js && node --check rpg-ui.js && node --check rpg-mail.js && node --check rpg-catalog.js && node --check rpg-item-data.js && node --check rpg-map-data.js && node --check rpg-map.js && node --check rpg-campaign.js",
+    "check": "node --check src/index.js && node --check src/runtime/comms.js && node --check src/runtime/rpg-shops.js && node --check src/runtime/rpg-devices.js && node --check src/runtime/rpg-assets.js && node --check src/runtime/rpg-estate.js && node --check src/runtime/rpg-support.js && node --check src/runtime/rpg-scene.js && node --check src/runtime/rpg-core.js && node --check src/runtime/rpg-ui.js && node --check src/runtime/rpg-mail.js && node --check src/runtime/rpg-catalog.js && node --check src/runtime/rpg-item-data.js && node --check src/runtime/rpg-map-data.js && node --check src/runtime/rpg-map.js && node --check src/runtime/rpg-campaign.js",
     "test": "node tests/comms-regression.cjs && node tests/ui-regression.cjs && node tests/portrait-regression.cjs && node tests/rpg-regression.cjs && node tests/map-regression.cjs && node tests/mail-regression.cjs && node tests/scene-regression.cjs && node tests/expansion-regression.cjs && node tests/recovery-regression.cjs && node tests/device-regression.cjs && node tests/shop-regression.cjs && node tests/interaction-regression.cjs && node tests/campaign-regression.cjs && node tests/cost-repair-regression.cjs && node tests/medical-regression.cjs && node tests/usability-regression.cjs && node tests/estate-regression.cjs && node tests/shard-regression.cjs"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
-const box={};vm.createContext(box);vm.runInContext(fs.readFileSync(path.join(repo,'rpg-core.js'),'utf8'),box);
+const box={};vm.createContext(box);vm.runInContext(fs.readFileSync(path.join(repo,'src/runtime/rpg-core.js'),'utf8'),box);
 const C=box.CyberpunkRpgCore,M=C.medical;let count=0;
 const test=(name,fn)=>{fn();count++;console.log('PASS '+name);};
 const fresh=()=>({player:C.actor(),actors:{},turn:0,settings:{riskScale:1},map:{location:{district:'watson',danger:false}},shards:[]});
@@ -53,8 +53,8 @@ test('RP request only queues, deduplicates and requires owned medication',()=>{c
  w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};
  const ctx={name1:'V',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(k,f)=>events.set(k,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(k,p){prompt=p;},async generateQuietPrompt(){requests++;return '';}};
  w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};
- for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
- await w.eval('(async()=>{'+fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/index.js'))+'\n})()');
+ for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,'src/runtime',f),'utf8'));
+ await w.eval('(async()=>{'+fs.readFileSync(path.join(repo,'src/index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/src/index.js'))+'\n})()');
  const wait=()=>new Promise(r=>setTimeout(r,40));await wait();
  const q=s=>{const el=d.querySelector(s);assert.ok(el,'Missing '+s);return el;};const click=s=>q(s).click();const s=()=>ctx.chatMetadata.cyberpunk_system.rpg;
  async function message(raw){const i=ctx.chat.push({mes:raw,is_user:false})-1,el=d.createElement('div');el.className='mes';el.setAttribute('mesid',i);el.innerHTML='<div class="mes_text"></div>';el.firstChild.textContent=raw;d.querySelector('#chat').append(el);events.get('received')(i);await wait();return {i,el};}
@@ -66,7 +66,7 @@ test('RP request only queues, deduplicates and requires owned medication',()=>{c
   test(key+' review displays the selected price and cancellation is mutation-free',()=>{click('[data-rpg="med-plan:'+key+'"]');assert.equal(q('.cps-field-confirm .cps-plan-price').textContent,'€$'+M.plans[key].price.toLocaleString());assert.ok(q('.cps-field-confirm .cps-plan-benefits').textContent.includes(String(M.plans[key].copay)));click('[data-rpg=medical-cancel]');assert.ok(!s().medical.contract);assert.equal(s().player.balance,0);});
  }
  click('[data-med-choice=silver]');
- test('Price CSS explicitly sets readable text and WebKit text fill even on strong elements',()=>{const ast=require('postcss').parse(fs.readFileSync(path.join(repo,'style.css'),'utf8'));let found=false;ast.walkRules('.cps-ui .cps-plan-price',r=>{const rules=Object.fromEntries(r.nodes.filter(x=>x.type==='decl').map(x=>[x.prop,x]));assert.equal(rules.color.value,'var(--cps-text)');assert.equal(rules.color.important,true);assert.equal(rules['-webkit-text-fill-color'].value,'var(--cps-text)');assert.equal(rules['-webkit-text-fill-color'].important,true);found=true;});assert.ok(found);});
+ test('Price CSS explicitly sets readable text and WebKit text fill even on strong elements',()=>{const ast=require('postcss').parse(fs.readFileSync(path.join(repo,'styles/style.css'),'utf8'));let found=false;ast.walkRules('.cps-ui .cps-plan-price',r=>{const rules=Object.fromEntries(r.nodes.filter(x=>x.type==='decl').map(x=>[x.prop,x]));assert.equal(rules.color.value,'var(--cps-text)');assert.equal(rules.color.important,true);assert.equal(rules['-webkit-text-fill-color'].value,'var(--cps-text)');assert.equal(rules['-webkit-text-fill-color'].important,true);found=true;});assert.ok(found);});
  s().player.balance=10000;
  click('[data-rpg="med-buy:neural-suppressant-injector"]');
  test('Purchase confirmation does not mutate inventory before acceptance',()=>{assert.equal(s().player.inventory.length,0);assert.equal(s().player.balance,10000);});
@@ -101,7 +101,7 @@ test('RP request only queues, deduplicates and requires owned medication',()=>{c
  test('New renewal layout preserves existing term and charges the original premium',()=>{assert.equal(s().medical.contract.expires,120);assert.equal(s().player.balance,8000);assert.equal(s().shards.length,2);});
  click('[data-med-choice=platinum]');click('[data-rpg="med-plan:platinum"]');click('[data-rpg=medical-confirm]');
  test('Confirmed package change replaces coverage once without carrying the old term',()=>{assert.equal(s().medical.contract.plan,'platinum');assert.equal(s().medical.contract.expires,60);assert.equal(s().player.balance,5500);assert.equal(s().shards.length,3);});
- test('Mobile review overrides the narrow desktop max-width and Field Ops uses its reference fonts',()=>{const ast=require('postcss').parse(fs.readFileSync(path.join(repo,'style.css'),'utf8'));let full=false,fonts=false;ast.walkRules(r=>{if(r.selector==='dialog.cps-ui.cps-field-confirm,dialog.cps-ui.cps-field-document')full=r.nodes.some(n=>n.prop==='max-width'&&n.value==='100%');if(r.selector.includes('.cps-ui.cps-field-document')&&r.nodes.some(n=>n.prop==='--cps-font-en'&&n.value.includes('Rajdhani')))fonts=true;});assert.ok(full&&fonts);});
+ test('Mobile review overrides the narrow desktop max-width and Field Ops uses its reference fonts',()=>{const ast=require('postcss').parse(fs.readFileSync(path.join(repo,'styles/style.css'),'utf8'));let full=false,fonts=false;ast.walkRules(r=>{if(r.selector==='dialog.cps-ui.cps-field-confirm,dialog.cps-ui.cps-field-document')full=r.nodes.some(n=>n.prop==='max-width'&&n.value==='100%');if(r.selector.includes('.cps-ui.cps-field-document')&&r.nodes.some(n=>n.prop==='--cps-font-en'&&n.value.includes('Rajdhani')))fonts=true;});assert.ok(full&&fonts);});
  test('No live AI calls or browser errors during medical interactions',()=>{assert.equal(requests,0);assert.deepEqual(errors,[]);});
  dom.window.close();console.log(`${count} medical integration checks passed. No live AI calls.`);
 })().catch(e=>{console.error(e);process.exitCode=1;});

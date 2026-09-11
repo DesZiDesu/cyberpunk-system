@@ -1,12 +1,12 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');const repo=path.resolve(__dirname,'..');
 const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
-const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'settings.html'),'utf8')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
+const dom=new JSDOM('<!doctype html><html><body><div id="extensionsMenu"></div><div id="extensions_settings2">'+fs.readFileSync(path.join(repo,'ui/settings.html'),'utf8')+'</div><div id="chat"></div></body></html>',{url:'https://fixture.test/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});
 const w=dom.window,d=w.document;w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};w.confirm=()=>true;
 const events=new Map();let stops=0,hostBusy=false;
 const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'@@lucy'}],skills:[]}},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated',CHARACTER_MESSAGE_RENDERED:'rendered',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed',GENERATION_ENDED:'ended',GENERATION_STARTED:'started'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt:async()=>'',stopGeneration(){stops++;},isGenerating:()=>hostBusy};
 w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,'src/runtime',f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const C=w.CyberpunkRpgCore,q=s=>{const el=d.querySelector(s);assert.ok(el,'Missing '+s);return el;},click=s=>q(s).click(),wait=()=>new Promise(r=>setTimeout(r,20)),json=x=>JSON.stringify(x);
 const bucket=()=>ctx.chatMetadata.cyberpunk_system,state=()=>bucket().rpg,record=(tag,v)=>'[CP_'+tag+']'+json(v)+'[/CP_'+tag+']';let count=0,seq=0;
@@ -17,7 +17,7 @@ function pathToAccess(p){const seq=p.daemons[0].codes;const solve=(i,row,col,axi
 function prepareLink(){const clock=require('./connection-clock.cjs')(w);click('[data-rpg=connect]');clock.advance(60000);click('[data-rpg=enter-breach]');clock.restore();}
 function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p))click('.cps-breach [data-cell="'+r+','+c+'"]');if(p.status!=='success')click('.cps-breach [data-rpg=finish]');}
 (async()=>{
- await w.eval('(async()=>{'+fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'))+'\n})()');await wait();
+ await w.eval('(async()=>{'+fs.readFileSync(path.join(repo,'src/index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/src/index.js'))+'\n})()');await wait();
  ctx.generateQuietPrompt=async()=>{requests++;return '';};
  const dev=systems.devices,b=()=>dev.store(),player=()=>state().player,lookup=id=>b().devices.find(x=>x.id===id);
  state().settings.notifications=false;player().maxRam=100;player().ram=100;
@@ -151,6 +151,6 @@ function solveBreach(){const p=state().puzzle;for(const [r,c] of pathToAccess(p)
  dev.open('safe');const stale=q('[data-device-action="use:read"]'),old=b();ctx.chatMetadata={cyberpunk_system:{npcs:[],skills:[]}};events.get('changed')();stale.click();
  await check('Chat switch closes device controls and isolates all device state',()=>{assert.equal(d.querySelector('.cps-device-window'),null);assert.equal(dev.store().devices.length,0);assert.ok(old.devices.length>0);});
  await check('Device workflow makes zero extra AI calls',()=>assert.equal(requests,0));
- await check('Device CSS parses and preserves plain-text sizing and motion preferences',()=>{const css=fs.readFileSync(path.join(repo,'device-style.css'),'utf8');require('postcss').parse(css);assert.ok(css.includes('font:inherit!important'));assert.ok(css.includes('prefers-reduced-motion'));assert.ok(css.includes('var(--cps-viewport-height'));});
+ await check('Device CSS parses and preserves plain-text sizing and motion preferences',()=>{const css=fs.readFileSync(path.join(repo,'styles/device-style.css'),'utf8');require('postcss').parse(css);assert.ok(css.includes('font:inherit!important'));assert.ok(css.includes('prefers-reduced-motion'));assert.ok(css.includes('var(--cps-viewport-height'));});
  assert.deepEqual(errors,[]);console.log(count+' device behavior checks passed. Host, network and pointer behavior simulated.');w.close();
 })().catch(e=>{console.error(e);process.exitCode=1;w.close();});

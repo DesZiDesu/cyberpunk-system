@@ -7,7 +7,7 @@ w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialog
 let requests=0,saves=0;
 const ctx={name1:'Noah',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png'}],extensionSettings:{},chatMetadata:{},chat:[],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_UPDATED:'updated'},eventSource:{on:(k,f)=>events.set(k,f)},saveMetadataDebounced(){saves++;},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt(){requests++;}};
 w.HTMLMediaElement.prototype.play=function(){return Promise.resolve();};w.HTMLMediaElement.prototype.pause=function(){};w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(root,f),'utf8'));
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(root,'src/runtime',f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const wait=()=>new Promise(r=>setTimeout(r,60)),record=(k,v)=>'[CP_'+k+']'+JSON.stringify(v)+'[/CP_'+k+']';
 const q=s=>{const n=d.querySelector(s);assert.ok(n,s);return n;};
@@ -15,7 +15,7 @@ const state=()=>ctx.chatMetadata.cyberpunk_system.rpg;
 async function reply(raw){const index=ctx.chat.length,message={mes:raw,is_user:false};ctx.chat.push(message);const el=d.createElement('div');el.className='mes';el.setAttribute('mesid',index);const text=d.createElement('div');text.className='mes_text';text.textContent=raw;el.append(text);q('#chat').append(el);events.get('received')(index);await wait();return {message,el:text,index};}
 let n=0;function test(name,fn){fn();console.log('PASS '+name);n++;}
 (async()=>{
- const src=fs.readFileSync(path.join(root,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/scripts/extensions/third-party/cyberpunk-system/index.js'));
+ const src=fs.readFileSync(path.join(root,'src/index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/scripts/extensions/third-party/cyberpunk-system/src/index.js'));
  await w.eval('(async()=>{'+src+'})()');await wait();
  const plain=await reply('An ordinary reply without a header.');
  test('Every plain AI reply receives exactly one tracker above prose',()=>{assert.equal(plain.el.firstElementChild.className,'cps-scene-stack');assert.equal(plain.el.querySelectorAll('.cps-scene-tracker').length,1);assert.ok(plain.el.textContent.endsWith('An ordinary reply without a header.'));});

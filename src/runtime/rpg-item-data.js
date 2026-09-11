@@ -1,5 +1,5 @@
 /* Item dossiers: original RP briefs, with separately sourced game comparisons.
-   No game art, ripped archives or remote image trackers are bundled. See SOURCES.md. */
+   No game art, ripped archives or remote image trackers are bundled. See docs/SOURCES.md. */
 (() => {
   'use strict';
   const C=globalThis.CyberpunkRpgCore;

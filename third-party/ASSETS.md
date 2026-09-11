@@ -14,4 +14,4 @@ The extension uses the NC Zoning Board map as a free, unofficial Cyberpunk fan m
 - Upstream asset terms: https://github.com/nczoning/nc-zoning-board/blob/3a3ddc2f3e015206ec7d619b4ba7ebcb4daf93ff/ASSETS.md
 - Fan-content guidelines: https://www.cdprojektred.com/en/fan-content
 
-This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Game-derived assets are not offered for commercial reuse. The extension loads public map tiles online and includes projected boundary geometry; it does not redistribute the full raster tile collection. See SOURCES.md at the repository root for the projection, precision and network scope.
+This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Game-derived assets are not offered for commercial reuse. The extension loads public map tiles online and includes projected boundary geometry; it does not redistribute the full raster tile collection. See [docs/SOURCES.md](../docs/SOURCES.md) for the projection, precision and network scope.

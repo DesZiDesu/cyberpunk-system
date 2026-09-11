@@ -8,13 +8,13 @@ w.Audio=class{constructor(src){this.src=src;this.paused=true;}play(){this.paused
 let resolve,reject,requests=0,lastPrompt='',lastSkipWian=null,rejectAudio=false;
 const ctx={name1:'Mael',name2:'Lucy',characterId:0,characters:[{avatar:'lucy.png',description:'A loyal Night City netrunner.',personality:'Dry wit; replies in short bursts.',scenario:'Kabuki after midnight.'}],extensionSettings:{},chatMetadata:{cyberpunk_system:{npcs:[{id:'lucy',name:'Lucy',handle:'lucy',role:'Netrunner'},{id:'judy',name:'Judy',handle:'judy',role:'Tech'}],skills:[]}},chat:[{is_user:true,mes:'เจอกันที่คาบูกิไหม'}],event_types:{MESSAGE_RECEIVED:'received',MESSAGE_SENT:'sent',CHAT_CHANGED:'changed'},eventSource:{on:(n,f)=>events.set(n,f)},saveMetadataDebounced(){},saveSettingsDebounced(){},setExtensionPrompt(){},generateQuietPrompt(p,_loud,skipWian){lastPrompt=p;lastSkipWian=skipWian;requests++;return new Promise((a,b)=>{resolve=a;reject=b;});}};
 w.SillyTavern={getContext:()=>ctx};
-for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,f),'utf8'));
+for(const f of ['rpg-core.js','rpg-catalog.js','rpg-item-data.js','rpg-map-data.js','rpg-map.js','rpg-scene.js','rpg-assets.js','rpg-estate.js','rpg-support.js','rpg-mail.js','rpg-devices.js','rpg-shops.js','rpg-campaign.js','rpg-ui.js','comms.js'])w.eval(fs.readFileSync(path.join(repo,'src/runtime',f),'utf8'));
 let systems;const factory=w.CyberpunkSystemsFactory;w.CyberpunkSystemsFactory=api=>(systems=factory(api));
 const q=s=>{const e=d.querySelector(s);assert.ok(e,'Missing '+s);return e;},click=s=>q(s).click(),wait=()=>new Promise(r=>setTimeout(r,40));
 const type=(s,v)=>{q(s).value=v;q(s).dispatchEvent(new w.Event('input',{bubbles:true}));},enter=s=>q(s).dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
 let count=0;const test=(n,f)=>{f();count++;console.log('PASS '+n);};const bucket=()=>ctx.chatMetadata.cyberpunk_system,thread=n=>bucket().directThreads.find(t=>t.name===n),played=f=>sounds.filter(s=>s.action==='play'&&!s.muted&&s.src.endsWith(f));
 (async()=>{
- await w.eval('(async()=>{'+fs.readFileSync(path.join(repo,'index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/index.js'))+'\n})()');await wait();const api=w.CyberpunkSystem;
+ await w.eval('(async()=>{'+fs.readFileSync(path.join(repo,'src/index.js'),'utf8').replaceAll('import.meta.url',JSON.stringify('https://fixture.test/extension/src/index.js'))+'\n})()');await wait();const api=w.CyberpunkSystem;
  api.openMessages('Lucy');
  test('Direct messages open without starting a call or an AI request',()=>{assert.equal(bucket().call.active,false);assert.equal(requests,0);assert.ok(q('.cps-dm-window').open);});
  type('.cps-dm-input','Meet in Kabuki?');enter('.cps-dm-input');
@@ -100,6 +100,6 @@ let count=0;const test=(n,f)=>{f();count++;console.log('PASS '+n);};const bucket
  test('Chat switching cancels messaging, removes UI and rejects late responses',()=>{assert.equal(d.querySelector('.cps-dm-window'),null);assert.equal(d.querySelector('.cps-dm-minimized'),null);assert.ok(!old.messages.some(m=>m.text==='Wrong chat'));});
  test('New communication UI has no uncaught DOM errors',()=>assert.deepEqual(errors,[]));
  test('All five audio files are bundled locally',()=>{for(const f of ['v-phone-ringtone','outgoing-call','opening-phone-contacts','closing-phone-contacts','v-phone-new-message'])assert.ok(fs.statSync(path.join(repo,'assets/audio',f+'.mp3')).size>1000);});
- test('Message viewport follows the shared keyboard-aware measurement',()=>{const css=fs.readFileSync(path.join(repo,'style.css'),'utf8');assert.ok(css.includes('height:var(--cps-viewport-height,100dvh)'));assert.ok(css.includes('.cps-call-minimized {touch-action:none;'));});
+ test('Message viewport follows the shared keyboard-aware measurement',()=>{const css=fs.readFileSync(path.join(repo,'styles/style.css'),'utf8');assert.ok(css.includes('height:var(--cps-viewport-height,100dvh)'));assert.ok(css.includes('.cps-call-minimized {touch-action:none;'));});
  console.log(count+' communication checks passed; host, pointer and audio APIs simulated.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1;});
